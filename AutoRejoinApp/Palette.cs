@@ -6,25 +6,25 @@ namespace AutoRejoinApp;
 
 public static class Palette
 {
-	public static readonly SolidColorBrush Text = Make("#ECEEF5");
+	public static readonly SolidColorBrush Text = Make("#F2F1F8");
 
-	public static readonly SolidColorBrush Text2 = Make("#A2A9BC");
+	public static readonly SolidColorBrush Text2 = Make("#A3A2B8");
 
-	public static readonly SolidColorBrush Text3 = Make("#646B82");
+	public static readonly SolidColorBrush Text3 = Make("#67667D");
 
-	public static readonly SolidColorBrush Line = Make("#1B2030");
+	public static readonly SolidColorBrush Line = Make("#1D1D2A");
 
-	public static readonly SolidColorBrush Accent = Make("#3B82F6");
+	public static readonly SolidColorBrush Accent = Make("#8B5CF6");
 
-	public static readonly SolidColorBrush AccentSoft = Make("#0F1A2E");
+	public static readonly SolidColorBrush AccentSoft = Make("#1B1533");
 
 	public static readonly SolidColorBrush Green = Make("#34D399");
 
-	public static readonly SolidColorBrush GreenSoft = Make("#0E1F1A");
+	public static readonly SolidColorBrush GreenSoft = Make("#0D1F1A");
 
-	public static readonly SolidColorBrush Blue = Make("#60A5FA");
+	public static readonly SolidColorBrush Blue = Make("#22D3EE");
 
-	public static readonly SolidColorBrush BlueSoft = Make("#0F1B30");
+	public static readonly SolidColorBrush BlueSoft = Make("#0B1B22");
 
 	public static readonly SolidColorBrush Yellow = Make("#FBBF24");
 
@@ -34,11 +34,15 @@ public static class Palette
 
 	public static readonly SolidColorBrush RedSoft = Make("#231216");
 
-	public static readonly SolidColorBrush Gray = Make("#8B93A7");
+	public static readonly SolidColorBrush BlueLine = Make("#1A3B47");
 
-	public static readonly SolidColorBrush GraySoft = Make("#161A23");
+	public static readonly SolidColorBrush YellowLine = Make("#4A3812");
 
-	public static readonly Color BgColor = Color.FromRgb(7, 8, 12);
+	public static readonly SolidColorBrush Gray = Make("#8E8DA4");
+
+	public static readonly SolidColorBrush GraySoft = Make("#17171F");
+
+	public static readonly Color BgColor = Color.FromRgb(8, 8, 13);
 
 	private static readonly Dictionary<string, SolidColorBrush> LogColors = new Dictionary<string, SolidColorBrush>(StringComparer.OrdinalIgnoreCase)
 	{
@@ -60,7 +64,7 @@ public static class Palette
 		},
 		{
 			"Cyan",
-			Make("#38BDF8")
+			Make("#67E8F9")
 		},
 		{
 			"DarkGray",
@@ -72,15 +76,15 @@ public static class Palette
 		},
 		{
 			"White",
-			Make("#ECEEF5")
+			Make("#F2F1F8")
 		}
 	};
 
 	private static readonly SolidColorBrush[] AvatarColors = new SolidColorBrush[7]
 	{
-		Make("#3B82F6"),
+		Make("#A78BFA"),
 		Make("#34D399"),
-		Make("#60A5FA"),
+		Make("#22D3EE"),
 		Make("#F472B6"),
 		Make("#A78BFA"),
 		Make("#FB923C"),

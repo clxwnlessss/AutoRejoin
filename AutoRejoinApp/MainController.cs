@@ -259,7 +259,7 @@ public class MainController
 		scheduleWarn = Find<Border>("ScheduleWarn");
 		scheduleWarnText = Find<TextBlock>("ScheduleWarnText");
 		scheduleWarnFix = Find<Button>("ScheduleWarnFix");
-		Find<TextBlock>("VersionText").Text = "Version " + Updater.CurrentText;
+		Find<TextBlock>("VersionText").Text = (Updater.Current.Build > 0) ? Updater.CurrentText : Updater.Current.ToString(2);
 		BitmapFrame bitmapFrame = Xaml.AppIcon();
 		if (bitmapFrame != null)
 		{
@@ -336,6 +336,14 @@ public class MainController
 		WireLog();
 		discord = new DiscordWebhook(this, window.Dispatcher);
 		settingsPage = new SettingsPage(this, Find<StackPanel>("SettingsHost"));
+		Find<Button>("ContactButton").Click += delegate
+		{
+			ContactOwner();
+		};
+		Find<Button>("HelpContact").Click += delegate
+		{
+			ContactOwner();
+		};
 		Find<Button>("HelpOpenData").Click += delegate
 		{
 			SystemTools.OpenFolder(AppPaths.DataDir);
@@ -619,11 +627,33 @@ public class MainController
 		};
 	}
 
+	private void ContactOwner()
+	{
+		Owner.OpenDiscord();
+		ShowBanner("contact", "Ник " + Owner.Name + " скопирован — открываю Discord.", null, null, warning: false);
+		DispatcherTimer hide = new DispatcherTimer
+		{
+			Interval = TimeSpan.FromSeconds(4.0)
+		};
+		hide.Tick += delegate
+		{
+			hide.Stop();
+			HideBanner("contact");
+		};
+		hide.Start();
+	}
+
 	public void ShowPage(string name)
 	{
 		foreach (KeyValuePair<string, FrameworkElement> page in pages)
 		{
-			page.Value.Visibility = ((!(page.Key == name)) ? Visibility.Collapsed : Visibility.Visible);
+			bool show = page.Key == name;
+			bool wasHidden = page.Value.Visibility != Visibility.Visible;
+			page.Value.Visibility = (show ? Visibility.Visible : Visibility.Collapsed);
+			if (show && wasHidden)
+			{
+				Anim.SlideIn(page.Value);
+			}
 		}
 		if (navs[name].IsChecked != true)
 		{
@@ -649,8 +679,12 @@ public class MainController
 		bannerIcon.Text = (warning ? "\ue7ba" : "\ue946");
 		bannerIcon.Foreground = (warning ? Palette.Yellow : Palette.Blue);
 		banner.Background = (warning ? Palette.YellowSoft : Palette.BlueSoft);
-		banner.BorderBrush = (warning ? Palette.Make("#4A3812") : Palette.Make("#1E3A66"));
-		banner.Visibility = Visibility.Visible;
+		banner.BorderBrush = (warning ? Palette.YellowLine : Palette.BlueLine);
+		if (banner.Visibility != Visibility.Visible)
+		{
+			banner.Visibility = Visibility.Visible;
+			Anim.SlideIn(banner, -10.0, 0.28);
+		}
 	}
 
 	private void HideBanner(string kind = null)
@@ -1049,7 +1083,7 @@ public class MainController
 		{
 			fill = Palette.Text3;
 			text = "Останавливаю…";
-			text2 = "Окна Роблокса останутся открытыми";
+			text2 = "Закрываю окна Роблокса";
 		}
 		else
 		{
@@ -1066,8 +1100,8 @@ public class MainController
 		engineButtonText.Text = (running ? "Остановить" : "Запустить");
 		engineButton.IsEnabled = phase != "stopping";
 		tray.SetRunning(running);
-		tray.SetText(running ? ("AutoRejoin — " + ((phase == "running") ? (num2 + " из " + num + " в игре") : "запускается")) : "AutoRejoin — остановлен");
-		accountsSub.Text = ((cards.Count == 0) ? "Держит все аккаунты в игре и перезаходит, если что-то случилось." : ((running && phase == "running") ? ((num2 == num) ? "Все аккаунты в игре." : (num2 + " из " + num + " в игре — остальные заходят или ждут.")) : ("Аккаунтов: " + cards.Count + ((num != cards.Count) ? (" (включено " + num + ")") : "") + ".")));
+		tray.SetText(Owner.Credit + " — " + (running ? ((phase == "running") ? (num2 + " из " + num + " в игре") : "запускается") : "остановлен"));
+		accountsSub.Text = ((cards.Count == 0) ? "Держит аккаунты в игре." : ((running && phase == "running") ? ((num2 == num) ? "Все в игре." : (num2 + " из " + num + " в игре")) : ("Аккаунтов: " + cards.Count + ((num != cards.Count) ? (", включено " + num) : ""))));
 	}
 
 	private void UpdateStats()

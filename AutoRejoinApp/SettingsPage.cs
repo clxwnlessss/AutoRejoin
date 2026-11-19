@@ -43,7 +43,7 @@ public class SettingsPage
 	private void BuildDiscord()
 	{
 		StackPanel section = Section("", "Discord");
-		AddRow(section, "Отчёт в Discord", "Раз в заданное время вебхук присылает в канал сообщение: какие аккаунты в игре (🟢), а какие нет (🔴). Только отчёт — управлять программой из Discord нельзя.", Switch(Cfg.discordOn, delegate(bool v)
+		AddRow(section, "Отчёт в Discord", "Кто в игре 🟢, а кто нет 🔴 — раз в N минут.", Switch(Cfg.discordOn, delegate(bool v)
 		{
 			Cfg.discordOn = v;
 			main.ConfigChanged();
@@ -70,13 +70,13 @@ public class SettingsPage
 		StackPanel urlPanel = new StackPanel();
 		urlPanel.Children.Add(urlBox);
 		urlPanel.Children.Add(urlError);
-		AddStacked(section, "Ссылка вебхука", "В Discord: настройки канала → Интеграции → Вебхуки → Новый вебхук → «Копировать URL вебхука». Хранится зашифрованной вместе с аккаунтами — никому её не показывай: по ней любой может писать в канал.", urlPanel);
-		AddRow(section, "Присылать отчёт раз в", "Первый отчёт — через минуту после запуска программы.", WithSuffix(NumberBox(Cfg.discordInterval, 1.0, 1440.0, integer: true, delegate(double v)
+		AddStacked(section, "Ссылка вебхука", "Канал → Интеграции → Вебхуки → «Копировать URL». Никому не показывай.", urlPanel);
+		AddRow(section, "Присылать отчёт раз в", "Первый — через минуту после запуска.", WithSuffix(NumberBox(Cfg.discordInterval, 1.0, 1440.0, integer: true, delegate(double v)
 		{
 			Cfg.discordInterval = (int)v;
 			main.ConfigChanged();
 		}), "мин"));
-		AddRow(section, "Сразу сообщать о вылетах и проблемах", "Не дожидаясь отчёта: «🔴 аккаунт вылетел» с причиной (кик, ошибка, зависание, память, окно закрылось) и «🟢 снова в игре» — сколько его не было. Перезаходы по кнопке, по расписанию и по Balloon Blessing не считаются. Проблемы, которые сами не чинятся (кука перестала работать, предупреждение Роблокса, капча при входе, Потассиум разлогинился, ошибка версии), приходят с упоминанием.", Switch(Cfg.discordEvents, delegate(bool v)
+		AddRow(section, "Мгновенные оповещения", "Вылет с причиной и возврат в игру. Проблемы — с упоминанием.", Switch(Cfg.discordEvents, delegate(bool v)
 		{
 			Cfg.discordEvents = v;
 			main.ConfigChanged();
@@ -92,10 +92,10 @@ public class SettingsPage
 				main.ConfigChanged();
 			}
 		};
-		AddStacked(section, "Кого упоминать при проблемах", "Включи в Discord режим разработчика (Настройки → Расширенные), затем ПКМ по себе → «Копировать ID пользователя». Пусто — сообщения о проблемах приходят без упоминания.", mentionBox);
+		AddStacked(section, "Кого упоминать", "ПКМ по себе → «Копировать ID» (нужен режим разработчика).", mentionBox);
 		discordState = HintBlock("");
 		discordState.Margin = new Thickness(0.0, 3.0, 0.0, 0.0);
-		FrameworkElement row = AddRow(section, "Проверка", "Отправить отчёт прямо сейчас, не дожидаясь срока.", Button("Отправить сейчас", delegate
+		FrameworkElement row = AddRow(section, "Проверка", "Отправить отчёт сейчас.", Button("Отправить сейчас", delegate
 		{
 			main.Discord.SendNow();
 		}));
@@ -124,7 +124,7 @@ public class SettingsPage
 	private void BuildAccounts()
 	{
 		StackPanel section = Section("\ue716", "Вход в аккаунты");
-		AddRow(section, "Принимать предупреждения Роблокса", "Ошибка 403 «User is moderated»: на аккаунте предупреждение, и Роблокс не пускает его в игру, пока его не примут на roblox.com. Включено — AutoRejoin принимает предупреждение сам (как кнопка «I agree / Reactivate») и пишет его текст в журнал. Выключено — при входе по логину и паролю откроется окно с предупреждением, принять его нужно тебе. Баны со сроком не снимаются — аккаунт ждёт конца срока.", Switch(Cfg.autoAcceptWarnings, delegate(bool v)
+		AddRow(section, "Принимать предупреждения Роблокса", "Ошибка 403: принимать предупреждение самому. Баны не снимает.", Switch(Cfg.autoAcceptWarnings, delegate(bool v)
 		{
 			Cfg.autoAcceptWarnings = v;
 			main.ConfigChanged();
@@ -168,13 +168,13 @@ public class SettingsPage
 			textBlock.Foreground = Palette.Yellow;
 			stackPanel.Children.Add(textBlock);
 		}
-		AddStacked(section, "Ссылка на сервер", "VIP-ссылка (приглашение на приватный сервер или ссылка с privateServerLinkCode), ссылка на игру или ID плейса. Пусто — обычный сервер Bee Swarm Simulator. Применяется при следующих перезаходах. У аккаунта может быть своя ссылка (кнопка ✎).", stackPanel);
+		AddStacked(section, "Ссылка на сервер", "VIP-ссылка, ссылка на игру или ID плейса. Пусто — обычный BSS.", stackPanel);
 	}
 
 	private void BuildWindows()
 	{
 		StackPanel section = Section("\ue7f4", "Окна");
-		AddRow(section, "Сворачивать окна хелперов", "После захода окно уменьшается и сворачивается — так Роблокс почти не грузит видеокарту. Окно, которое ты развернул 3 раза за 10 сек, больше не сворачивается.", Switch(Cfg.minimizeWindows, delegate(bool v)
+		AddRow(section, "Сворачивать окна хелперов", "Меньше нагрузка на видеокарту.", Switch(Cfg.minimizeWindows, delegate(bool v)
 		{
 			Cfg.minimizeWindows = v;
 			main.ConfigChanged();
@@ -201,23 +201,23 @@ public class SettingsPage
 			VerticalAlignment = VerticalAlignment.Center
 		});
 		stackPanel2.Children.Add(element2);
-		AddRow(section, "Размер окна хелпера", "До какого размера уменьшать окно перед тем, как свернуть.", stackPanel2);
-		AddRow(section, "Мейн на весь экран", "Окно мейна открывается на весь экран (F11). Мейн никогда не сворачивается. Мейна выбирают в аккаунте (кнопка ✎).", Switch(Cfg.mainFullscreen, delegate(bool v)
+		AddRow(section, "Размер окна хелпера", "", stackPanel2);
+		AddRow(section, "Мейн на весь экран", "Мейн не сворачивается никогда.", Switch(Cfg.mainFullscreen, delegate(bool v)
 		{
 			Cfg.mainFullscreen = v;
 			main.ConfigChanged();
 		}));
-		AddRow(section, "Лимит FPS мейна", "0 — не трогать (как в настройках Роблокса).", WithSuffix(NumberBox(Cfg.mainFps, 0.0, 1000.0, integer: true, delegate(double v)
+		AddRow(section, "Лимит FPS мейна", "0 — не трогать.", WithSuffix(NumberBox(Cfg.mainFps, 0.0, 1000.0, integer: true, delegate(double v)
 		{
 			Cfg.mainFps = (int)v;
 			main.ConfigChanged();
 		}), "FPS"));
-		AddRow(section, "Лимит FPS хелперов", "Меньше FPS — меньше нагрузка на процессор и видеокарту. 0 — не трогать.", WithSuffix(NumberBox(Cfg.helperFps, 0.0, 1000.0, integer: true, delegate(double v)
+		AddRow(section, "Лимит FPS хелперов", "0 — не трогать.", WithSuffix(NumberBox(Cfg.helperFps, 0.0, 1000.0, integer: true, delegate(double v)
 		{
 			Cfg.helperFps = (int)v;
 			main.ConfigChanged();
 		}), "FPS"));
-		AddRow(section, "Графика хелперов", "Уровень графики Роблокса (1 — самый низкий, 10 — самый высокий) для окон хелперов: меньше текстур и деталей в памяти. Ставится при запуске окна, как лимит FPS. Графика мейна не меняется — ему при запуске возвращается его собственная.", NumberWithSwitch(Cfg.helperQualityOn, Cfg.helperQuality, 1.0, 10.0, integer: true, "ур.", delegate(bool on)
+		AddRow(section, "Графика хелперов", "1 — минимум. Мейна не трогает.", NumberWithSwitch(Cfg.helperQualityOn, Cfg.helperQuality, 1.0, 10.0, integer: true, "ур.", delegate(bool on)
 		{
 			Cfg.helperQualityOn = on;
 			main.ConfigChanged();
@@ -249,7 +249,7 @@ public class SettingsPage
 				Name = "Высокий"
 			}
 		};
-		AddRow(section, "Приоритет процессора для мейна", "Роблокс сам опускает приоритет своих окон — AutoRejoin возвращает его каждые 100 мс.", Choice(items, Cfg.mainPriority ?? "", delegate(string v)
+		AddRow(section, "Приоритет процессора для мейна", "", Choice(items, Cfg.mainPriority ?? "", delegate(string v)
 		{
 			Cfg.mainPriority = v;
 			main.ConfigChanged();
@@ -259,7 +259,7 @@ public class SettingsPage
 	private void BuildMemory()
 	{
 		StackPanel section = Section("\ue9d9", "Память");
-		AddRow(section, "Перезапуск раздувшегося окна", "Роблокс со временем раздувается в памяти, а когда она кончается, Windows роняет все окна разом. Окно больше лимита перезаходит (не раньше 2 мин после старта).", NumberWithSwitch(Cfg.memoryLimitOn, Cfg.memoryLimitGB, 1.0, 256.0, integer: false, "ГБ", delegate(bool on)
+		AddRow(section, "Перезапуск раздувшегося окна", "Окно больше лимита перезаходит.", NumberWithSwitch(Cfg.memoryLimitOn, Cfg.memoryLimitGB, 1.0, 256.0, integer: false, "ГБ", delegate(bool on)
 		{
 			Cfg.memoryLimitOn = on;
 			main.ConfigChanged();
@@ -268,12 +268,12 @@ public class SettingsPage
 			Cfg.memoryLimitGB = v;
 			main.ConfigChanged();
 		}));
-		AddRow(section, "Не перезапускать мейна", "Только для перезапуска раздувшегося окна: мейн из-за лимита памяти не перезаходит, хелперы — как обычно. Спасение при нехватке памяти по-прежнему может перезапустить и мейна, чтобы Windows не уронила все окна.", Switch(Cfg.memoryLimitSkipMain, delegate(bool v)
+		AddRow(section, "Не перезапускать мейна", "Лимит выше действует только на хелперов.", Switch(Cfg.memoryLimitSkipMain, delegate(bool v)
 		{
 			Cfg.memoryLimitSkipMain = v;
 			main.ConfigChanged();
 		}));
-		AddRow(section, "Ждать память перед запуском окна", "Новое окно открывается, только когда свободно столько памяти (вместе с файлом подкачки): окно без памяти не заходит или роняет соседей.", NumberWithSwitch(Cfg.windowMemoryOn, Cfg.windowMemoryGB, 0.5, 64.0, integer: false, "ГБ", delegate(bool on)
+		AddRow(section, "Ждать память перед запуском окна", "Новое окно — только при свободной памяти.", NumberWithSwitch(Cfg.windowMemoryOn, Cfg.windowMemoryGB, 0.5, 64.0, integer: false, "ГБ", delegate(bool on)
 		{
 			Cfg.windowMemoryOn = on;
 			main.ConfigChanged();
@@ -282,7 +282,7 @@ public class SettingsPage
 			Cfg.windowMemoryGB = v;
 			main.ConfigChanged();
 		}));
-		AddRow(section, "Спасение при нехватке памяти", "Свободной памяти осталось меньше — перезаходит самое большое окно, пока Windows не уронила все.", NumberWithSwitch(Cfg.minFreeMemoryOn, Cfg.minFreeMemoryGB, 0.2, 64.0, integer: false, "ГБ", delegate(bool on)
+		AddRow(section, "Спасение при нехватке памяти", "Памяти меньше — перезаходит самое большое окно.", NumberWithSwitch(Cfg.minFreeMemoryOn, Cfg.minFreeMemoryGB, 0.2, 64.0, integer: false, "ГБ", delegate(bool on)
 		{
 			Cfg.minFreeMemoryOn = on;
 			main.ConfigChanged();
@@ -291,7 +291,7 @@ public class SettingsPage
 			Cfg.minFreeMemoryGB = v;
 			main.ConfigChanged();
 		}));
-		AddRow(section, "Потолок RAM хелперов", "Через минуту после захода окно хелпера держит в оперативной памяти не больше этого — остальное Windows выгружает в подкачку, начиная с самого давно не нужного. Окну тесно (часто подгружает страницы обратно) — потолок поднимается сам, до 3×. Мейна не трогает. Не чистит память всем подряд, как Mem Reduct, — его автоочистку тогда лучше выключить.", NumberWithSwitch(Cfg.helperMemCapOn, Cfg.helperMemCapMB, 300.0, 4096.0, integer: true, "МБ", delegate(bool on)
+		AddRow(section, "Потолок RAM хелперов", "Остальное уходит в подкачку. Мейна не трогает.", NumberWithSwitch(Cfg.helperMemCapOn, Cfg.helperMemCapMB, 300.0, 4096.0, integer: true, "МБ", delegate(bool on)
 		{
 			Cfg.helperMemCapOn = on;
 			main.ConfigChanged();
@@ -304,7 +304,7 @@ public class SettingsPage
 		{
 			main.SetupPagefile(pagefileButton);
 		});
-		AddRow(section, "Файл подкачки", "Windows держит файл подкачки маленьким, и несколько окон Роблокса в него не влезают — окна вылетают с «Out of Virtual Memory». Настрой один раз под число аккаунтов (попросит права администратора) и перезагрузи компьютер.", pagefileButton);
+		AddRow(section, "Файл подкачки", "Против «Out of Virtual Memory». Нужна перезагрузка.", pagefileButton);
 	}
 
 	private void BuildPotassium()
@@ -325,7 +325,7 @@ public class SettingsPage
 			refresh();
 			main.ConfigChanged();
 		});
-		AddRow(section, "Работать с Потассиумом", "Открывать Потассиум перед запуском окон, следить, что он жив, и перезапускать, если он закрылся или его окно зависло.", control);
+		AddRow(section, "Работать с Потассиумом", "Открывать и перезапускать Потассиум.", control);
 		TextBox pathBox = Field("Пусто — найдётся сам", Cfg.potassiumPath);
 		pathBox.LostKeyboardFocus += delegate
 		{
@@ -364,14 +364,14 @@ public class SettingsPage
 		Grid.SetColumn(button, 1);
 		grid.Children.Add(button);
 		dependent.Add(grid);
-		AddStacked(section, "Путь к Potassium.exe", "Пусто — AutoRejoin найдёт сам (Рабочий стол, Загрузки или где он был открыт в прошлый раз).", grid);
+		AddStacked(section, "Путь к Potassium.exe", "Пусто — найдёт сам.", grid);
 		CheckBox checkBox = Switch(Cfg.keepAutoAttach, delegate(bool v)
 		{
 			Cfg.keepAutoAttach = v;
 			main.ConfigChanged();
 		});
 		dependent.Add(checkBox);
-		AddRow(section, "Держать автоаттач включённым", "Скрипт в окна подключает автоаттач Потассиума (Settings → Client → Auto attach). Выключится — AutoRejoin включит его обратно.", checkBox);
+		AddRow(section, "Держать автоаттач включённым", "Включает Auto attach обратно, если он выключился.", checkBox);
 		TextBox loginBox = Field("Логин", main.Vault.potassium.user);
 		loginBox.Width = 200.0;
 		PasswordBox passwordBox = new PasswordBox
@@ -407,10 +407,10 @@ public class SettingsPage
 			main.ConfigChanged();
 		});
 		dependent.Add(checkBox2);
-		FrameworkElement frameworkElement = AddRow(section, "Автовход", "Потассиум разлогинился (экран Sign in) — AutoRejoin войдёт сам, до 3 попыток. Логин и пароль хранятся зашифрованными, в журнал не пишутся.", checkBox2);
+		FrameworkElement frameworkElement = AddRow(section, "Автовход", "Входит сам, если Потассиум разлогинился.", checkBox2);
 		((StackPanel)((Grid)frameworkElement).Children[0]).Children.Add(credentials);
 		dependent.Add(credentials);
-		AddRow(section, "Проверять запуск скрипта", "Нужен загрузчик javad1khive.txt в автоэкзекуте Потассиума — он сообщает, что скрипт в окне запустился. Не запустился за это время после захода — окно перезаходит; следующее окно ждёт скрипт в предыдущем. Без загрузчика выключи.", Track(dependent, NumberWithSwitch(Cfg.scriptCheck, Cfg.scriptStartTimeout, 15.0, 600.0, integer: true, "сек", delegate(bool on)
+		AddRow(section, "Проверять запуск скрипта", "Нужен загрузчик в автоэкзекуте. Нет скрипта — перезаход.", Track(dependent, NumberWithSwitch(Cfg.scriptCheck, Cfg.scriptStartTimeout, 15.0, 600.0, integer: true, "сек", delegate(bool on)
 		{
 			Cfg.scriptCheck = on;
 			main.ConfigChanged();
@@ -419,7 +419,7 @@ public class SettingsPage
 			Cfg.scriptStartTimeout = (int)v;
 			main.ConfigChanged();
 		})));
-		AddRow(section, "Проверять пульс скрипта", "Тот же загрузчик пишет «пульс» раз в 10 сек. Пульса нет столько времени — окно зависло в игре или скрипт упал: окно перезаходит.", Track(dependent, NumberWithSwitch(Cfg.pulseCheck, Cfg.scriptTimeout, 30.0, 1800.0, integer: true, "сек", delegate(bool on)
+		AddRow(section, "Проверять пульс скрипта", "Нет пульса — окно перезаходит.", Track(dependent, NumberWithSwitch(Cfg.pulseCheck, Cfg.scriptTimeout, 30.0, 1800.0, integer: true, "сек", delegate(bool on)
 		{
 			Cfg.pulseCheck = on;
 			main.ConfigChanged();
@@ -428,7 +428,7 @@ public class SettingsPage
 			Cfg.scriptTimeout = (int)v;
 			main.ConfigChanged();
 		})));
-		AddRow(section, "Перезаход всех по Balloon Blessing мейна", "Atlas пишет в лог данных каждое продление Balloon Blessing (шар в улье сдан). После стольких продлений у МЕЙНА перезаходят ВСЕ окна — сразу, шар только что сдан. Счёт — с запуска AutoRejoin (после утренней перезагрузки) или с прошлого перезахода всех; кик мейна его не сбрасывает. Шары хелперов не считаются.", Track(dependent, NumberWithSwitch(Cfg.balloonRejoin, Cfg.balloonRejoinCount, 1.0, 50.0, integer: true, "продл.", delegate(bool on)
+		AddRow(section, "Перезаход по Balloon Blessing", "После N продлений у мейна — перезаход всех.", Track(dependent, NumberWithSwitch(Cfg.balloonRejoin, Cfg.balloonRejoinCount, 1.0, 50.0, integer: true, "продл.", delegate(bool on)
 		{
 			Cfg.balloonRejoin = on;
 			main.ConfigChanged();
@@ -437,7 +437,7 @@ public class SettingsPage
 			Cfg.balloonRejoinCount = (int)v;
 			main.ConfigChanged();
 		})));
-		AddRow(section, "Не перезаходить перед плановым перезапуском", "Если до перезагрузки или перезахода по расписанию осталось меньше этого, перезаход по Balloon Blessing пропускается — расписание всё обновит само, без лишнего перезапуска.", Track(dependent, WithSuffix(NumberBox(Cfg.balloonQuietMinutes, 0.0, 720.0, integer: true, delegate(double v)
+		AddRow(section, "Тишина перед расписанием", "Пропускать Balloon-перезаход, если скоро расписание.", Track(dependent, WithSuffix(NumberBox(Cfg.balloonQuietMinutes, 0.0, 720.0, integer: true, delegate(double v)
 		{
 			Cfg.balloonQuietMinutes = (int)v;
 			main.ConfigChanged();
@@ -448,31 +448,31 @@ public class SettingsPage
 	private void BuildStartup()
 	{
 		StackPanel section = Section("\ue7e8", "Запуск");
-		AddRow(section, "Запускать вместе с Windows", "AutoRejoin стартует свёрнутым в трей и сам заводит аккаунты — например, после отключения света или перезагрузки по расписанию. Windows должна входить без пароля.", Switch(SystemTools.IsAutostartOn(), delegate(bool v)
+		AddRow(section, "Запускать вместе с Windows", "Стартует в трее и заводит аккаунты сам.", Switch(SystemTools.IsAutostartOn(), delegate(bool v)
 		{
 			main.SetAutostart(v);
 		}));
-		AddRow(section, "Пауза при автозапуске", "Дать Windows и интернету подняться перед стартом.", WithSuffix(NumberBox(Cfg.startupDelay, 0.0, 600.0, integer: true, delegate(double v)
+		AddRow(section, "Пауза при автозапуске", "", WithSuffix(NumberBox(Cfg.startupDelay, 0.0, 600.0, integer: true, delegate(double v)
 		{
 			Cfg.startupDelay = (int)v;
 			main.ConfigChanged();
 		}), "сек"));
-		AddRow(section, "Запускать аккаунты при открытии приложения", "Иначе — кнопкой «Запустить».", Switch(Cfg.autoStartEngine, delegate(bool v)
+		AddRow(section, "Запускать при открытии", "", Switch(Cfg.autoStartEngine, delegate(bool v)
 		{
 			Cfg.autoStartEngine = v;
 			main.ConfigChanged();
 		}));
-		AddRow(section, "Пауза между аккаунтами", "Аккаунты заходят строго по очереди: следующий запускается, только когда предыдущий зашёл на сервер (а при включённой проверке скрипта — ещё и скрипт в нём запустился). Мейн всегда первый. Это пауза после такой проверки перед запуском следующего аккаунта.", WithSuffix(NumberBox(Cfg.advanced.launchCooldown, 0.0, 600.0, integer: true, delegate(double v)
+		AddRow(section, "Пауза между аккаунтами", "Следующий — только когда предыдущий в игре. Мейн первый.", WithSuffix(NumberBox(Cfg.advanced.launchCooldown, 0.0, 600.0, integer: true, delegate(double v)
 		{
 			Cfg.advanced.launchCooldown = (int)v;
 			main.ConfigChanged();
 		}), "сек"));
-		AddRow(section, "Запуск через Froststrap / Bloxstrap", "Обычно Роблокс запускается напрямую — на 2–3 сек быстрее. Включи, только если прямой запуск не работает. Новую версию Роблокса AutoRejoin и так скачивает через них.", Switch(Cfg.useBootstrapper, delegate(bool v)
+		AddRow(section, "Запуск через Froststrap / Bloxstrap", "Только если прямой запуск не работает.", Switch(Cfg.useBootstrapper, delegate(bool v)
 		{
 			Cfg.useBootstrapper = v;
 			main.ConfigChanged();
 		}));
-		AddRow(section, "Автоперезагрузка, если окна умирают на старте", "Бывает, что Роблокс убивает каждое новое окно сразу после запуска, — это лечится только перезагрузкой. AutoRejoin перезагрузит компьютер сам, не чаще раза в 30 мин.", Switch(Cfg.autoReboot, delegate(bool v)
+		AddRow(section, "Автоперезагрузка при мёртвых окнах", "Не чаще раза в 30 мин.", Switch(Cfg.autoReboot, delegate(bool v)
 		{
 			Cfg.autoReboot = v;
 			main.ConfigChanged();
@@ -482,7 +482,13 @@ public class SettingsPage
 	private void BuildData()
 	{
 		StackPanel section = Section("\ue8b7", "Данные");
-		AddRow(section, "Папка данных", "Настройки, зашифрованные куки, журнал. Её никому не отправляй. " + AppPaths.DataDir, Button("Открыть", delegate
+		Button contact = Button("Связь в Discord", delegate
+		{
+			Owner.OpenDiscord();
+		});
+		contact.Style = Res("BtnDiscord");
+		AddRow(section, "Владелец: " + Owner.Name, "Вопросы и баги — в Discord.", contact);
+		AddRow(section, "Папка данных", "Никому не отправляй. " + AppPaths.DataDir, Button("Открыть", delegate
 		{
 			SystemTools.OpenFolder(AppPaths.DataDir);
 		}));
@@ -497,9 +503,9 @@ public class SettingsPage
 			updateState.Text = result ?? "";
 			updateButton.IsEnabled = true;
 		});
-		FrameworkElement updateRow = AddRow(section, "Обновления", "Сейчас версия " + Updater.CurrentText + ". Новые версии берутся из релизов на GitHub (" + Updater.RepoUrl + ") и ставятся сами — аккаунты и настройки сохраняются.", updateButton);
+		FrameworkElement updateRow = AddRow(section, "Обновления", "Версия " + Updater.CurrentText + ". Ставятся с GitHub сами.", updateButton);
 		((StackPanel)((Grid)updateRow).Children[0]).Children.Add(updateState);
-		AddRow(section, "Импорт из accounts.txt", "Куки и ссылки из старой версии AutoRejoin (по одной куке на строку, ссылка — через пробел после куки).", Button("Импорт…", delegate
+		AddRow(section, "Импорт из accounts.txt", "Кука на строку, ссылка — через пробел.", Button("Импорт…", delegate
 		{
 			main.ImportAccountsTxt();
 		}));

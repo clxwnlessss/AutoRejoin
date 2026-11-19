@@ -428,7 +428,7 @@ public class DiscordWebhook
 					["title"] = (snap.Running ? ("В игре " + inGame + " из " + total) : "AutoRejoin остановлен"),
 					["description"] = text.ToString().TrimEnd(),
 					["color"] = color,
-					["footer"] = new Dictionary<string, object> { ["text"] = Environment.MachineName },
+					["footer"] = new Dictionary<string, object> { ["text"] = Owner.Credit + " · " + Environment.MachineName },
 					["timestamp"] = DateTime.UtcNow.ToString("o")
 				}
 			}

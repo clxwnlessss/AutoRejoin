@@ -48,7 +48,7 @@
                         </Grid.ColumnDefinitions>
                         <TextBlock Text="&#xE946;" FontFamily="{StaticResource Icons}" FontSize="13" Foreground="{StaticResource Accent}" Margin="0,2,11,0" VerticalAlignment="Top"/>
                         <TextBlock Grid.Column="1" Style="{StaticResource Hint}"
-                                   Text="AutoRejoin войдёт сам во встроенном окне Роблокса и сам возьмёт новую куку, когда старая перестанет работать (401/403) — без твоего участия. Капчу или код из почты, если Роблокс их попросит, вводишь ты: окно откроется само. Пароль хранится зашифрованным (Windows DPAPI)."/>
+                                   Text="Входит сам и сам обновляет куку. Капчу или код из почты вводишь ты. Пароль зашифрован."/>
                     </Grid>
                 </Border>
                 <Button x:Name="ReloginButton" Style="{StaticResource LinkBtn}" Content="Войти заново сейчас" HorizontalAlignment="Left" Margin="0,10,0,0" Visibility="Collapsed"/>
@@ -68,7 +68,7 @@
                         <LineBreak/>
                         <Run Text="3. Строка .ROBLOSECURITY → скопируй значение целиком и вставь сюда."/>
                         <LineBreak/>
-                        <Run Text="Потом не нажимай «Выйти» в этом браузере — кука перестанет работать. Устаревшую куку придётся вставлять заново — с входом по логину и паролю этого не нужно."/>
+                        <Run Text="Не жми потом «Выйти» в браузере — кука умрёт."/>
                     </TextBlock>
                 </Border>
             </StackPanel>
@@ -79,7 +79,7 @@
             <Grid Margin="0,20,0,0">
                 <StackPanel Margin="0,0,70,0">
                     <TextBlock Text="Мейн-аккаунт" FontWeight="SemiBold" FontSize="13.5"/>
-                    <TextBlock Text="Свой лимит FPS, полный экран и приоритет процессора; окно мейна не сворачивается." Style="{StaticResource Hint}" Margin="0,2,0,0"/>
+                    <TextBlock Text="Заходит первым, не сворачивается." Style="{StaticResource Hint}" Margin="0,2,0,0"/>
                 </StackPanel>
                 <CheckBox x:Name="MainSwitch" Style="{StaticResource Switch}" HorizontalAlignment="Right"/>
             </Grid>
