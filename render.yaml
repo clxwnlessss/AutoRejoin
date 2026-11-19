@@ -6,6 +6,7 @@ services:
     name: autorejoin-server
     runtime: node
     plan: free
+    region: frankfurt
     rootDir: server
     buildCommand: npm install --omit=dev
     startCommand: node index.js
