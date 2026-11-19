@@ -1,0 +1,48 @@
+﻿<Project Sdk="Microsoft.NET.Sdk.WindowsDesktop">
+  <PropertyGroup>
+    <AssemblyName>AutoRejoin</AssemblyName>
+    <GenerateAssemblyInfo>False</GenerateAssemblyInfo>
+    <OutputType>WinExe</OutputType>
+    <UseWindowsForms>True</UseWindowsForms>
+    <TargetFramework>net48</TargetFramework>
+  </PropertyGroup>
+  <PropertyGroup>
+    <LangVersion>12.0</LangVersion>
+    <AllowUnsafeBlocks>True</AllowUnsafeBlocks>
+  </PropertyGroup>
+  <PropertyGroup>
+    <ApplicationIcon>app.ico</ApplicationIcon>
+    <ApplicationManifest>app.manifest</ApplicationManifest>
+    <RootNamespace />
+  </PropertyGroup>
+  <ItemGroup>
+    <None Remove="AutoRejoinApp.Theme.xaml" />
+    <None Remove="AutoRejoinApp.MainWindow.xaml" />
+    <None Remove="AutoRejoinApp.AccountDialog.xaml" />
+    <None Remove="AutoRejoinApp.MessageDialog.xaml" />
+    <None Remove="AutoRejoinApp.LoginWindow.xaml" />
+    <None Remove="AutoRejoinApp.app.ico" />
+    <EmbeddedResource Include="AutoRejoinApp.Theme.xaml" LogicalName="AutoRejoinApp.Theme.xaml" />
+    <EmbeddedResource Include="AutoRejoinApp.MainWindow.xaml" LogicalName="AutoRejoinApp.MainWindow.xaml" />
+    <EmbeddedResource Include="AutoRejoinApp.AccountDialog.xaml" LogicalName="AutoRejoinApp.AccountDialog.xaml" />
+    <EmbeddedResource Include="AutoRejoinApp.MessageDialog.xaml" LogicalName="AutoRejoinApp.MessageDialog.xaml" />
+    <EmbeddedResource Include="AutoRejoinApp.LoginWindow.xaml" LogicalName="AutoRejoinApp.LoginWindow.xaml" />
+    <EmbeddedResource Include="AutoRejoinApp.app.ico" LogicalName="AutoRejoinApp.app.ico" />
+  </ItemGroup>
+  <ItemGroup>
+    <Reference Include="PresentationCore" /><Reference Include="PresentationFramework" /><Reference Include="System.Xaml" />
+    <Reference Include="System.Core" />
+    <Reference Include="WindowsBase" />
+    <Reference Include="Microsoft.Web.WebView2.Wpf">
+      <HintPath>lib\Microsoft.Web.WebView2.Wpf.dll</HintPath>
+    </Reference>
+    <Reference Include="Microsoft.Web.WebView2.Core">
+      <HintPath>lib\Microsoft.Web.WebView2.Core.dll</HintPath>
+    </Reference>
+    <Reference Include="System.Web.Extensions" />
+    <Reference Include="System.Management" />
+    <Reference Include="System.Security" /><Reference Include="System.IO.Compression" /><Reference Include="System.IO.Compression.FileSystem" />
+  </ItemGroup>
+</Project>
+
+

@@ -1,0 +1,114 @@
+<Window xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        Title="Аккаунт" Width="600" SizeToContent="Height" WindowStyle="None" AllowsTransparency="True" Background="Transparent"
+        ResizeMode="NoResize" ShowInTaskbar="False" WindowStartupLocation="CenterOwner"
+        Foreground="{StaticResource Text}" FontFamily="Segoe UI" FontSize="13" UseLayoutRounding="True"
+        TextOptions.TextFormattingMode="Display">
+    <Border x:Name="Frame" Margin="18" Background="{StaticResource CardBg}" BorderBrush="{StaticResource LineStrong}" BorderThickness="1" CornerRadius="16">
+        <Border.Effect>
+            <DropShadowEffect BlurRadius="26" ShadowDepth="0" Opacity="0.6" Color="#000000"/>
+        </Border.Effect>
+        <StackPanel Margin="28,22,28,24">
+            <Grid>
+                <StackPanel Orientation="Horizontal">
+                    <Border Width="40" Height="40" CornerRadius="11" Background="{StaticResource AccentSoft}">
+                        <TextBlock x:Name="HeaderIcon" Text="&#xE77B;" FontFamily="{StaticResource Icons}" FontSize="17"
+                                   Foreground="{StaticResource Accent}" HorizontalAlignment="Center" VerticalAlignment="Center"/>
+                    </Border>
+                    <StackPanel Margin="14,0,0,0" VerticalAlignment="Center">
+                        <TextBlock x:Name="TitleText" Text="Добавить аккаунт" FontSize="18" FontWeight="SemiBold"/>
+                        <TextBlock x:Name="SubtitleText" Text="AutoRejoin войдёт в аккаунт и узнает ник." Foreground="{StaticResource Text2}" FontSize="12.5" Margin="0,2,0,0"/>
+                    </StackPanel>
+                </StackPanel>
+                <Button x:Name="CloseX" Style="{StaticResource IconBtn}" Content="&#xE8BB;" FontSize="10" HorizontalAlignment="Right" VerticalAlignment="Top"/>
+            </Grid>
+
+            <TextBlock Text="ВХОД В АККАУНТ" Style="{StaticResource Label}" Margin="0,22,0,7"/>
+            <Border Background="{StaticResource FieldBg}" BorderBrush="{StaticResource Line}" BorderThickness="1" CornerRadius="11" Padding="4">
+                <UniformGrid Columns="2">
+                    <RadioButton x:Name="ModePassword" Style="{StaticResource Segment}" GroupName="LoginMode" Tag="&#xE72E;" Content="Логин и пароль"/>
+                    <RadioButton x:Name="ModeCookie" Style="{StaticResource Segment}" GroupName="LoginMode" Tag="&#xE8D7;" Content="По куке"/>
+                </UniformGrid>
+            </Border>
+
+            <StackPanel x:Name="PasswordPanel">
+                <TextBlock Text="ЛОГИН (НИК, ПОЧТА ИЛИ ТЕЛЕФОН)" Style="{StaticResource Label}" Margin="0,16,0,7"/>
+                <TextBox x:Name="UserBox" Style="{StaticResource Field}" Tag="Ник аккаунта Роблокса"/>
+                <TextBlock Text="ПАРОЛЬ" Style="{StaticResource Label}" Margin="0,14,0,7"/>
+                <Grid>
+                    <PasswordBox x:Name="PassBox" Style="{StaticResource PasswordField}"/>
+                    <TextBlock x:Name="PassHint" Text="Пусто — оставить сохранённый пароль" Foreground="{StaticResource Text3}" FontSize="12.5"
+                               Margin="13,0,0,0" VerticalAlignment="Center" IsHitTestVisible="False" Visibility="Collapsed"/>
+                </Grid>
+                <Border Background="{StaticResource AccentSoft}" CornerRadius="10" Padding="14,11" Margin="0,12,0,0">
+                    <Grid>
+                        <Grid.ColumnDefinitions>
+                            <ColumnDefinition Width="Auto"/>
+                            <ColumnDefinition Width="*"/>
+                        </Grid.ColumnDefinitions>
+                        <TextBlock Text="&#xE946;" FontFamily="{StaticResource Icons}" FontSize="13" Foreground="{StaticResource Accent}" Margin="0,2,11,0" VerticalAlignment="Top"/>
+                        <TextBlock Grid.Column="1" Style="{StaticResource Hint}"
+                                   Text="AutoRejoin войдёт сам во встроенном окне Роблокса и сам возьмёт новую куку, когда старая перестанет работать (401/403) — без твоего участия. Капчу или код из почты, если Роблокс их попросит, вводишь ты: окно откроется само. Пароль хранится зашифрованным (Windows DPAPI)."/>
+                    </Grid>
+                </Border>
+                <Button x:Name="ReloginButton" Style="{StaticResource LinkBtn}" Content="Войти заново сейчас" HorizontalAlignment="Left" Margin="0,10,0,0" Visibility="Collapsed"/>
+            </StackPanel>
+
+            <StackPanel x:Name="CookiePanel">
+                <TextBlock x:Name="CookieLabel" Text="КУКА .ROBLOSECURITY" Style="{StaticResource Label}" Margin="0,16,0,7"/>
+                <TextBox x:Name="CookieBox" Style="{StaticResource Field}" Height="92" TextWrapping="Wrap" VerticalContentAlignment="Top"
+                         VerticalScrollBarVisibility="Auto" FontFamily="Consolas" FontSize="11.5"
+                         Tag="_|WARNING:-DO-NOT-SHARE-THIS.--Sharing-this-will-allow-someone-to-log-in-as-you…"/>
+                <Button x:Name="HowCookie" Style="{StaticResource LinkBtn}" Content="Как достать куку?" HorizontalAlignment="Left" Margin="0,8,0,0"/>
+                <Border x:Name="HowCookiePanel" Visibility="Collapsed" Background="{StaticResource FieldBg}" CornerRadius="10" Padding="14,12" Margin="0,8,0,0">
+                    <TextBlock Style="{StaticResource Hint}">
+                        <Run Text="1. Зайди на roblox.com под этим аккаунтом в браузере."/>
+                        <LineBreak/>
+                        <Run Text="2. F12 → Application (Приложение) → Cookies → https://www.roblox.com."/>
+                        <LineBreak/>
+                        <Run Text="3. Строка .ROBLOSECURITY → скопируй значение целиком и вставь сюда."/>
+                        <LineBreak/>
+                        <Run Text="Потом не нажимай «Выйти» в этом браузере — кука перестанет работать. Устаревшую куку придётся вставлять заново — с входом по логину и паролю этого не нужно."/>
+                    </TextBlock>
+                </Border>
+            </StackPanel>
+
+            <TextBlock Text="СВОЯ ССЫЛКА НА СЕРВЕР — НЕОБЯЗАТЕЛЬНО" Style="{StaticResource Label}" Margin="0,18,0,7"/>
+            <TextBox x:Name="LinkBox" Style="{StaticResource Field}" Tag="Пусто — общая ссылка из настроек"/>
+
+            <Grid Margin="0,20,0,0">
+                <StackPanel Margin="0,0,70,0">
+                    <TextBlock Text="Мейн-аккаунт" FontWeight="SemiBold" FontSize="13.5"/>
+                    <TextBlock Text="Свой лимит FPS, полный экран и приоритет процессора; окно мейна не сворачивается." Style="{StaticResource Hint}" Margin="0,2,0,0"/>
+                </StackPanel>
+                <CheckBox x:Name="MainSwitch" Style="{StaticResource Switch}" HorizontalAlignment="Right"/>
+            </Grid>
+
+            <Border x:Name="ResultPanel" Visibility="Collapsed" CornerRadius="10" Padding="13,10" Margin="0,18,0,0" Background="{StaticResource RedSoft}">
+                <StackPanel Orientation="Horizontal">
+                    <TextBlock x:Name="ResultIcon" Text="&#xE7BA;" FontFamily="{StaticResource Icons}" FontSize="14" VerticalAlignment="Top" Margin="0,1,10,0"
+                               Foreground="{StaticResource Red}"/>
+                    <TextBlock x:Name="ResultText" TextWrapping="Wrap" MaxWidth="470" FontSize="12.5"/>
+                </StackPanel>
+            </Border>
+
+            <Grid Margin="0,24,0,0">
+                <Button x:Name="DeleteButton" Style="{StaticResource BtnDangerGhost}" HorizontalAlignment="Left" Visibility="Collapsed">
+                    <StackPanel Orientation="Horizontal">
+                        <TextBlock Text="&#xE74D;" FontFamily="{StaticResource Icons}" FontSize="12" VerticalAlignment="Center"/>
+                        <TextBlock Text="Удалить аккаунт" Margin="8,0,0,0"/>
+                    </StackPanel>
+                </Button>
+                <StackPanel Orientation="Horizontal" HorizontalAlignment="Right">
+                    <Button x:Name="CancelButton" Style="{StaticResource Btn}" Content="Отмена"/>
+                    <Button x:Name="SaveButton" Style="{StaticResource BtnPrimary}" Margin="10,0,0,0" MinWidth="170">
+                        <StackPanel Orientation="Horizontal">
+                            <TextBlock x:Name="SaveIcon" Text="&#xE73E;" FontFamily="{StaticResource Icons}" FontSize="12" VerticalAlignment="Center"/>
+                            <TextBlock x:Name="SaveText" Text="Войти и добавить" Margin="8,0,0,0"/>
+                        </StackPanel>
+                    </Button>
+                </StackPanel>
+            </Grid>
+        </StackPanel>
+    </Border>
+</Window>
