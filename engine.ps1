@@ -753,7 +753,7 @@ $script:FpsHoldQuality = -1
 $script:QualityState = $null   # quality.json в памяти (Get-QualityState)
 $script:QualityLoaded = $false
 $script:TrayDirtyAt = $null    # когда закрылось окно Роблокса — значит, в трее мог остаться мёртвый значок
-$script:WorkspaceScanAt = [datetime]::MinValue   # файлы скрипта Javad1k Hive в workspace Потассиума (запуск, пульс, ошибки)
+$script:WorkspaceScanAt = [datetime]::MinValue   # файлы скрипта Hive в workspace Потассиума (запуск, пульс, ошибки)
 $script:WorkspaceFiles = @{}   # имя файла -> время последней записи
 $script:AutoAttachCheckAt = [datetime]::MinValue   # когда последний раз проверяли, что автоаттач Потассиума включён
 $script:AutoAttachWarned = $false
@@ -1424,7 +1424,7 @@ function Get-Owner($Tracker) {
 }
 
 # Можно ли запускать следующее окно. Окна заходят по очереди: пока последнее запущенное окно не зашло на сервер
-# и в нём не запустился скрипт Javad1k Hive (его подключает автоаттач Потассиума), следующее не запускаем, а после
+# и в нём не запустился скрипт Hive (его подключает автоаттач Потассиума), следующее не запускаем, а после
 # запуска скрипта ждём ещё $LaunchCooldown сек. Так Потассиум подключается к окнам по одному.
 function Test-LaunchBusy {
     # Предыдущее окно ещё не появилось — ждём, иначе можно перепутать, какое окно чьё.
@@ -1500,7 +1500,7 @@ function Get-AccountsMainFirst {
     return @(@($script:Accounts | Where-Object { $_.IsMain }) + @($script:Accounts | Where-Object { -not $_.IsMain }))
 }
 
-# Файлы, которые скрипт Javad1k Hive (загрузчик javad1khive.txt в автоэкзекуте Потассиума) пишет в workspace:
+# Файлы, которые скрипт Hive (загрузчик javad1khive.txt в автоэкзекуте Потассиума) пишет в workspace:
 #   javad1khive_started_<UserId>.txt — скрипт запустился в окне (внутри "ok" или почему не смог);
 #   javad1khive_alive_<UserId>.txt   — пульс, раз в 10 сек;
 #   javad1khive_error_<UserId>.txt   — Роблокс показал ошибку (кик, дисконнект и т.п.), внутри её текст.
@@ -3928,7 +3928,7 @@ function Start-Watchdog {
     if (-not (Wait-ForNetwork)) { return }
 
     # Мейн — первым и сразу: проверили его куку — запускаем его окно, остальные проверяем, пока оно грузится
-    # (user 21.10: "Javad1k должен зайти моментально, пофиг на другие аккаунты").
+    # (user 21.10: "мейн должен зайти моментально, пофиг на другие аккаунты").
     $script:Phase = 'accounts'
     Write-AppStatus -Force
     $sorted = @(@($entries | Where-Object { $_.main }) + @($entries | Where-Object { -not $_.main }))
