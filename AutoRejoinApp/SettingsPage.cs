@@ -482,12 +482,6 @@ public class SettingsPage
 	private void BuildData()
 	{
 		StackPanel section = Section("\ue8b7", "Данные");
-		Button contact = Button("Связь в Discord", delegate
-		{
-			Owner.OpenDiscord();
-		});
-		contact.Style = Res("BtnDiscord");
-		AddRow(section, "Владелец: " + Owner.Name, "Вопросы и баги — в Discord.", contact);
 		AddRow(section, "Папка данных", "Никому не отправляй. " + AppPaths.DataDir, Button("Открыть", delegate
 		{
 			SystemTools.OpenFolder(AppPaths.DataDir);
