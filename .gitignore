@@ -3,3 +3,4 @@ obj/
 *.user
 .vs/
 AutoRejoin.zip
+node_modules/

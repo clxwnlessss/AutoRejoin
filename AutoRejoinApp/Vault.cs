@@ -10,6 +10,10 @@ public class Vault
 
 	public string discordWebhook { get; set; }
 
+	public string leaderboardToken { get; set; }
+
+	public string leaderboardNick { get; set; }
+
 	public Vault()
 	{
 		accounts = new List<VaultAccount>();

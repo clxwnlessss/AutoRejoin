@@ -1,0 +1,23 @@
+{
+  "name": "autorejoin-server",
+  "version": "1.0.0",
+  "description": "AutoRejoin by clxwnlesss — аккаунты и топ АФК-стендеров за месяц",
+  "author": "clxwnlesss",
+  "license": "UNLICENSED",
+  "private": true,
+  "main": "index.js",
+  "engines": {
+    "node": ">=20"
+  },
+  "scripts": {
+    "start": "node index.js",
+    "test": "node test.js"
+  },
+  "dependencies": {
+    "express": "4.21.2",
+    "pg": "8.13.1"
+  },
+  "devDependencies": {
+    "pg-mem": "3.0.4"
+  }
+}

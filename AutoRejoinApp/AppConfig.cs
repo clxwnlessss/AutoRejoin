@@ -82,6 +82,10 @@ public class AppConfig
 
 	public bool trayHintShown { get; set; }
 
+	public bool leaderboardGuest { get; set; }
+
+	public string leaderboardUrl { get; set; }
+
 	public bool logCleanupOn { get; set; }
 
 	public int logCleanupHours { get; set; }
@@ -134,6 +138,8 @@ public class AppConfig
 		autoAcceptWarnings = false;
 		schedule = new ScheduleConfig();
 		advanced = new AdvancedConfig();
+		leaderboardGuest = false;
+		leaderboardUrl = "";
 		logCleanupOn = true;
 		logCleanupHours = 24;
 		discordOn = false;
@@ -147,6 +153,10 @@ public class AppConfig
 		if (discordMentions == null)
 		{
 			discordMentions = "";
+		}
+		if (leaderboardUrl == null)
+		{
+			leaderboardUrl = "";
 		}
 		if (logCleanupHours < 1)
 		{

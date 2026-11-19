@@ -23,10 +23,10 @@ internal static class Screenshots
 			try
 			{
 				controller.FeedFake(fakeStatus, fakeLog);
-				foreach (string page2 in new string[5] { "accounts", "schedule", "settings", "log", "help" })
+				foreach (string page2 in new string[6] { "accounts", "top", "schedule", "settings", "log", "help" })
 				{
 					controller.ShowPage(page2);
-					await Task.Delay(500);
+					await Task.Delay((page2 == "top") ? 2500 : 500);
 					Save((FrameworkElement)window.Content, Path.Combine(dir, page2 + ".png"));
 				}
 				foreach (string page in new string[3] { "settings", "schedule", "help" })

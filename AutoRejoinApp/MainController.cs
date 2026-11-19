@@ -172,6 +172,33 @@ public class MainController
 
 	public string EnginePhase => phase;
 
+	private TopPage topPage;
+
+	// Сколько аккаунтов сейчас в игре — для пульса топа АФК (0, если AutoRejoin не работает).
+	public int InGameCount
+	{
+		get
+		{
+			if (!Running || phase != "running")
+			{
+				return 0;
+			}
+			return cards.Count((AccountCard c) => c.Enabled && c.InGame);
+		}
+	}
+
+	public void SetLeaderboardSession(string token, string nickname)
+	{
+		vault.leaderboardToken = token ?? "";
+		vault.leaderboardNick = nickname ?? "";
+		if (token != null)
+		{
+			config.leaderboardGuest = false;
+			ConfigChanged();
+		}
+		SaveVault();
+	}
+
 	public Window Window => window;
 
 	private bool Running
@@ -336,6 +363,7 @@ public class MainController
 		WireLog();
 		discord = new DiscordWebhook(this, window.Dispatcher);
 		settingsPage = new SettingsPage(this, Find<StackPanel>("SettingsHost"));
+		topPage = new TopPage(this, Find<StackPanel>("TopHost"));
 		Find<Button>("ContactButton").Click += delegate
 		{
 			ContactOwner();
@@ -640,6 +668,8 @@ public class MainController
 	private void WireNavigation()
 	{
 		pages["accounts"] = Find<FrameworkElement>("PageAccounts");
+		pages["top"] = Find<FrameworkElement>("PageTop");
+		navs["top"] = Find<RadioButton>("NavTop");
 		pages["schedule"] = Find<FrameworkElement>("PageSchedule");
 		pages["settings"] = Find<FrameworkElement>("PageSettings");
 		pages["log"] = Find<FrameworkElement>("PageLog");
@@ -702,6 +732,10 @@ public class MainController
 		if (name == "schedule")
 		{
 			UpdateSchedulePreview();
+		}
+		if (name == "top")
+		{
+			topPage?.OnShown();
 		}
 	}
 

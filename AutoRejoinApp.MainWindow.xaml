@@ -136,6 +136,7 @@
                         <StackPanel Margin="12,0">
                             <TextBlock Text="МЕНЮ" Style="{StaticResource Label}" Margin="16,0,0,6"/>
                             <RadioButton x:Name="NavAccounts" Style="{StaticResource Nav}" Tag="&#xE716;" Content="Аккаунты" IsChecked="True" GroupName="Nav"/>
+                            <RadioButton x:Name="NavTop" Style="{StaticResource Nav}" Tag="&#xE734;" Content="Топ АФК" GroupName="Nav"/>
                             <RadioButton x:Name="NavSchedule" Style="{StaticResource Nav}" Tag="&#xE787;" Content="Расписание" GroupName="Nav"/>
                             <RadioButton x:Name="NavSettings" Style="{StaticResource Nav}" Tag="&#xE713;" Content="Настройки" GroupName="Nav"/>
                             <RadioButton x:Name="NavLog" Style="{StaticResource Nav}" Tag="&#xE8A5;" Content="Журнал" GroupName="Nav"/>
@@ -408,6 +409,15 @@
                                 </StackPanel>
                             </ScrollViewer>
                         </Grid>
+
+                        <!-- ===== Топ АФК (строки собирает TopPage.cs) ===== -->
+                        <ScrollViewer x:Name="PageTop" Visibility="Collapsed" VerticalScrollBarVisibility="Auto">
+                            <StackPanel Margin="34,0,34,28" MaxWidth="860" HorizontalAlignment="Left">
+                                <TextBlock Text="Топ АФК" Style="{StaticResource H1}"/>
+                                <TextBlock Text="Кто дольше всех простоял в АФК за месяц." Style="{StaticResource Sub}" Margin="0,4,0,0"/>
+                                <StackPanel x:Name="TopHost" Margin="0,22,0,0" MinWidth="640"/>
+                            </StackPanel>
+                        </ScrollViewer>
 
                         <!-- ===== Расписание ===== -->
                         <ScrollViewer x:Name="PageSchedule" Visibility="Collapsed" VerticalScrollBarVisibility="Auto">
