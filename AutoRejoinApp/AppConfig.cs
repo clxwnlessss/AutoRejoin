@@ -82,6 +82,10 @@ public class AppConfig
 
 	public bool trayHintShown { get; set; }
 
+	public bool logCleanupOn { get; set; }
+
+	public int logCleanupHours { get; set; }
+
 	public bool discordOn { get; set; }
 
 	public int discordInterval { get; set; }
@@ -130,6 +134,8 @@ public class AppConfig
 		autoAcceptWarnings = false;
 		schedule = new ScheduleConfig();
 		advanced = new AdvancedConfig();
+		logCleanupOn = true;
+		logCleanupHours = 24;
 		discordOn = false;
 		discordInterval = 15;
 		discordEvents = true;
@@ -141,6 +147,10 @@ public class AppConfig
 		if (discordMentions == null)
 		{
 			discordMentions = "";
+		}
+		if (logCleanupHours < 1)
+		{
+			logCleanupHours = 24;
 		}
 		if (discordInterval < 1)
 		{

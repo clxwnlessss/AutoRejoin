@@ -479,6 +479,16 @@ public class SettingsPage
 		}));
 	}
 
+	private static string CleanupText()
+	{
+		DateTime? last = LogCleaner.LastRunUtc;
+		if (last.HasValue)
+		{
+			return "Последняя очистка: " + last.Value.ToLocalTime().ToString("dd.MM HH:mm");
+		}
+		return "Ещё не чистились.";
+	}
+
 	private void BuildData()
 	{
 		StackPanel section = Section("\ue8b7", "Данные");
@@ -486,6 +496,28 @@ public class SettingsPage
 		{
 			SystemTools.OpenFolder(AppPaths.DataDir);
 		}));
+		AddRow(section, "Чистить старые логи", "Логи Роблокса и журнал старше срока, раз в столько же часов.", NumberWithSwitch(Cfg.logCleanupOn, Cfg.logCleanupHours, 1.0, 720.0, integer: true, "ч", delegate(bool on)
+		{
+			Cfg.logCleanupOn = on;
+			main.ConfigChanged();
+		}, delegate(double v)
+		{
+			Cfg.logCleanupHours = (int)v;
+			main.ConfigChanged();
+		}));
+		TextBlock cleanState = HintBlock(CleanupText());
+		cleanState.Margin = new Thickness(0.0, 3.0, 0.0, 0.0);
+		Button cleanButton = null;
+		cleanButton = Button("Очистить сейчас", async delegate
+		{
+			cleanButton.IsEnabled = false;
+			cleanState.Text = "Чищу…";
+			string result = await main.CleanLogsNow();
+			cleanState.Text = (result != null) ? ("Готово: " + result) : CleanupText();
+			cleanButton.IsEnabled = true;
+		});
+		FrameworkElement cleanRow = AddRow(section, "Очистка логов", "", cleanButton);
+		((StackPanel)((Grid)cleanRow).Children[0]).Children.Add(cleanState);
 		TextBlock updateState = HintBlock("");
 		updateState.Margin = new Thickness(0.0, 3.0, 0.0, 0.0);
 		Button updateButton = null;

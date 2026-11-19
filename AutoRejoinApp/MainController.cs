@@ -424,6 +424,42 @@ public class MainController
 			await CheckForUpdates(interactive: false);
 		};
 		updateTimer.Start();
+		// Очистка старых логов: проверяем раз в 10 мин (первый раз — через 2 мин после запуска), чистим раз в N часов.
+		DispatcherTimer cleanupTimer = new DispatcherTimer
+		{
+			Interval = TimeSpan.FromMinutes(2.0)
+		};
+		cleanupTimer.Tick += async delegate
+		{
+			cleanupTimer.Interval = TimeSpan.FromMinutes(10.0);
+			if (config.logCleanupOn && LogCleaner.IsDue(config.logCleanupHours))
+			{
+				await CleanLogsNow();
+			}
+		};
+		cleanupTimer.Start();
+	}
+
+	private bool cleaningLogs;
+
+	public async Task<string> CleanLogsNow()
+	{
+		if (cleaningLogs)
+		{
+			return null;
+		}
+		cleaningLogs = true;
+		try
+		{
+			int hours = config.logCleanupHours;
+			LogCleaner.Result result = await Task.Run(() => LogCleaner.Run(hours));
+			AppLog(null, "Очистка логов старше " + hours + " ч: " + result.Text + ".", "DarkGray");
+			return result.Text;
+		}
+		finally
+		{
+			cleaningLogs = false;
+		}
 	}
 
 	// ---------- обновления с GitHub ----------
