@@ -76,6 +76,23 @@ public class SettingsPage
 			Cfg.discordInterval = (int)v;
 			main.ConfigChanged();
 		}), "мин"));
+		AddRow(section, "Сразу сообщать о вылетах и проблемах", "Не дожидаясь отчёта: «🔴 аккаунт вылетел» с причиной (кик, ошибка, зависание, память, окно закрылось) и «🟢 снова в игре» — сколько его не было. Перезаходы по кнопке, по расписанию и по Balloon Blessing не считаются. Проблемы, которые сами не чинятся (кука перестала работать, предупреждение Роблокса, капча при входе, Потассиум разлогинился, ошибка версии), приходят с упоминанием.", Switch(Cfg.discordEvents, delegate(bool v)
+		{
+			Cfg.discordEvents = v;
+			main.ConfigChanged();
+		}));
+		TextBox mentionBox = Field("Discord ID через запятую (необязательно)", Cfg.discordMentions);
+		mentionBox.LostKeyboardFocus += delegate
+		{
+			string text = string.Join(", ", DiscordWebhook.ParseIds(mentionBox.Text).Distinct());
+			mentionBox.Text = text;
+			if (text != Cfg.discordMentions)
+			{
+				Cfg.discordMentions = text;
+				main.ConfigChanged();
+			}
+		};
+		AddStacked(section, "Кого упоминать при проблемах", "Включи в Discord режим разработчика (Настройки → Расширенные), затем ПКМ по себе → «Копировать ID пользователя». Пусто — сообщения о проблемах приходят без упоминания.", mentionBox);
 		discordState = HintBlock("");
 		discordState.Margin = new Thickness(0.0, 3.0, 0.0, 0.0);
 		FrameworkElement row = AddRow(section, "Проверка", "Отправить отчёт прямо сейчас, не дожидаясь срока.", Button("Отправить сейчас", delegate

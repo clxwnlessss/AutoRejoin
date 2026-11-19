@@ -86,6 +86,10 @@ public class AppConfig
 
 	public int discordInterval { get; set; }
 
+	public bool discordEvents { get; set; }
+
+	public string discordMentions { get; set; }
+
 	public AppConfig()
 	{
 		version = 1;
@@ -128,10 +132,16 @@ public class AppConfig
 		advanced = new AdvancedConfig();
 		discordOn = false;
 		discordInterval = 15;
+		discordEvents = true;
+		discordMentions = "";
 	}
 
 	public void Normalize()
 	{
+		if (discordMentions == null)
+		{
+			discordMentions = "";
+		}
 		if (discordInterval < 1)
 		{
 			discordInterval = 15;

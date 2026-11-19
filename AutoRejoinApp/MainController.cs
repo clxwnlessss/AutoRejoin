@@ -282,6 +282,7 @@ public class MainController
 		RobloxLogin.NeedsUser += delegate(string name, string what)
 		{
 			ShowBanner("login", name + ": " + what, null, null, warning: true);
+			discord?.OnAlert("**" + name + "**: " + what + " — нужно твоё действие в окне входа AutoRejoin.");
 			tray.Balloon("AutoRejoin: вход в " + name, what, warning: true);
 		};
 		tray = new Tray();
@@ -820,6 +821,7 @@ public class MainController
 		{
 			string text = Store.Str(data, "msg") ?? "";
 			ShowBanner("alert", text, null, null, warning: true);
+			discord?.OnAlert(text);
 			if (!window.IsVisible || window.WindowState == WindowState.Minimized)
 			{
 				tray.Balloon("AutoRejoin: нужна твоя помощь", text, warning: true);
