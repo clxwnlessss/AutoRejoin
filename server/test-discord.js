@@ -33,6 +33,25 @@ const { createApp, initDb } = require('./app');
   const slash = (user, name, options) => ({ type: 2, locale: 'ru', member: { user }, data: { name, options } });
   const button = (user, custom_id, values) => ({ type: 3, locale: 'ru', member: { user }, data: { custom_id, values } });
   const modal = (user, code) => ({ type: 5, locale: 'ru', user, data: { custom_id: 'ar:linkmodal', components: [{ type: 1, components: [{ type: 4, custom_id: 'code', value: code }] }] } });
+
+  // Discord rejects replies that break its limits, and the user only sees "did not respond".
+  const limits = (resp) => {
+    const errs = [];
+    const len = (v) => [...String(v || '')].length;
+    const d = resp.data || {};
+    if (resp.type === 9) { if (len(d.title) > 45) errs.push('modal title'); }
+    if (len(d.content) > 2000) errs.push('content');
+    for (const e of d.embeds || []) { if (len(e.title) > 256) errs.push('embed title'); if (len(e.description) > 4096) errs.push('embed description'); if (e.footer && len(e.footer.text) > 2048) errs.push('footer'); }
+    for (const row of d.components || []) for (const c of row.components || []) {
+      if (c.type === 2 && len(c.label) > 80) errs.push('button label ' + c.label);
+      if (c.type === 3) { if (len(c.placeholder) > 150) errs.push('select placeholder'); if ((c.options || []).length > 25) errs.push('select options');
+        for (const o of c.options || []) { if (len(o.label) > 100 || len(o.description) > 100) errs.push('option'); } }
+      if (c.type === 4) { if (len(c.label) > 45) errs.push('text input label: ' + c.label); if (len(c.placeholder) > 100) errs.push('text input placeholder'); }
+    }
+    for (const ch of d.choices || []) if (len(ch.name) > 100) errs.push('choice');
+    return errs;
+  };
+  const okLimits = async (payload, msg) => { const r = await interact(payload); const e = limits(r.body); ok(e.length === 0, msg + (e.length ? ' — ' + e.join(', ') : '')); return r; };
   let passed = 0;
   const ok = (cond, msg) => { assert.ok(cond, msg); passed++; console.log('  ✓ ' + msg); };
 
@@ -53,6 +72,12 @@ const { createApp, initDb } = require('./app');
   ok(r.body.data.flags === 64 && /не привязан/.test(r.body.data.content) && r.body.data.components[0].components[0].custom_id === 'ar:link', 'без привязки /status предлагает привязать (видно только тебе)');
   r = await interact(button(userA, 'ar:link'));
   ok(r.body.type === 9 && r.body.data.custom_id === 'ar:linkmodal', 'кнопка открывает окно ввода кода');
+
+  for (const locale of ['ru', 'en-US']) {
+    await okLimits({ type: 3, locale, member: { user: userA }, data: { custom_id: 'ar:link' } }, `окно кода в лимитах Discord (${locale})`);
+    await okLimits({ type: 2, locale, member: { user: userA }, data: { name: 'panel' } }, `панель в лимитах Discord (${locale})`);
+    await okLimits({ type: 2, locale, member: { user: userA }, data: { name: 'status' } }, `«не привязан» в лимитах Discord (${locale})`);
+  }
 
   // Code is tied to the requesting account
   r = await call('POST', '/api/discord/code', null, t1);
@@ -100,6 +125,7 @@ const { createApp, initDb } = require('./app');
   ok(r.body.data.components[1].components[0].options.length === 2, 'меню «перезайти одним» со списком аккаунтов');
   ok(r.body.data.components[0].components[1].disabled === true && r.body.data.components[0].components[2].disabled === false, 'работает → «Запустить» неактивна, «Остановить» активна');
 
+  await okLimits(slash(userC, 'status'), 'статус с аккаунтами в лимитах Discord');
   r = await interact(button(userC, 'ar:rejoin', ['a2']));
   ok(r.body.type === 7 && /Helper_1/.test(r.body.data.embeds[0].footer.text), 'перезаход одного аккаунта поставлен в очередь');
   await interact(button(userC, 'ar:stop'));

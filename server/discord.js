@@ -193,7 +193,7 @@ function createDiscord(pool, options = {}) {
     : '🔗 Discord is not linked yet. In AutoRejoin open **Settings → Link bot**, get a code and press the button below.', [{ type: 1, components: [linkButton(ru)] }]);
   const linkModal = (ru) => ({ type: 9, data: { custom_id: 'ar:linkmodal', title: ru ? 'Привязка AutoRejoin' : 'Link AutoRejoin',
     components: [{ type: 1, components: [{ type: 4, custom_id: 'code', style: 1, min_length: 6, max_length: 6, required: true,
-      label: ru ? 'Код из AutoRejoin (Настройки → Привязать бота)' : 'Code from AutoRejoin (Settings → Link bot)', placeholder: '123456' }] }] } });
+      label: ru ? 'Код из AutoRejoin' : 'Code from AutoRejoin', placeholder: ru ? 'Настройки → Привязать бота → 6 цифр' : 'Settings → Link bot → 6 digits' }] }] } });
   const panel = (ru) => ({ type: 4, data: {
     embeds: [{ title: '🐝 AutoRejoin', color: 0x8B5CF6,
       description: ru
