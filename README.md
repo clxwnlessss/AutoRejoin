@@ -1,61 +1,83 @@
-# AutoRejoin 2.0
+# AutoRejoin
 
-**Владелец и разработчик — [clxwnlesss](https://discord.com/users/1505693601932382241) (Даниил Арзамасов).**
-Связь: Discord **overdosedclxwn** · Сервер сообщества: **https://discord.gg/bZFB8dwBdw**
+**Owner & developer — [clxwnlesss](https://discord.com/users/1505693601932382241) (Daniil Arzamasov).**
+Contact: Discord **overdosedclxwn** · Community server: **https://discord.gg/bZFB8dwBdw**
 
-Держит аккаунты Роблокса (Bee Swarm Simulator) в игре и перезаходит сам: вылет, кик, ошибка, зависание,
-раздувшаяся память, упавший скрипт. Аккаунты заходят строго по очереди, мейн первым.
+Keeps your Roblox **Bee Swarm Simulator** accounts in game 24/7 and rejoins on its own when something goes wrong:
+disconnects, kicks, errors, frozen windows, bloated memory or a crashed script. Accounts join strictly one at a time,
+main first.
 
-![AutoRejoin 2.0](docs/screenshot.png)
+![AutoRejoin](docs/screenshot-en.png)
 
-## Скачать
+## Download
 
-[Releases](../../releases/latest) → `AutoRejoin.zip` → распакуй → `AutoRejoin.exe`. Windows 10/11.
-Дальше обновляется сама (Настройки → Данные → «Проверить обновления»).
+[Releases](../../releases/latest) → `AutoRejoin.zip` → extract → run `AutoRejoin.exe`. Windows 10/11.
 
-## Что нового в 2.3 / What's new in 2.3
+If Windows shows *“Windows protected your PC”*, click **More info → Run anyway** (the app isn't code-signed).
+After that it updates itself (Settings → Data → **Check for updates**, plus a silent check on every start).
 
-- **English language** — переключатель RU/EN в настройках (по умолчанию — по языку Windows). / RU/EN switch in Settings (defaults to your Windows language).
+## Features
 
-## Что нового в 2.2
+- **Auto-rejoin** — watches every window and rejoins on disconnect, kick, error, freeze, memory bloat or a dead script.
+- **Strict queue** — the next account launches only after the previous one is in game; the main always goes first.
+- **Discord alerts** — a report every 15 minutes, plus instant *🔴 dropped / 🟢 back in game* messages and pings for
+  problems that need you (expired cookie, Roblox warning, captcha, Potassium signed out).
+- **🏆 Monthly AFK leaderboard** — create an account in the app (or browse as a guest); while your accounts are in
+  game, the server counts your AFK hours. A new board every month.
+- **Memory control** — restarts bloated windows, waits for free memory, caps helper RAM, page file setup.
+- **Scheduled restart** — reboot the PC or rejoin everyone daily at a set time.
+- **Stop closes all Roblox windows** until you press Start again.
+- **Log cleanup** — old Roblox logs and journals are deleted every 24 hours.
+- **English / Russian** interface (defaults to your Windows language).
+- **Auto-updates** from GitHub releases.
 
-- **Топ АФК за месяц**: создай аккаунт в программе (или зайди гостем) — пока твои аккаунты в игре,
-  сервер копит АФК-время, и ты попадаешь в топ стендеров. Каждый месяц — новый топ.
-- Сервер — `server/` (Node.js + PostgreSQL), деплой на Render по `render.yaml`. База закрытая:
-  пароли хранятся хешами, наружу отдаются только ники и часы.
+## What's new
 
-## Что нового в 2.1
+**2.3** — English language: RU/EN switch in Settings → Language.
 
-- **Очистка старых логов** раз в 24 часа (срок настраивается): логи Роблокса, журнал AutoRejoin, ошибки.
-  Логи открытых окон не трогаются. Кнопка «Очистить сейчас» — Настройки → Данные.
+**2.2** — Monthly AFK leaderboard with accounts, guest mode and a server on Render.
 
-## Что нового в 2.0
+**2.1** — Automatic cleanup of old logs every 24 hours.
 
-- **Новый дизайн** с ног до головы: тёмная тема Midnight Violet, градиенты, новые карточки и меню.
-- **Анимации**: появление окна и страниц, карточки аккаунтов выезжают снизу, плавные кнопки, тумблеры с пружиной, пульс индикатора.
-- **Кнопка «Связь в Discord»** с владельцем — в боковой панели, в «Помощи» и в настройках.
-- **Меньше текста**: подсказки сокращены до сути.
+**2.0** — Brand-new design (Midnight Violet theme), smooth animations, *Contact on Discord* button, much less text.
 
-## Возможности
+## Building from source
 
-- Отчёт в Discord через вебхук раз в 15 минут и мгновенные оповещения о вылетах и проблемах.
-- «Остановить» закрывает все окна Роблокса до нажатия «Запустить».
-- Пауза между аккаунтами, плановый перезапуск, контроль памяти, работа с Потассиумом.
-- Автообновление с GitHub.
+Requires .NET SDK 8+ (targets .NET Framework 4.8):
 
-## Сборка
+```
+dotnet build AutoRejoin.csproj -c Release
+```
 
-Нужен .NET SDK 8+ (собирается под .NET Framework 4.8): `dotnet build AutoRejoin.csproj -c Release`.
+The app is `bin/Release/net48/AutoRejoin.exe`; `engine.ps1` and `lib/WebView2Loader.dll` must sit next to it.
 
-## Выпуск обновления
+### Releasing an update
 
-1. Подними версию в `Properties/AssemblyInfo.cs`.
-2. `.\release.ps1` — соберёт `AutoRejoin.zip`.
-3. `gh release create vX.Y.Z AutoRejoin.zip --title "AutoRejoin X.Y.Z" --notes "что нового"`.
+1. Bump the version in `Properties/AssemblyInfo.cs`.
+2. Run `.\release.ps1` — it builds and packs `AutoRejoin.zip`.
+3. `gh release create vX.Y.Z AutoRejoin.zip --title "AutoRejoin X.Y.Z" --notes "what's new"`.
 
-## Данные
+Every installed copy finds the release and updates itself.
 
-Куки, пароли и вебхук хранятся зашифрованными (Windows DPAPI) в `%LOCALAPPDATA%\AutoRejoin`. Никому не отправляй эту папку.
+### Leaderboard server
+
+`server/` — Node.js + PostgreSQL. Deploy it on Render with `render.yaml` and set `DATABASE_URL`
+(e.g. a free Neon database). Passwords are stored as salted scrypt hashes; the public API exposes only nicknames
+and hours. Run the tests with `npm test`.
+
+### Translations
+
+Interface strings live in the code in Russian; English comes from `AutoRejoinApp.lang-en.tsv`
+(`russian<TAB>english`, one per line).
+
+## Your data
+
+Cookies, passwords and the webhook URL are stored encrypted (Windows DPAPI) in `%LOCALAPPDATA%\AutoRejoin`,
+not in the program folder. Never send that folder to anyone.
+
+## Disclaimer
+
+Automation tools may break Roblox's Terms of Use — use AutoRejoin at your own risk.
 
 ---
 
