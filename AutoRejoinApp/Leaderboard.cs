@@ -153,7 +153,7 @@ public static class Leaderboard
 		}
 		catch (WebException ex)
 		{
-			throw new ApiException(0, (ex.Status == WebExceptionStatus.Timeout) ? "Сервер не ответил — попробуй ещё раз через минуту." : "Нет связи с сервером.");
+			throw new ApiException(0, (ex.Status == WebExceptionStatus.Timeout) ? L.T("Сервер не ответил — попробуй ещё раз через минуту.") : L.T("Нет связи с сервером."));
 		}
 		string text;
 		int status;
@@ -173,7 +173,7 @@ public static class Leaderboard
 		}
 		if (status < 200 || status >= 300)
 		{
-			throw new ApiException(status, Store.Str(json, "error") ?? ("Сервер ответил " + status + "."));
+			throw new ApiException(status, L.T(Store.Str(json, "error")) ?? (L.T("Сервер ответил ") + status + "."));
 		}
 		return json ?? new Dictionary<string, object>();
 	}
@@ -184,8 +184,8 @@ public static class Leaderboard
 		long m = seconds % 3600 / 60;
 		if (h <= 0)
 		{
-			return m + " мин";
+			return m + L.T(" мин");
 		}
-		return h + " ч " + m.ToString("00") + " мин";
+		return h + L.T(" ч ") + m.ToString("00") + L.T(" мин");
 	}
 }

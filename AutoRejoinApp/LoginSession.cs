@@ -98,7 +98,7 @@ internal class LoginSession
 			};
 			core.Navigate("https://www.roblox.com/login");
 			lastLoginNav = DateTime.UtcNow;
-			SetStatus(string.IsNullOrEmpty(request.Reason) ? "Открываю страницу входа Роблокса…" : (request.Reason + " Открываю страницу входа…"), Palette.Accent, "\ue895");
+			SetStatus(string.IsNullOrEmpty(request.Reason) ? L.T("Открываю страницу входа Роблокса…") : (request.Reason + L.T(" Открываю страницу входа…")), Palette.Accent, "\ue895");
 			while (!closedByUser)
 			{
 				await Task.Delay(700);
@@ -115,14 +115,14 @@ internal class LoginSession
 			return new LoginResult
 			{
 				Cancelled = true,
-				Error = "вход отменён"
+				Error = L.T("вход отменён")
 			};
 		}
 		catch (Exception ex)
 		{
-			App.LogError("вход по логину и паролю", ex);
+			App.LogError(L.T("вход по логину и паролю"), ex);
 			LoginResult loginResult = new LoginResult();
-			loginResult.Error = "встроенный браузер: " + ex.Message;
+			loginResult.Error = L.T("встроенный браузер: ") + ex.Message;
 			return loginResult;
 		}
 		finally
@@ -172,15 +172,15 @@ internal class LoginSession
 		bool onLogin = path.StartsWith("/login");
 		if (cookie == null && submits > 0 && Store.Flag(page, "captcha"))
 		{
-			Reveal("Роблокс просит подтвердить, что ты не робот. Пройди проверку в окне ниже — куку AutoRejoin заберёт сам.");
+			Reveal(L.T("Роблокс просит подтвердить, что ты не робот. Пройди проверку в окне ниже — куку AutoRejoin заберёт сам."));
 		}
 		else if (cookie == null && submits > 0 && Store.Flag(page, "code"))
 		{
-			Reveal("Роблокс просит код подтверждения (из почты, SMS или приложения 2FA). Введи его в окне ниже — дальше AutoRejoin сам.");
+			Reveal(L.T("Роблокс просит код подтверждения (из почты, SMS или приложения 2FA). Введи его в окне ниже — дальше AutoRejoin сам."));
 		}
 		else if (cookie == null && onLogin && error.Length > 0 && submits > 0)
 		{
-			Reveal("Роблокс не пустил: «" + error + "». Проверь логин и пароль в окне ниже (или в настройках аккаунта в AutoRejoin).");
+			Reveal(L.T("Роблокс не пустил: «") + error + L.T("». Проверь логин и пароль в окне ниже (или в настройках аккаунта в AutoRejoin)."));
 		}
 		if (cookie == null && onLogin && !WaitingForUser)
 		{
@@ -191,7 +191,7 @@ internal class LoginSession
 			bool canSubmit = submits < 2 && (now - lastSubmitAt).TotalSeconds > 6.0;
 			if ((needUser || needPass || (hasUser && hasPass && submits == 0)) && canSubmit && error.Length == 0)
 			{
-				SetStatus("Ввожу логин и пароль…", Palette.Accent, "\ue895");
+				SetStatus(L.T("Ввожу логин и пароль…"), Palette.Accent, "\ue895");
 				await core.ExecuteScriptAsync(FillScript(request.Username, request.Password));
 				lastSubmitAt = now;
 				submits++;
@@ -206,17 +206,17 @@ internal class LoginSession
 		}
 		if (cookie == null && submits > 0 && (now - lastSubmitAt).TotalSeconds > 9.0 && !WaitingForUser)
 		{
-			Reveal("Вход не завершился сам — Роблокс что-то спрашивает. Закончи вход в окне ниже, куку AutoRejoin заберёт сам.");
+			Reveal(L.T("Вход не завершился сам — Роблокс что-то спрашивает. Закончи вход в окне ниже, куку AutoRejoin заберёт сам."));
 		}
 		if (!revealed && (now - started).TotalSeconds > 40.0)
 		{
-			Reveal("Вход идёт дольше обычного — посмотри, что показывает Роблокс.");
+			Reveal(L.T("Вход идёт дольше обычного — посмотри, что показывает Роблокс."));
 		}
 		if (revealed && (now - revealedAt).TotalMinutes > 60.0)
 		{
 			return new LoginResult
 			{
-				Error = "вход не завершён за час"
+				Error = L.T("вход не завершён за час")
 			};
 		}
 		return null;
@@ -224,7 +224,7 @@ internal class LoginSession
 
 	private async Task<LoginResult> CheckCookie(CoreWebView2 core, string cookie)
 	{
-		SetStatus("Вход прошёл — проверяю куку…", Palette.Accent, "\ue895");
+		SetStatus(L.T("Вход прошёл — проверяю куку…"), Palette.Accent, "\ue895");
 		RobloxUser user = null;
 		bool moderated = false;
 		CookieException failure = null;
@@ -249,10 +249,10 @@ internal class LoginSession
 				lastLoginNav = DateTime.UtcNow;
 				submits = 0;
 				waitingUserSince = null;
-				Reveal("Это другой аккаунт (" + user.Name + "). Войди в " + request.Name + ".");
+				Reveal(L.T("Это другой аккаунт (") + user.Name + L.T("). Войди в ") + request.Name + ".");
 				return null;
 			}
-			SetStatus("Готово: " + user.Name + ".", Palette.Green, "\ue73e");
+			SetStatus(L.T("Готово: ") + user.Name + ".", Palette.Green, "\ue73e");
 			LoginResult loginResult = new LoginResult();
 			loginResult.Ok = true;
 			loginResult.Cookie = cookie;
@@ -274,7 +274,7 @@ internal class LoginSession
 				moderationShown = true;
 				core.Navigate("https://www.roblox.com/not-approved");
 			}
-			Reveal("Роблокс показывает предупреждение для этого аккаунта (из-за него была ошибка 403). Прочитай его и нажми «I agree» / «Reactivate» — AutoRejoin продолжит сам.");
+			Reveal(L.T("Роблокс показывает предупреждение для этого аккаунта (из-за него была ошибка 403). Прочитай его и нажми «I agree» / «Reactivate» — AutoRejoin продолжит сам."));
 			return null;
 		}
 		if (failure != null && failure.Status == 401)
@@ -282,10 +282,10 @@ internal class LoginSession
 			core.CookieManager.DeleteCookiesWithDomainAndPath(".ROBLOSECURITY", ".roblox.com", "/");
 			core.Navigate("https://www.roblox.com/login");
 			lastLoginNav = DateTime.UtcNow;
-			SetStatus("Старая сессия устарела — вхожу заново…", Palette.Accent, "\ue895");
+			SetStatus(L.T("Старая сессия устарела — вхожу заново…"), Palette.Accent, "\ue895");
 			return null;
 		}
-		SetStatus(((failure != null) ? failure.Message : "Роблокс не ответил.") + " Пробую ещё раз…", Palette.Yellow, "\ue7ba");
+		SetStatus(((failure != null) ? failure.Message : L.T("Роблокс не ответил.")) + L.T(" Пробую ещё раз…"), Palette.Yellow, "\ue7ba");
 		lastCookieTried = null;
 		return null;
 	}
@@ -313,7 +313,7 @@ internal class LoginSession
 		}
 		catch (Exception error)
 		{
-			App.LogError("принятие предупреждения при входе", error);
+			App.LogError(L.T("принятие предупреждения при входе"), error);
 			return null;
 		}
 	}
@@ -371,8 +371,8 @@ internal class LoginSession
 		statusText = Xaml.Find<TextBlock>(window, "StatusText");
 		statusIcon = Xaml.Find<TextBlock>(window, "StatusIcon");
 		statusBar = Xaml.Find<Border>(window, "StatusBar");
-		Xaml.Find<TextBlock>(window, "TitleText").Text = "Вход в Roblox — " + (string.IsNullOrEmpty(request.Name) ? request.Username : request.Name);
-		Xaml.Find<TextBlock>(window, "SubtitleText").Text = "Логин и пароль AutoRejoin вводит сам. Куку заберёт сам, как только вход пройдёт.";
+		Xaml.Find<TextBlock>(window, "TitleText").Text = L.T("Вход в Roblox — ") + (string.IsNullOrEmpty(request.Name) ? request.Username : request.Name);
+		Xaml.Find<TextBlock>(window, "SubtitleText").Text = L.T("Логин и пароль AutoRejoin вводит сам. Куку заберёт сам, как только вход пройдёт.");
 		Action cancel = delegate
 		{
 			if (!finished)

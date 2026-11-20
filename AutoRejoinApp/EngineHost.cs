@@ -90,7 +90,7 @@ public class EngineHost
 		}
 		if (!File.Exists(AppPaths.EngineScript))
 		{
-			throw new FileNotFoundException("Рядом с AutoRejoin.exe нет engine.ps1 — распакуй папку программы целиком.", AppPaths.EngineScript);
+			throw new FileNotFoundException(L.T("Рядом с AutoRejoin.exe нет engine.ps1 — распакуй папку программы целиком."), AppPaths.EngineScript);
 		}
 		SystemTools.KillOrphanEngine();
 		Process started = new Process();

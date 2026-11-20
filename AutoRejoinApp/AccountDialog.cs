@@ -115,10 +115,10 @@ public class AccountDialog
 		if (existing != null)
 		{
 			Xaml.Find<TextBlock>(window, "TitleText").Text = existing.name;
-			Xaml.Find<TextBlock>(window, "SubtitleText").Text = "ID " + existing.userId + (existing.UsesPassword ? " · вход по логину и паролю, хранится зашифрованным" : " · кука хранится зашифрованной");
+			Xaml.Find<TextBlock>(window, "SubtitleText").Text = "ID " + existing.userId + (existing.UsesPassword ? L.T(" · вход по логину и паролю, хранится зашифрованным") : L.T(" · кука хранится зашифрованной"));
 			Xaml.Find<TextBlock>(window, "HeaderIcon").Text = "\ue70f";
-			Xaml.Find<TextBlock>(window, "CookieLabel").Text = "НОВАЯ КУКА — ТОЛЬКО ЕСЛИ СТАРАЯ УСТАРЕЛА";
-			cookieBox.Tag = "Пусто — оставить текущую куку";
+			Xaml.Find<TextBlock>(window, "CookieLabel").Text = L.T("НОВАЯ КУКА — ТОЛЬКО ЕСЛИ СТАРАЯ УСТАРЕЛА");
+			cookieBox.Tag = L.T("Пусто — оставить текущую куку");
 			cookieBox.Height = 64.0;
 			linkBox.Text = existing.link ?? "";
 			mainSwitch.IsChecked = existing.main;
@@ -169,7 +169,7 @@ public class AccountDialog
 		};
 		deleteButton.Click += delegate
 		{
-			if (MessageDialog.Ask(accountDialog.window, "Удалить " + existing.name + "?", "AutoRejoin перестанет держать этот аккаунт в игре, кука и пароль удалятся из приложения. Окно Роблокса, если открыто, останется как есть.", "Удалить", MessageDialog.Kind.Danger, "Отмена"))
+			if (MessageDialog.Ask(accountDialog.window, L.T("Удалить ") + existing.name + "?", L.T("AutoRejoin перестанет держать этот аккаунт в игре, кука и пароль удалятся из приложения. Окно Роблокса, если открыто, останется как есть."), L.T("Удалить"), MessageDialog.Kind.Danger, L.T("Отмена")))
 			{
 				accountDialog.Result = Outcome.Deleted;
 				accountDialog.window.Close();
@@ -227,11 +227,11 @@ public class AccountDialog
 		cookiePanel.Visibility = (PasswordMode ? Visibility.Collapsed : Visibility.Visible);
 		if (existing != null)
 		{
-			saveText.Text = "Сохранить";
+			saveText.Text = L.T("Сохранить");
 		}
 		else
 		{
-			saveText.Text = (PasswordMode ? "Войти и добавить" : "Проверить и добавить");
+			saveText.Text = (PasswordMode ? L.T("Войти и добавить") : L.T("Проверить и добавить"));
 		}
 		resultPanel.Visibility = Visibility.Collapsed;
 	}
@@ -276,7 +276,7 @@ public class AccountDialog
 		string cookie = RobloxApi.CleanCookie(cookieBox.Text);
 		if (existing == null && cookie.Length == 0)
 		{
-			ShowResult("Вставь куку .ROBLOSECURITY этого аккаунта.", error: true);
+			ShowResult(L.T("Вставь куку .ROBLOSECURITY этого аккаунта."), error: true);
 			cookieBox.Focus();
 			return;
 		}
@@ -290,20 +290,20 @@ public class AccountDialog
 		saveButton.IsEnabled = false;
 		cancelButton.IsEnabled = false;
 		string oldText = saveText.Text;
-		saveText.Text = "Проверяю куку…";
+		saveText.Text = L.T("Проверяю куку…");
 		try
 		{
 			RobloxUser user = await Task.Run(() => RobloxApi.CheckCookie(cookie));
 			string duplicate = duplicateCheck(user.Id, (existing == null) ? null : existing.id);
 			if (duplicate != null)
 			{
-				ShowResult("Аккаунт " + user.Name + " уже есть в списке" + ((duplicate != user.Name) ? (" (" + duplicate + ")") : "") + ".", error: true);
+				ShowResult(L.T("Аккаунт ") + user.Name + L.T(" уже есть в списке") + ((duplicate != user.Name) ? (" (" + duplicate + ")") : "") + ".", error: true);
 			}
-			else if (existing == null || string.IsNullOrEmpty(existing.userId) || !(existing.userId != user.Id) || MessageDialog.Ask(window, "Это другой аккаунт", "Новая кука — от аккаунта " + user.Name + ", а не " + existing.name + ". Заменить " + existing.name + " на " + user.Name + "?", "Заменить", MessageDialog.Kind.Warning, "Отмена"))
+			else if (existing == null || string.IsNullOrEmpty(existing.userId) || !(existing.userId != user.Id) || MessageDialog.Ask(window, L.T("Это другой аккаунт"), L.T("Новая кука — от аккаунта ") + user.Name + L.T(", а не ") + existing.name + L.T(". Заменить ") + existing.name + L.T(" на ") + user.Name + "?", L.T("Заменить"), MessageDialog.Kind.Warning, L.T("Отмена")))
 			{
 				User = user;
 				Cookie = cookie;
-				ShowResult("Аккаунт " + user.Name + ((string.IsNullOrEmpty(user.DisplayName) || user.DisplayName == user.Name) ? "" : (" (" + user.DisplayName + ")")) + " — кука рабочая.", error: false);
+				ShowResult(L.T("Аккаунт ") + user.Name + ((string.IsNullOrEmpty(user.DisplayName) || user.DisplayName == user.Name) ? "" : (" (" + user.DisplayName + ")")) + L.T(" — кука рабочая."), error: false);
 				Result = Outcome.Saved;
 				await Task.Delay(550);
 				window.Close();
@@ -315,7 +315,7 @@ public class AccountDialog
 		}
 		catch (Exception ex2)
 		{
-			ShowResult("Не получилось проверить куку: " + ex2.Message, error: true);
+			ShowResult(L.T("Не получилось проверить куку: ") + ex2.Message, error: true);
 		}
 		finally
 		{
@@ -332,13 +332,13 @@ public class AccountDialog
 		bool hadPassword = existing != null && existing.UsesPassword && !string.IsNullOrEmpty(existing.password);
 		if (username.Length == 0)
 		{
-			ShowResult("Введи логин аккаунта Роблокса (ник, почту или телефон).", error: true);
+			ShowResult(L.T("Введи логин аккаунта Роблокса (ник, почту или телефон)."), error: true);
 			userBox.Focus();
 			return;
 		}
 		if (password.Length == 0 && !hadPassword)
 		{
-			ShowResult("Введи пароль.", error: true);
+			ShowResult(L.T("Введи пароль."), error: true);
 			passBox.Focus();
 			return;
 		}
@@ -361,8 +361,8 @@ public class AccountDialog
 		cancelButton.IsEnabled = false;
 		reloginButton.IsEnabled = false;
 		string oldText = saveText.Text;
-		saveText.Text = (RobloxLogin.Busy ? "Жду другой вход…" : "Вхожу в Роблокс…");
-		ShowResult("Открываю окно входа Роблокса. Логин и пароль AutoRejoin введёт сам; если Роблокс попросит капчу или код — введи их там.", error: false);
+		saveText.Text = (RobloxLogin.Busy ? L.T("Жду другой вход…") : L.T("Вхожу в Роблокс…"));
+		ShowResult(L.T("Открываю окно входа Роблокса. Логин и пароль AutoRejoin введёт сам; если Роблокс попросит капчу или код — введи их там."), error: false);
 		try
 		{
 			LoginResult login = await RobloxLogin.Run(new LoginRequest
@@ -376,22 +376,22 @@ public class AccountDialog
 			}, window);
 			if (!login.Ok)
 			{
-				ShowResult(login.Cancelled ? "Вход отменён — аккаунт не сохранён." : ("Не получилось войти: " + login.Error), error: true);
+				ShowResult(login.Cancelled ? L.T("Вход отменён — аккаунт не сохранён.") : (L.T("Не получилось войти: ") + login.Error), error: true);
 				return;
 			}
 			RobloxUser user = login.User;
 			string duplicate = duplicateCheck(user.Id, (existing == null) ? null : existing.id);
 			if (duplicate != null)
 			{
-				ShowResult("Аккаунт " + user.Name + " уже есть в списке" + ((duplicate != user.Name) ? (" (" + duplicate + ")") : "") + ".", error: true);
+				ShowResult(L.T("Аккаунт ") + user.Name + L.T(" уже есть в списке") + ((duplicate != user.Name) ? (" (" + duplicate + ")") : "") + ".", error: true);
 			}
 			else
 			{
-				if (existing != null && !string.IsNullOrEmpty(existing.userId) && existing.userId != user.Id && !MessageDialog.Ask(window, "Это другой аккаунт", "Вход выполнен в " + user.Name + ", а не в " + existing.name + ". Заменить " + existing.name + " на " + user.Name + "?", "Заменить", MessageDialog.Kind.Warning, "Отмена"))
+				if (existing != null && !string.IsNullOrEmpty(existing.userId) && existing.userId != user.Id && !MessageDialog.Ask(window, L.T("Это другой аккаунт"), L.T("Вход выполнен в ") + user.Name + L.T(", а не в ") + existing.name + L.T(". Заменить ") + existing.name + L.T(" на ") + user.Name + "?", L.T("Заменить"), MessageDialog.Kind.Warning, L.T("Отмена")))
 				{
 					return;
 				}
-				saveText.Text = "Получаю куку…";
+				saveText.Text = L.T("Получаю куку…");
 				string working;
 				try
 				{
@@ -399,13 +399,13 @@ public class AccountDialog
 				}
 				catch (Exception error)
 				{
-					App.LogError("отдельная сессия после входа", error);
+					App.LogError(L.T("отдельная сессия после входа"), error);
 					working = login.Cookie;
 				}
 				User = user;
 				Master = login.Cookie;
 				Cookie = working;
-				ShowResult("Вошёл в " + user.Name + ((string.IsNullOrEmpty(user.DisplayName) || user.DisplayName == user.Name) ? "" : (" (" + user.DisplayName + ")")) + " — кука получена, дальше AutoRejoin обновляет её сам.", error: false);
+				ShowResult(L.T("Вошёл в ") + user.Name + ((string.IsNullOrEmpty(user.DisplayName) || user.DisplayName == user.Name) ? "" : (" (" + user.DisplayName + ")")) + L.T(" — кука получена, дальше AutoRejoin обновляет её сам."), error: false);
 				Result = Outcome.Saved;
 				await Task.Delay(700);
 				window.Close();
@@ -413,8 +413,8 @@ public class AccountDialog
 		}
 		catch (Exception ex)
 		{
-			App.LogError("вход из окна аккаунта", ex);
-			ShowResult("Не получилось войти: " + ex.Message, error: true);
+			App.LogError(L.T("вход из окна аккаунта"), ex);
+			ShowResult(L.T("Не получилось войти: ") + ex.Message, error: true);
 		}
 		finally
 		{

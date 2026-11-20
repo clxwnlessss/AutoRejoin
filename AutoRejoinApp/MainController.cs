@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Collections.Generic;
 using System.Collections.ObjectModel;
 using System.ComponentModel;
@@ -236,9 +236,9 @@ public class MainController
 		}
 		catch (Exception error)
 		{
-			App.LogError("vault.dat не расшифровывается", error);
+			App.LogError(L.T("vault.dat не расшифровывается"), error);
 			vault = new Vault();
-			MessageDialog.Show(null, "Не читается список аккаунтов", "Файл vault.dat не расшифровывается — скорее всего, его скопировали с другого компьютера или из другой учётной записи Windows. Добавь аккаунты заново. Старый файл сохранён как vault.dat.broken.", MessageDialog.Kind.Warning);
+			MessageDialog.Show(null, L.T("Не читается список аккаунтов"), L.T("Файл vault.dat не расшифровывается — скорее всего, его скопировали с другого компьютера или из другой учётной записи Windows. Добавь аккаунты заново. Старый файл сохранён как vault.dat.broken."), MessageDialog.Kind.Warning);
 			try
 			{
 				File.Copy(AppPaths.VaultFile, AppPaths.VaultFile + ".broken", overwrite: true);
@@ -254,6 +254,17 @@ public class MainController
 		bannerActionButton = Find<Button>("BannerAction");
 		accountsEmpty = Find<Border>("AccountsEmpty");
 		accountsList = Find<ItemsControl>("AccountsList");
+		// Карточки аккаунтов создаются из шаблона уже после загрузки окна — переводим их подписи по мере появления.
+		accountsList.ItemContainerGenerator.StatusChanged += delegate
+		{
+			if (accountsList.ItemContainerGenerator.Status == System.Windows.Controls.Primitives.GeneratorStatus.ContainersGenerated)
+			{
+				accountsList.Dispatcher.BeginInvoke(DispatcherPriority.Loaded, (Action)delegate
+				{
+					L.ApplyVisual(accountsList);
+				});
+			}
+		};
 		accountsSub = Find<TextBlock>("AccountsSub");
 		engineTitle = Find<TextBlock>("EngineTitle");
 		engineSub = Find<TextBlock>("EngineSub");
@@ -309,8 +320,8 @@ public class MainController
 		RobloxLogin.NeedsUser += delegate(string name, string what)
 		{
 			ShowBanner("login", name + ": " + what, null, null, warning: true);
-			discord?.OnAlert("**" + name + "**: " + what + " — нужно твоё действие в окне входа AutoRejoin.");
-			tray.Balloon("AutoRejoin: вход в " + name, what, warning: true);
+			discord?.OnAlert("**" + name + "**: " + what + L.T(" — нужно твоё действие в окне входа AutoRejoin."));
+			tray.Balloon(L.T("AutoRejoin: вход в ") + name, what, warning: true);
 		};
 		tray = new Tray();
 		tray.OpenRequested += ShowWindow;
@@ -481,7 +492,7 @@ public class MainController
 		{
 			int hours = config.logCleanupHours;
 			LogCleaner.Result result = await Task.Run(() => LogCleaner.Run(hours));
-			AppLog(null, "Очистка логов старше " + hours + " ч: " + result.Text + ".", "DarkGray");
+			AppLog(null, L.T("Очистка логов старше ") + hours + L.T(" ч: ") + result.Text + ".", "DarkGray");
 			return result.Text;
 		}
 		finally
@@ -513,30 +524,30 @@ public class MainController
 			updateBusy = false;
 			if (interactive)
 			{
-				MessageDialog.Show(window, "Не получилось проверить", "Не получилось проверить обновления: " + ex.Message + ".", MessageDialog.Kind.Warning);
+				MessageDialog.Show(window, L.T("Не получилось проверить"), L.T("Не получилось проверить обновления: ") + ex.Message + ".", MessageDialog.Kind.Warning);
 			}
-			return "проверка не удалась: " + ex.Message;
+			return L.T("проверка не удалась: ") + ex.Message;
 		}
 		updateBusy = false;
 		if (release == null)
 		{
 			if (interactive)
 			{
-				MessageDialog.Show(window, "Обновлений нет", "У тебя последняя версия — " + Updater.CurrentText + ".", MessageDialog.Kind.Success);
+				MessageDialog.Show(window, L.T("Обновлений нет"), L.T("У тебя последняя версия — ") + Updater.CurrentText + ".", MessageDialog.Kind.Success);
 			}
-			return "последняя версия — " + Updater.CurrentText;
+			return L.T("последняя версия — ") + Updater.CurrentText;
 		}
 		string version = release.Version.ToString(3);
 		if (!interactive)
 		{
-			ShowBanner("update", "Вышла новая версия AutoRejoin " + version + ".", "Обновить", delegate
+			ShowBanner("update", L.T("Вышла новая версия AutoRejoin ") + version + ".", L.T("Обновить"), delegate
 			{
 				InstallUpdate(release);
 			}, warning: false);
-			return "доступна версия " + version;
+			return L.T("доступна версия ") + version;
 		}
 		InstallUpdate(release);
-		return "доступна версия " + version;
+		return L.T("доступна версия ") + version;
 	}
 
 	private async void InstallUpdate(Updater.Release release)
@@ -552,13 +563,13 @@ public class MainController
 		{
 			notes = notes.Substring(0, 600) + "…";
 		}
-		string message = "Сейчас " + Updater.CurrentText + ", вышла " + version + "." + ((notes.Length > 0) ? ("\n\n" + notes) : "") + "\n\nAutoRejoin скачает обновление, закроется и откроется уже новой версией. Окна Роблокса останутся открытыми, аккаунты и настройки сохранятся.";
-		if (!MessageDialog.Ask(window, "Установить обновление " + version + "?", message, "Обновить", MessageDialog.Kind.Info, "Позже"))
+		string message = L.T("Сейчас ") + Updater.CurrentText + L.T(", вышла ") + version + "." + ((notes.Length > 0) ? ("\n\n" + notes) : "") + L.T("\n\nAutoRejoin скачает обновление, закроется и откроется уже новой версией. Окна Роблокса останутся открытыми, аккаунты и настройки сохранятся.");
+		if (!MessageDialog.Ask(window, L.T("Установить обновление ") + version + "?", message, L.T("Обновить"), MessageDialog.Kind.Info, L.T("Позже")))
 		{
 			return;
 		}
 		updateBusy = true;
-		ShowBanner("update", "Скачиваю обновление " + version + "…", null, null, warning: false);
+		ShowBanner("update", L.T("Скачиваю обновление ") + version + "…", null, null, warning: false);
 		try
 		{
 			await Updater.PrepareAsync(release);
@@ -566,14 +577,14 @@ public class MainController
 		catch (Exception ex)
 		{
 			updateBusy = false;
-			App.LogError("обновление не установилось", ex);
-			ShowBanner("update", "Обновление не установилось: " + ex.Message, "Повторить", delegate
+			App.LogError(L.T("обновление не установилось"), ex);
+			ShowBanner("update", L.T("Обновление не установилось: ") + ex.Message, L.T("Повторить"), delegate
 			{
 				InstallUpdate(release);
 			}, warning: true);
 			return;
 		}
-		AppLog(null, "Устанавливаю обновление " + version + " — AutoRejoin перезапустится.", "Cyan");
+		AppLog(null, L.T("Устанавливаю обновление ") + version + L.T(" — AutoRejoin перезапустится."), "Cyan");
 		engineWanted = false;
 		if (engine.IsRunning)
 		{
@@ -610,9 +621,9 @@ public class MainController
 			root.Margin = (flag ? new Thickness(7.0) : new Thickness(0.0));
 			root.BorderThickness = (flag ? new Thickness(0.0) : new Thickness(1.0));
 			maxButton.Content = (flag ? "\ue923" : "\ue922");
-			maxButton.ToolTip = (flag ? "Восстановить" : "Развернуть");
+			maxButton.ToolTip = (flag ? L.T("Восстановить") : L.T("Развернуть"));
 		};
-		maxButton.ToolTip = "Развернуть";
+		maxButton.ToolTip = L.T("Развернуть");
 	}
 
 	public void ShowWindow()
@@ -638,7 +649,7 @@ public class MainController
 		{
 			config.trayHintShown = true;
 			ConfigChanged();
-			tray.Balloon("AutoRejoin работает в трее", engine.IsRunning ? "Аккаунты продолжают перезаходить. Открыть — значок у часов, выйти — правой кнопкой по нему." : "Открыть — значок у часов, выйти — правой кнопкой по нему.", warning: false);
+			tray.Balloon(L.T("AutoRejoin работает в трее"), engine.IsRunning ? L.T("Аккаунты продолжают перезаходить. Открыть — значок у часов, выйти — правой кнопкой по нему.") : L.T("Открыть — значок у часов, выйти — правой кнопкой по нему."), warning: false);
 		}
 	}
 
@@ -647,7 +658,7 @@ public class MainController
 		if (engine.IsRunning)
 		{
 			ShowWindow();
-			if (!MessageDialog.Ask(window, "Выйти из AutoRejoin?", "Аккаунты перестанут перезаходить. Окна Роблокса останутся открытыми.", "Выйти", MessageDialog.Kind.Warning, "Отмена"))
+			if (!MessageDialog.Ask(window, L.T("Выйти из AutoRejoin?"), L.T("Аккаунты перестанут перезаходить. Окна Роблокса останутся открытыми."), L.T("Выйти"), MessageDialog.Kind.Warning, L.T("Отмена")))
 			{
 				return;
 			}
@@ -696,7 +707,7 @@ public class MainController
 	private void ContactOwner()
 	{
 		Owner.OpenDiscord();
-		ShowBanner("contact", "Ник " + Owner.Name + " скопирован — открываю Discord.", null, null, warning: false);
+		ShowBanner("contact", L.T("Ник ") + Owner.Name + L.T(" скопирован — открываю Discord."), null, null, warning: false);
 		DispatcherTimer hide = new DispatcherTimer
 		{
 			Interval = TimeSpan.FromSeconds(4.0)
@@ -776,7 +787,7 @@ public class MainController
 		if (!vault.accounts.Any((VaultAccount a) => a.enabled && !string.IsNullOrEmpty(a.cookie)))
 		{
 			ShowPage("accounts");
-			ShowBanner("info", "Сначала добавь хотя бы один аккаунт — без аккаунтов запускать нечего.", "Добавить аккаунт", AddAccount, warning: false);
+			ShowBanner("info", L.T("Сначала добавь хотя бы один аккаунт — без аккаунтов запускать нечего."), L.T("Добавить аккаунт"), AddAccount, warning: false);
 			return;
 		}
 		restartTimer.Stop();
@@ -791,8 +802,8 @@ public class MainController
 		}
 		catch (Exception ex)
 		{
-			App.LogError("движок не запустился", ex);
-			ShowBanner("crash", "Не получилось запустить движок: " + ex.Message, null, null, warning: true);
+			App.LogError(L.T("движок не запустился"), ex);
+			ShowBanner("crash", L.T("Не получилось запустить движок: ") + ex.Message, null, null, warning: true);
 		}
 		UpdateEngineBlock();
 		UpdateCardsIdle();
@@ -813,7 +824,7 @@ public class MainController
 		int closed = await Task.Run(() => CloseAllRoblox());
 		if (closed > 0)
 		{
-			AppLog(null, "Закрыл окна Роблокса: " + closed + " шт.", "Cyan");
+			AppLog(null, L.T("Закрыл окна Роблокса: ") + closed + L.T(" шт."), "Cyan");
 		}
 	}
 
@@ -855,13 +866,13 @@ public class MainController
 			{
 			case 4:
 				engineWanted = false;
-				ShowBanner("conflict", "Уже работает другой AutoRejoin — например, старая версия в окне консоли. Два сразу перезапускали бы одни и те же окна.", "Закрыть другой и запустить этот", async delegate
+				ShowBanner("conflict", L.T("Уже работает другой AutoRejoin — например, старая версия в окне консоли. Два сразу перезапускали бы одни и те же окна."), L.T("Закрыть другой и запустить этот"), async delegate
 				{
 					int killed = SystemTools.KillOtherAutoRejoins(engine.ProcessId);
 					AddLog(new LogLine
 					{
 						Time = DateTime.Now.ToString("HH:mm:ss"),
-						Message = "Закрыл другой AutoRejoin (" + killed + " процесс.).",
+						Message = L.T("Закрыл другой AutoRejoin (") + killed + L.T(" процесс.)."),
 						Color = "Cyan"
 					});
 					await Task.Delay(1500);
@@ -883,15 +894,15 @@ public class MainController
 				if (crashes.Count >= 5)
 				{
 					engineWanted = false;
-					ShowBanner("crash", "Движок AutoRejoin падает раз за разом (5 раз за 10 минут) — остановил. Подробности в журнале.", "Запустить снова", delegate
+					ShowBanner("crash", L.T("Движок AutoRejoin падает раз за разом (5 раз за 10 минут) — остановил. Подробности в журнале."), L.T("Запустить снова"), delegate
 					{
 						StartEngine(0);
 					}, warning: true);
-					tray.Balloon("AutoRejoin остановлен", "Движок падает раз за разом — открой AutoRejoin.", warning: true);
+					tray.Balloon(L.T("AutoRejoin остановлен"), L.T("Движок падает раз за разом — открой AutoRejoin."), warning: true);
 				}
 				else
 				{
-					ShowBanner("crash", "Движок AutoRejoin неожиданно закрылся (код " + code + ") — перезапускаю через 15 сек.", null, null, warning: true);
+					ShowBanner("crash", L.T("Движок AutoRejoin неожиданно закрылся (код ") + code + L.T(") — перезапускаю через 15 сек."), null, null, warning: true);
 					restartTimer.Start();
 				}
 				break;
@@ -928,14 +939,14 @@ public class MainController
 			discord?.OnAlert(text);
 			if (!window.IsVisible || window.WindowState == WindowState.Minimized)
 			{
-				tray.Balloon("AutoRejoin: нужна твоя помощь", text, warning: true);
+				tray.Balloon(L.T("AutoRejoin: нужна твоя помощь"), text, warning: true);
 			}
 			break;
 		}
 		case "reboot":
 			rebootAtUtc = Store.Time(data, "at");
 			rebootWhy = Store.Str(data, "why");
-			tray.Balloon("Перезагрузка компьютера", (rebootWhy ?? "") + ".", warning: true);
+			tray.Balloon(L.T("Перезагрузка компьютера"), (rebootWhy ?? "") + ".", warning: true);
 			UpdateRebootBanner();
 			break;
 		case "auth":
@@ -1002,9 +1013,9 @@ public class MainController
 
 	public void ShowAuthBanner(VaultAccount entry, string reason, string detail)
 	{
-		string text = ((reason == "moderated") ? (entry.name + ": Роблокс не пускает аккаунт (403)" + (string.IsNullOrEmpty(detail) ? "" : (" — " + detail)) + ". Прими предупреждение на roblox.com под этим аккаунтом, включи «Принимать предупреждения Роблокса» в настройках или переключи аккаунт на вход по логину и паролю.") : (entry.name + ": кука устарела (401). Вставь новую или переключи аккаунт на вход по логину и паролю — тогда AutoRejoin будет обновлять куку сам."));
+		string text = ((reason == "moderated") ? (entry.name + L.T(": Роблокс не пускает аккаунт (403)") + (string.IsNullOrEmpty(detail) ? "" : (" — " + detail)) + L.T(". Прими предупреждение на roblox.com под этим аккаунтом, включи «Принимать предупреждения Роблокса» в настройках или переключи аккаунт на вход по логину и паролю.")) : (entry.name + L.T(": кука устарела (401). Вставь новую или переключи аккаунт на вход по логину и паролю — тогда AutoRejoin будет обновлять куку сам.")));
 		AccountCard card = cards.FirstOrDefault((AccountCard c) => c.Key == entry.id);
-		ShowBanner("auth", text, "Открыть аккаунт", delegate
+		ShowBanner("auth", text, L.T("Открыть аккаунт"), delegate
 		{
 			if (card != null)
 			{
@@ -1013,7 +1024,7 @@ public class MainController
 		}, warning: true);
 		if (!window.IsVisible || window.WindowState == WindowState.Minimized)
 		{
-			tray.Balloon("AutoRejoin: " + entry.name, (reason == "moderated") ? "Роблокс не пускает аккаунт (403)." : "Кука устарела — нужна новая.", warning: true);
+			tray.Balloon("AutoRejoin: " + entry.name, (reason == "moderated") ? L.T("Роблокс не пускает аккаунт (403).") : L.T("Кука устарела — нужна новая."), warning: true);
 		}
 	}
 
@@ -1024,7 +1035,7 @@ public class MainController
 		{
 			return;
 		}
-		accountCard.SetAuthNote((!auth.IsBusy(key)) ? null : (RobloxLogin.Busy ? "Входит в аккаунт — новая кука…" : "Берёт новую куку…"));
+		accountCard.SetAuthNote((!auth.IsBusy(key)) ? null : (RobloxLogin.Busy ? L.T("Входит в аккаунт — новая кука…") : L.T("Берёт новую куку…")));
 		if (!auth.IsBusy(key))
 		{
 			if (lastStatus != null && Running)
@@ -1085,29 +1096,29 @@ public class MainController
 	{
 		if (!Running)
 		{
-			return "Остановлен";
+			return L.T("Остановлен");
 		}
 		if (!(phase == "running"))
 		{
-			return "Ожидание";
+			return L.T("Ожидание");
 		}
-		return "Проверка";
+		return L.T("Проверка");
 	}
 
 	private string IdleDetail()
 	{
 		if (!Running)
 		{
-			return "AutoRejoin остановлен — аккаунт не перезаходит. Нажми «Запустить».";
+			return L.T("AutoRejoin остановлен — аккаунт не перезаходит. Нажми «Запустить».");
 		}
 		return phase switch
 		{
-			"delay" => "Автозапуск: даю Windows прогрузиться…", 
-			"network" => "Жду интернет…", 
-			"accounts" => "Проверяю куки аккаунтов…", 
-			"potassium" => "Открываю Потассиум…", 
-			"running" => "Проверяю куку у Роблокса…", 
-			_ => "Запускаюсь…", 
+			"delay" => L.T("Автозапуск: даю Windows прогрузиться…"), 
+			"network" => L.T("Жду интернет…"), 
+			"accounts" => L.T("Проверяю куки аккаунтов…"), 
+			"potassium" => L.T("Открываю Потассиум…"), 
+			"running" => L.T("Проверяю куку у Роблокса…"), 
+			_ => L.T("Запускаюсь…"), 
 		};
 	}
 
@@ -1134,31 +1145,31 @@ public class MainController
 		if (!running)
 		{
 			fill = Palette.Text3;
-			text = "Остановлен";
-			text2 = ((num == 0) ? "Добавь аккаунт, потом «Запустить»" : "Аккаунты не перезаходят");
+			text = L.T("Остановлен");
+			text2 = ((num == 0) ? L.T("Добавь аккаунт, потом «Запустить»") : L.T("Аккаунты не перезаходят"));
 			if (bannerKind == "crash" && restartTimer.IsEnabled)
 			{
 				fill = Palette.Red;
-				text = "Перезапуск…";
-				text2 = "Движок закрылся, через 15 сек запущу снова";
+				text = L.T("Перезапуск…");
+				text2 = L.T("Движок закрылся, через 15 сек запущу снова");
 			}
 		}
 		else if (phase == "running")
 		{
 			fill = ((num > 0 && num2 == num) ? Palette.Green : Palette.Yellow);
-			text = "Работает";
-			text2 = num2 + " из " + num + " в игре";
+			text = L.T("Работает");
+			text2 = num2 + L.T(" из ") + num + L.T(" в игре");
 		}
 		else if (phase == "stopping")
 		{
 			fill = Palette.Text3;
-			text = "Останавливаю…";
-			text2 = "Закрываю окна Роблокса";
+			text = L.T("Останавливаю…");
+			text2 = L.T("Закрываю окна Роблокса");
 		}
 		else
 		{
 			fill = Palette.Blue;
-			text = "Запускается";
+			text = L.T("Запускается");
 			text2 = IdleDetail();
 		}
 		engineDot.Fill = fill;
@@ -1167,11 +1178,11 @@ public class MainController
 		engineSub.Text = text2;
 		engineButton.Style = (Style)window.FindResource(running ? "Btn" : "BtnPrimary");
 		engineButtonIcon.Text = (running ? "\ue71a" : "\ue768");
-		engineButtonText.Text = (running ? "Остановить" : "Запустить");
+		engineButtonText.Text = (running ? L.T("Остановить") : L.T("Запустить"));
 		engineButton.IsEnabled = phase != "stopping";
 		tray.SetRunning(running);
-		tray.SetText(Owner.Credit + " — " + (running ? ((phase == "running") ? (num2 + " из " + num + " в игре") : "запускается") : "остановлен"));
-		accountsSub.Text = ((cards.Count == 0) ? "Держит аккаунты в игре." : ((running && phase == "running") ? ((num2 == num) ? "Все в игре." : (num2 + " из " + num + " в игре")) : ("Аккаунтов: " + cards.Count + ((num != cards.Count) ? (", включено " + num) : ""))));
+		tray.SetText(Owner.Credit + " — " + (running ? ((phase == "running") ? (num2 + L.T(" из ") + num + L.T(" в игре")) : L.T("запускается")) : L.T("остановлен")));
+		accountsSub.Text = ((cards.Count == 0) ? L.T("Держит аккаунты в игре.") : ((running && phase == "running") ? ((num2 == num) ? L.T("Все в игре.") : (num2 + L.T(" из ") + num + L.T(" в игре"))) : (L.T("Аккаунтов: ") + cards.Count + ((num != cards.Count) ? (L.T(", включено ") + num) : ""))));
 	}
 
 	private void UpdateStats()
@@ -1183,67 +1194,67 @@ public class MainController
 			statGameValue.Text = num2 + " / " + num;
 			int result;
 			int num3 = cards.Sum((AccountCard c) => int.TryParse(c.Restarts, out result) ? result : 0);
-			statGameSub.Text = ((num2 != num) ? (num - num2 + " заходят или ждут") : ((num3 == 0) ? "все на месте" : ("перезаходов: " + num3)));
+			statGameSub.Text = ((num2 != num) ? (num - num2 + L.T(" заходят или ждут")) : ((num3 == 0) ? L.T("все на месте") : (L.T("перезаходов: ") + num3)));
 		}
 		else
 		{
 			statGameValue.Text = (Running ? "…" : "—");
-			statGameSub.Text = (Running ? "запускается" : "AutoRejoin остановлен");
+			statGameSub.Text = (Running ? L.T("запускается") : L.T("AutoRejoin остановлен"));
 		}
 		MemoryInfo memoryInfo = MemoryInfo.Get();
 		if (memoryInfo != null)
 		{
-			statMemValue.Text = memoryInfo.FreeCommitGB.ToString("0.0", CultureInfo.InvariantCulture) + " ГБ";
-			statMemSub.Text = "ОЗУ " + Math.Round(memoryInfo.TotalRamGB) + " ГБ + подкачка " + Math.Max(0.0, Math.Round(memoryInfo.CommitLimitGB - memoryInfo.TotalRamGB)) + " ГБ";
+			statMemValue.Text = memoryInfo.FreeCommitGB.ToString("0.0", CultureInfo.InvariantCulture) + L.T(" ГБ");
+			statMemSub.Text = L.T("ОЗУ ") + Math.Round(memoryInfo.TotalRamGB) + L.T(" ГБ + подкачка ") + Math.Max(0.0, Math.Round(memoryInfo.CommitLimitGB - memoryInfo.TotalRamGB)) + L.T(" ГБ");
 			statMemValue.Foreground = ((memoryInfo.FreeCommitGB < 2.0) ? Palette.Red : ((memoryInfo.FreeCommitGB < 4.0) ? Palette.Yellow : Palette.Text));
 		}
 		IDictionary<string, object> dictionary = Store.Obj(lastStatus, "potassium");
 		if (!config.potassium)
 		{
-			statPotValue.Text = "Выключен";
-			statPotSub.Text = "AutoRejoin работает без него";
+			statPotValue.Text = L.T("Выключен");
+			statPotSub.Text = L.T("AutoRejoin работает без него");
 			statPotValue.Foreground = Palette.Text2;
 		}
 		else if (dictionary != null && Running)
 		{
 			if (Store.Flag(dictionary, "signedOut"))
 			{
-				statPotValue.Text = "Нужен вход";
-				statPotSub.Text = "Потассиум разлогинился";
+				statPotValue.Text = L.T("Нужен вход");
+				statPotSub.Text = L.T("Потассиум разлогинился");
 				statPotValue.Foreground = Palette.Red;
 			}
 			else if (!Store.Flag(dictionary, "running"))
 			{
-				statPotValue.Text = "Закрыт";
-				statPotSub.Text = "AutoRejoin откроет его сам";
+				statPotValue.Text = L.T("Закрыт");
+				statPotSub.Text = L.T("AutoRejoin откроет его сам");
 				statPotValue.Foreground = Palette.Yellow;
 			}
 			else
 			{
-				statPotValue.Text = "Работает";
+				statPotValue.Text = L.T("Работает");
 				statPotValue.Foreground = Palette.Text;
 				double? num4 = Store.Num(dictionary, "clients");
-				statPotSub.Text = (Store.Flag(dictionary, "autoAttachProblem") ? "автоаттач выключен!" : (num4.HasValue ? ("подключён к окнам: " + num4.Value) : "автоаттач включён"));
+				statPotSub.Text = (Store.Flag(dictionary, "autoAttachProblem") ? L.T("автоаттач выключен!") : (num4.HasValue ? (L.T("подключён к окнам: ") + num4.Value) : L.T("автоаттач включён")));
 			}
 		}
 		else
 		{
 			bool flag = Process.GetProcessesByName("Potassium").Length > 0;
-			statPotValue.Text = (flag ? "Открыт" : "Закрыт");
-			statPotSub.Text = (flag ? "AutoRejoin не следит за ним" : "откроется при запуске");
+			statPotValue.Text = (flag ? L.T("Открыт") : L.T("Закрыт"));
+			statPotSub.Text = (flag ? L.T("AutoRejoin не следит за ним") : L.T("откроется при запуске"));
 			statPotValue.Foreground = Palette.Text;
 		}
 		if (!config.schedule.enabled)
 		{
-			statSchedValue.Text = "Выключен";
-			statSchedSub.Text = "настроить →";
+			statSchedValue.Text = L.T("Выключен");
+			statSchedSub.Text = L.T("настроить →");
 			statSchedValue.Foreground = Palette.Text2;
 			return;
 		}
 		DateTime utc = NextScheduleUtc();
 		statSchedValue.Text = utc.ToLocalTime().ToString("HH:mm", CultureInfo.InvariantCulture);
 		statSchedValue.Foreground = Palette.Text;
-		string text = ((config.schedule.action == "reboot") ? "перезагрузка ПК" : "перезаход всеми");
+		string text = ((config.schedule.action == "reboot") ? L.T("перезагрузка ПК") : L.T("перезаход всеми"));
 		string text2 = ScheduleMath.DescribeLocal(utc);
 		statSchedSub.Text = text2.Substring(0, text2.LastIndexOf(" в ", StringComparison.Ordinal)) + " · " + text;
 	}
@@ -1262,7 +1273,7 @@ public class MainController
 			HideBanner("reboot");
 			return;
 		}
-		ShowBanner("reboot", "Компьютер перезагрузится через " + Math.Max(num, 0) + " сек" + (string.IsNullOrEmpty(rebootWhy) ? "" : (": " + rebootWhy)) + ".", "Отменить перезагрузку", delegate
+		ShowBanner("reboot", L.T("Компьютер перезагрузится через ") + Math.Max(num, 0) + L.T(" сек") + (string.IsNullOrEmpty(rebootWhy) ? "" : (": " + rebootWhy)) + ".", L.T("Отменить перезагрузку"), delegate
 		{
 			engine.Send("cancel-reboot");
 			if (!engine.IsRunning)
@@ -1311,6 +1322,31 @@ public class MainController
 		discord?.Apply();
 	}
 
+	// Смена языка: сохранить настройки и перезапустить программу (второй экземпляр ждёт, пока закроется этот).
+	public async void RestartApp()
+	{
+		saveTimer.Stop();
+		SaveConfigNow();
+		string exe = System.Reflection.Assembly.GetExecutingAssembly().Location;
+		int pid = Process.GetCurrentProcess().Id;
+		string args = "-NoProfile -WindowStyle Hidden -Command \"try { Wait-Process -Id " + pid + " -Timeout 30 } catch {}; Start-Process -FilePath '" + exe.Replace("'", "''") + "'\"";
+		Process.Start(new ProcessStartInfo("powershell.exe", args)
+		{
+			UseShellExecute = false,
+			CreateNoWindow = true,
+			WindowStyle = ProcessWindowStyle.Hidden
+		});
+		engineWanted = false;
+		if (engine.IsRunning)
+		{
+			await engine.StopAsync();
+		}
+		discord?.Stop();
+		quitting = true;
+		tray.Dispose();
+		Application.Current.Shutdown();
+	}
+
 	public void SetDiscordWebhook(string url)
 	{
 		url = (url ?? "").Trim();
@@ -1331,8 +1367,8 @@ public class MainController
 		}
 		catch (Exception ex)
 		{
-			App.LogError("не сохранился config.json", ex);
-			ShowBanner("info", "Не получилось сохранить настройки: " + ex.Message, null, null, warning: true);
+			App.LogError(L.T("не сохранился config.json"), ex);
+			ShowBanner("info", L.T("Не получилось сохранить настройки: ") + ex.Message, null, null, warning: true);
 		}
 	}
 
@@ -1346,8 +1382,8 @@ public class MainController
 		}
 		catch (Exception ex)
 		{
-			App.LogError("не сохранился vault.dat", ex);
-			MessageDialog.Show(window, "Не сохранилось", "Не получилось сохранить аккаунты: " + ex.Message, MessageDialog.Kind.Danger);
+			App.LogError(L.T("не сохранился vault.dat"), ex);
+			MessageDialog.Show(window, L.T("Не сохранилось"), L.T("Не получилось сохранить аккаунты: ") + ex.Message, MessageDialog.Kind.Danger);
 			return false;
 		}
 	}
@@ -1370,7 +1406,7 @@ public class MainController
 		}
 		catch (Exception ex)
 		{
-			MessageDialog.Show(window, "Автозапуск", "Не получилось изменить автозапуск: " + ex.Message, MessageDialog.Kind.Danger);
+			MessageDialog.Show(window, L.T("Автозапуск"), L.T("Не получилось изменить автозапуск: ") + ex.Message, MessageDialog.Kind.Danger);
 		}
 		UpdateSchedulePreview();
 	}
@@ -1380,11 +1416,11 @@ public class MainController
 		int count = vault.accounts.Count((VaultAccount a) => a.enabled);
 		if (count == 0)
 		{
-			MessageDialog.Show(window, "Файл подкачки", "Сначала добавь аккаунты: размер подкачки считается по их числу.", MessageDialog.Kind.Info);
+			MessageDialog.Show(window, L.T("Файл подкачки"), L.T("Сначала добавь аккаунты: размер подкачки считается по их числу."), MessageDialog.Kind.Info);
 		}
 		else
 		{
-			if (!MessageDialog.Ask(window, "Настроить файл подкачки?", "Файл подкачки на диске " + Environment.GetEnvironmentVariable("SystemDrive") + " станет фиксированного размера под " + count + " окон Роблокса. Windows попросит права администратора. Заработает после перезагрузки компьютера.", "Настроить", MessageDialog.Kind.Info, "Отмена"))
+			if (!MessageDialog.Ask(window, L.T("Настроить файл подкачки?"), L.T("Файл подкачки на диске ") + Environment.GetEnvironmentVariable("SystemDrive") + L.T(" станет фиксированного размера под ") + count + L.T(" окон Роблокса. Windows попросит права администратора. Заработает после перезагрузки компьютера."), L.T("Настроить"), MessageDialog.Kind.Info, L.T("Отмена")))
 			{
 				return;
 			}
@@ -1421,7 +1457,7 @@ public class MainController
 				messages.Add(ex.Message);
 			}
 			button.IsEnabled = true;
-			MessageDialog.Show(message: (messages.Count > 0) ? messages[messages.Count - 1] : "Без подробностей.", owner: window, title: (code == 0) ? "Файл подкачки настроен" : "Файл подкачки не изменён", kind: (code != 0) ? MessageDialog.Kind.Warning : MessageDialog.Kind.Success);
+			MessageDialog.Show(message: (messages.Count > 0) ? messages[messages.Count - 1] : L.T("Без подробностей."), owner: window, title: (code == 0) ? L.T("Файл подкачки настроен") : L.T("Файл подкачки не изменён"), kind: (code != 0) ? MessageDialog.Kind.Warning : MessageDialog.Kind.Success);
 		}
 	}
 
@@ -1561,12 +1597,12 @@ public class MainController
 		{
 			Time = DateTime.Now.ToString("HH:mm:ss"),
 			Account = vaultAccount2.name,
-			Message = "добавлен в приложении.",
+			Message = L.T("добавлен в приложении."),
 			Color = "Cyan"
 		});
 		if (!engine.IsRunning)
 		{
-			ShowBanner("info", "Аккаунт " + vaultAccount2.name + " добавлен. AutoRejoin сейчас остановлен.", "Запустить", delegate
+			ShowBanner("info", L.T("Аккаунт ") + vaultAccount2.name + L.T(" добавлен. AutoRejoin сейчас остановлен."), L.T("Запустить"), delegate
 			{
 				StartEngine(0);
 			}, warning: false);
@@ -1625,7 +1661,7 @@ public class MainController
 			ReloadCards();
 			if (accountDialog.Cookie != null)
 			{
-				AppLog(vaultAccount.name, vaultAccount.UsesPassword ? "вошёл по логину и паролю — кука обновлена." : "новая кука сохранена.", "Green");
+				AppLog(vaultAccount.name, vaultAccount.UsesPassword ? L.T("вошёл по логину и паролю — кука обновлена.") : L.T("новая кука сохранена."), "Green");
 			}
 			break;
 		}
@@ -1653,7 +1689,7 @@ public class MainController
 		}
 		else if (!engine.IsRunning || phase != "running")
 		{
-			ShowBanner("info", engine.IsRunning ? "AutoRejoin ещё запускается — перезайти можно, когда он заработает." : "AutoRejoin остановлен — сначала нажми «Запустить».", null, null, warning: false);
+			ShowBanner("info", engine.IsRunning ? L.T("AutoRejoin ещё запускается — перезайти можно, когда он заработает.") : L.T("AutoRejoin остановлен — сначала нажми «Запустить»."), null, null, warning: false);
 		}
 		else if (card.Enabled)
 		{
@@ -1666,9 +1702,9 @@ public class MainController
 		ShowWindow();
 		if (!engine.IsRunning || phase != "running")
 		{
-			ShowBanner("info", engine.IsRunning ? "AutoRejoin ещё запускается — перезайти можно, когда он заработает." : "AutoRejoin остановлен — сначала нажми «Запустить».", null, null, warning: false);
+			ShowBanner("info", engine.IsRunning ? L.T("AutoRejoin ещё запускается — перезайти можно, когда он заработает.") : L.T("AutoRejoin остановлен — сначала нажми «Запустить»."), null, null, warning: false);
 		}
-		else if (MessageDialog.Ask(window, "Перезайти всеми аккаунтами?", "Окна всех аккаунтов закроются разом и через 10 сек зайдут заново по одному.", "Перезайти", MessageDialog.Kind.Warning, "Отмена"))
+		else if (MessageDialog.Ask(window, L.T("Перезайти всеми аккаунтами?"), L.T("Окна всех аккаунтов закроются разом и через 10 сек зайдут заново по одному."), L.T("Перезайти"), MessageDialog.Kind.Warning, L.T("Отмена")))
 		{
 			engine.Send("rejoin-all");
 		}
@@ -1680,7 +1716,7 @@ public class MainController
 		OpenFileDialog dialog = new OpenFileDialog
 		{
 			Filter = "accounts.txt|*.txt|Все файлы|*.*",
-			Title = "Файл с куками (accounts.txt)"
+			Title = L.T("Файл с куками (accounts.txt)")
 		};
 		if (dialog.ShowDialog(window) != true)
 		{
@@ -1703,19 +1739,19 @@ public class MainController
 		}
 		if (lines.Count == 0)
 		{
-			MessageDialog.Show(window, "Импорт", "В файле нет ни одной куки.", MessageDialog.Kind.Info);
+			MessageDialog.Show(window, L.T("Импорт"), L.T("В файле нет ни одной куки."), MessageDialog.Kind.Info);
 			return;
 		}
 		int added = 0;
 		List<string> problems = new List<string>();
 		for (int j = 0; j < lines.Count; j++)
 		{
-			ShowBanner("import", "Импорт: проверяю куку " + (j + 1) + " из " + lines.Count + "…", null, null, warning: false);
+			ShowBanner("import", L.T("Импорт: проверяю куку ") + (j + 1) + L.T(" из ") + lines.Count + "…", null, null, warning: false);
 			string cookie = lines[j][0];
 			string link = lines[j][1];
 			if (!RobloxApi.IsValidLink(link, out var linkProblem))
 			{
-				problems.Add("строка " + (j + 1) + ": " + linkProblem);
+				problems.Add(L.T("строка ") + (j + 1) + ": " + linkProblem);
 				link = "";
 			}
 			try
@@ -1723,7 +1759,7 @@ public class MainController
 				RobloxUser user = await Task.Run(() => RobloxApi.CheckCookie(cookie));
 				if (DuplicateOf(user.Id, null) != null)
 				{
-					problems.Add(user.Name + " уже есть в списке");
+					problems.Add(user.Name + L.T(" уже есть в списке"));
 					continue;
 				}
 				vault.accounts.Add(new VaultAccount
@@ -1739,11 +1775,11 @@ public class MainController
 			}
 			catch (CookieException ex)
 			{
-				problems.Add("строка " + (j + 1) + ": " + ex.Message);
+				problems.Add(L.T("строка ") + (j + 1) + ": " + ex.Message);
 			}
 			catch (Exception ex2)
 			{
-				problems.Add("строка " + (j + 1) + ": " + ex2.Message);
+				problems.Add(L.T("строка ") + (j + 1) + ": " + ex2.Message);
 			}
 		}
 		HideBanner("import");
@@ -1752,7 +1788,7 @@ public class MainController
 			SaveVault();
 			ReloadCards();
 		}
-		MessageDialog.Show(window, (added > 0) ? ("Импортировано аккаунтов: " + added) : "Ничего не импортировано", ((problems.Count > 0) ? ("Не вышло:\n• " + string.Join("\n• ", problems) + "\n\n") : "") + ((added > 0) ? "Мейна выбери кнопкой ✎ у аккаунта. Сам файл accounts.txt больше не нужен — удали его, в нём куки открытым текстом." : ""), (added <= 0) ? MessageDialog.Kind.Warning : MessageDialog.Kind.Success);
+		MessageDialog.Show(window, (added > 0) ? (L.T("Импортировано аккаунтов: ") + added) : L.T("Ничего не импортировано"), ((problems.Count > 0) ? (L.T("Не вышло:\n• ") + string.Join("\n• ", problems) + "\n\n") : "") + ((added > 0) ? L.T("Мейна выбери кнопкой ✎ у аккаунта. Сам файл accounts.txt больше не нужен — удали его, в нём куки открытым текстом.") : ""), (added <= 0) ? MessageDialog.Kind.Warning : MessageDialog.Kind.Success);
 	}
 
 	private async void LoadAvatars()
@@ -1990,42 +2026,42 @@ public class MainController
 	{
 		TimeZoneInfo timeZoneInfo = ScheduleMath.FindZone(config.schedule.timeZone);
 		bool flag = timeZoneInfo.Id != TimeZoneInfo.Local.Id && timeZoneInfo.BaseUtcOffset != TimeZoneInfo.Local.BaseUtcOffset;
-		zoneHint.Text = (flag ? "На часах этого компьютера — другой пояс: время пересчитается само." : "Совпадает с часовым поясом этого компьютера.");
-		string text = ((config.schedule.action == "reboot") ? "Перезагрузка компьютера" : "Перезаход всеми аккаунтами");
+		zoneHint.Text = (flag ? L.T("На часах этого компьютера — другой пояс: время пересчитается само.") : L.T("Совпадает с часовым поясом этого компьютера."));
+		string text = ((config.schedule.action == "reboot") ? L.T("Перезагрузка компьютера") : L.T("Перезаход всеми аккаунтами"));
 		if (!config.schedule.enabled)
 		{
-			scheduleNext.Text = "Плановый перезапуск выключен";
-			scheduleNextSub.Text = "Включи переключатель вверху, чтобы задать время.";
+			scheduleNext.Text = L.T("Плановый перезапуск выключен");
+			scheduleNextSub.Text = L.T("Включи переключатель вверху, чтобы задать время.");
 		}
 		else
 		{
 			DateTime dateTime = NextScheduleUtc();
-			scheduleNext.Text = "Следующий: " + ScheduleMath.DescribeLocal(dateTime);
+			scheduleNext.Text = L.T("Следующий: ") + ScheduleMath.DescribeLocal(dateTime);
 			string text2 = text + " · " + ScheduleMath.DescribeIn(dateTime - DateTime.UtcNow);
 			if (flag)
 			{
 				string text3 = text2;
-				text2 = text3 + " · по поясу «" + ScheduleMath.ShortZoneName(timeZoneInfo) + "» это " + config.schedule.time;
+				text2 = text3 + L.T(" · по поясу «") + ScheduleMath.ShortZoneName(timeZoneInfo) + L.T("» это ") + config.schedule.time;
 			}
 			DateTime? dateTime2 = Store.Time(Store.Obj(lastStatus, "schedule"), "last");
 			if (dateTime2.HasValue)
 			{
-				text2 = text2 + " · прошлый — " + dateTime2.Value.ToLocalTime().ToString("dd.MM HH:mm", CultureInfo.InvariantCulture);
+				text2 = text2 + L.T(" · прошлый — ") + dateTime2.Value.ToLocalTime().ToString("dd.MM HH:mm", CultureInfo.InvariantCulture);
 			}
 			scheduleNextSub.Text = text2;
 		}
 		if (config.schedule.enabled && config.schedule.action == "reboot" && !SystemTools.IsAutostartOn())
 		{
 			scheduleWarn.Visibility = Visibility.Visible;
-			scheduleWarnText.Text = "Автозапуск выключен: после перезагрузки AutoRejoin не запустится сам и аккаунты не зайдут.";
-			scheduleWarnFix.Content = "Включить автозапуск";
+			scheduleWarnText.Text = L.T("Автозапуск выключен: после перезагрузки AutoRejoin не запустится сам и аккаунты не зайдут.");
+			scheduleWarnFix.Content = L.T("Включить автозапуск");
 			scheduleWarnFix.Visibility = Visibility.Visible;
 		}
 		else if (config.schedule.enabled && !Running)
 		{
 			scheduleWarn.Visibility = Visibility.Visible;
-			scheduleWarnText.Text = "AutoRejoin сейчас остановлен — расписание срабатывает, только пока он запущен.";
-			scheduleWarnFix.Content = "Запустить";
+			scheduleWarnText.Text = L.T("AutoRejoin сейчас остановлен — расписание срабатывает, только пока он запущен.");
+			scheduleWarnFix.Content = L.T("Запустить");
 			scheduleWarnFix.Visibility = Visibility.Visible;
 		}
 		else
@@ -2038,11 +2074,11 @@ public class MainController
 	{
 		if (!engine.IsRunning || phase != "running")
 		{
-			MessageDialog.Show(window, "Сначала запусти AutoRejoin", "Плановый перезапуск выполняет работающий AutoRejoin.", MessageDialog.Kind.Info);
+			MessageDialog.Show(window, L.T("Сначала запусти AutoRejoin"), L.T("Плановый перезапуск выполняет работающий AutoRejoin."), MessageDialog.Kind.Info);
 			return;
 		}
 		bool flag = config.schedule.action == "reboot";
-		if (MessageDialog.Ask(window, flag ? "Перезагрузить компьютер сейчас?" : "Перезайти всеми аккаунтами сейчас?", flag ? "Windows перезагрузится сразу, окна Роблокса закроются. После перезагрузки AutoRejoin запустится сам (если включён автозапуск) и первым заведёт мейна." : "Окна всех аккаунтов закроются разом и через 10 сек зайдут заново по одному.", flag ? "Перезагрузить" : "Перезайти", (!flag) ? MessageDialog.Kind.Warning : MessageDialog.Kind.Danger, "Отмена"))
+		if (MessageDialog.Ask(window, flag ? L.T("Перезагрузить компьютер сейчас?") : L.T("Перезайти всеми аккаунтами сейчас?"), flag ? L.T("Windows перезагрузится сразу, окна Роблокса закроются. После перезагрузки AutoRejoin запустится сам (если включён автозапуск) и первым заведёт мейна.") : L.T("Окна всех аккаунтов закроются разом и через 10 сек зайдут заново по одному."), flag ? L.T("Перезагрузить") : L.T("Перезайти"), (!flag) ? MessageDialog.Kind.Warning : MessageDialog.Kind.Danger, L.T("Отмена")))
 		{
 			engine.Send("schedule-now");
 		}
@@ -2089,12 +2125,12 @@ public class MainController
 		logFilter.Items.Add(new ChoiceItem
 		{
 			Value = "",
-			Name = "Все события"
+			Name = L.T("Все события")
 		});
 		logFilter.Items.Add(new ChoiceItem
 		{
 			Value = "!",
-			Name = "Только важное"
+			Name = L.T("Только важное")
 		});
 		foreach (AccountCard card in cards)
 		{
@@ -2223,7 +2259,7 @@ public class MainController
 				AddLog(new LogLine
 				{
 					Time = DateTime.Now.ToString("HH:mm:ss"),
-					Message = "— выше: прошлые записи из rejoin.log —",
+					Message = L.T("— выше: прошлые записи из rejoin.log —"),
 					Color = "DarkGray"
 				});
 			}

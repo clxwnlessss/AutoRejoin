@@ -54,8 +54,8 @@ public class AuthManager
 		}
 		catch (Exception ex)
 		{
-			App.LogError("обновление куки", ex);
-			main.AppLog(entry.name, "не получилось обновить куку: " + ex.Message, "Red");
+			App.LogError(L.T("обновление куки"), ex);
+			main.AppLog(entry.name, L.T("не получилось обновить куку: ") + ex.Message, "Red");
 			Later(key, 5);
 			return false;
 		}
@@ -89,22 +89,22 @@ public class AuthManager
 		}
 		if (masterError != null && masterError.Status != 401)
 		{
-			main.AppLog(entry.name, "не получилось обновить куку: " + masterError.Message + " Повторю через 2 мин.", "DarkYellow");
+			main.AppLog(entry.name, L.T("не получилось обновить куку: ") + masterError.Message + L.T(" Повторю через 2 мин."), "DarkYellow");
 			Later(entry.id, 2);
 			return false;
 		}
 		if (masterUser != null && (string.IsNullOrEmpty(entry.userId) || entry.userId == masterUser.Id))
 		{
-			Apply(entry, await Task.Run(() => RobloxApi.MintSession(master)), master, masterUser, (reason == "moderated") ? "Роблокс снова пускает аккаунт — взял новую куку из сохранённого входа." : "кука устарела — взял новую из сохранённого входа (без пароля и капчи).");
+			Apply(entry, await Task.Run(() => RobloxApi.MintSession(master)), master, masterUser, (reason == "moderated") ? L.T("Роблокс снова пускает аккаунт — взял новую куку из сохранённого входа.") : L.T("кука устарела — взял новую из сохранённого входа (без пароля и капчи)."));
 			return true;
 		}
 		if (masterModerated && await TryAccept(entry, master))
 		{
 			string fresh = await Task.Run(() => RobloxApi.MintSession(master));
-			Apply(user: await Task.Run(() => RobloxApi.CheckCookie(fresh)), entry: entry, cookie: fresh, master: master, message: "предупреждение принято — взял новую куку из сохранённого входа.");
+			Apply(user: await Task.Run(() => RobloxApi.CheckCookie(fresh)), entry: entry, cookie: fresh, master: master, message: L.T("предупреждение принято — взял новую куку из сохранённого входа."));
 			return true;
 		}
-		main.AppLog(entry.name, masterModerated ? "Роблокс не пускает аккаунт (предупреждение) — открываю вход, чтобы его принять." : "кука устарела — вхожу заново по логину и паролю…", masterModerated ? "DarkYellow" : "Cyan");
+		main.AppLog(entry.name, masterModerated ? L.T("Роблокс не пускает аккаунт (предупреждение) — открываю вход, чтобы его принять.") : L.T("кука устарела — вхожу заново по логину и паролю…"), masterModerated ? "DarkYellow" : "Cyan");
 		LoginResult login = await RobloxLogin.Run(new LoginRequest
 		{
 			AccountId = entry.id,
@@ -114,11 +114,11 @@ public class AuthManager
 			ExpectedUserId = entry.userId,
 			Visible = interactive,
 			AutoAccept = main.Config.autoAcceptWarnings,
-			Reason = (masterModerated ? "Роблокс не пускает аккаунт (403)." : "Кука устарела.")
+			Reason = (masterModerated ? L.T("Роблокс не пускает аккаунт (403).") : L.T("Кука устарела."))
 		}, main.Window);
 		if (!login.Ok)
 		{
-			main.AppLog(entry.name, login.Cancelled ? "вход отменён — без него аккаунт не зайдёт. Попробую снова через 30 мин (или нажми ↻ у аккаунта)." : ("не получилось войти: " + login.Error + ". Попробую снова через 10 мин."), "Red");
+			main.AppLog(entry.name, login.Cancelled ? L.T("вход отменён — без него аккаунт не зайдёт. Попробую снова через 30 мин (или нажми ↻ у аккаунта).") : (L.T("не получилось войти: ") + login.Error + L.T(". Попробую снова через 10 мин.")), "Red");
 			Later(entry.id, login.Cancelled ? 30 : 10);
 			return false;
 		}
@@ -130,10 +130,10 @@ public class AuthManager
 		}
 		catch (Exception error)
 		{
-			App.LogError("отдельная сессия после входа", error);
+			App.LogError(L.T("отдельная сессия после входа"), error);
 			working = login.Cookie;
 		}
-		Apply(entry, working, login.Cookie, login.User, "вошёл по логину и паролю — кука обновлена.");
+		Apply(entry, working, login.Cookie, login.User, L.T("вошёл по логину и паролю — кука обновлена."));
 		return true;
 	}
 
@@ -162,7 +162,7 @@ public class AuthManager
 		}
 		catch (Exception ex)
 		{
-			main.AppLog(entry.name, "не получилось узнать, что за модерация: " + ex.Message, "DarkYellow");
+			main.AppLog(entry.name, L.T("не получилось узнать, что за модерация: ") + ex.Message, "DarkYellow");
 			return false;
 		}
 		if (info == null)
@@ -171,7 +171,7 @@ public class AuthManager
 		}
 		if (!info.CanReactivate)
 		{
-			main.AppLog(entry.name, "Роблокс: " + info.Describe() + " — снять это нельзя, аккаунт ждёт конца срока.", "Red");
+			main.AppLog(entry.name, L.T("Роблокс: ") + info.Describe() + L.T(" — снять это нельзя, аккаунт ждёт конца срока."), "Red");
 			return false;
 		}
 		await Task.Run(delegate
@@ -179,7 +179,7 @@ public class AuthManager
 			RobloxApi.Reactivate(cookie);
 		});
 		await Task.Run(() => RobloxApi.CheckCookie(cookie));
-		main.AppLog(entry.name, "принял " + info.Describe(), "DarkYellow");
+		main.AppLog(entry.name, L.T("принял ") + info.Describe(), "DarkYellow");
 		return true;
 	}
 

@@ -25,15 +25,15 @@ public static class RobloxLogin
 		{
 			SetLoaderPath();
 			string availableBrowserVersionString = CoreWebView2Environment.GetAvailableBrowserVersionString();
-			return string.IsNullOrEmpty(availableBrowserVersionString) ? "Для входа по логину и паролю нужен Microsoft Edge WebView2 Runtime — скачай его с сайта Microsoft («WebView2 Runtime», Evergreen) и попробуй снова." : null;
+			return string.IsNullOrEmpty(availableBrowserVersionString) ? L.T("Для входа по логину и паролю нужен Microsoft Edge WebView2 Runtime — скачай его с сайта Microsoft («WebView2 Runtime», Evergreen) и попробуй снова.") : null;
 		}
 		catch (WebView2RuntimeNotFoundException)
 		{
-			return "Для входа по логину и паролю нужен Microsoft Edge WebView2 Runtime — скачай его с сайта Microsoft («WebView2 Runtime», Evergreen) и попробуй снова.";
+			return L.T("Для входа по логину и паролю нужен Microsoft Edge WebView2 Runtime — скачай его с сайта Microsoft («WebView2 Runtime», Evergreen) и попробуй снова.");
 		}
 		catch (Exception ex2)
 		{
-			return "Встроенный браузер не запускается: " + ex2.Message;
+			return L.T("Встроенный браузер не запускается: ") + ex2.Message;
 		}
 	}
 

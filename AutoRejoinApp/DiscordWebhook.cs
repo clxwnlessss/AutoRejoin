@@ -79,7 +79,7 @@ public class DiscordWebhook
 
 	private volatile bool sendNow;
 
-	public string State { get; private set; } = "выключен";
+	public string State { get; private set; } = L.T("выключен");
 
 	public bool Healthy { get; private set; }
 
@@ -133,18 +133,18 @@ public class DiscordWebhook
 		runningKey = key;
 		if (!cfg.discordOn)
 		{
-			SetState("выключен", healthy: false);
+			SetState(L.T("выключен"), healthy: false);
 			return;
 		}
 		if (!IsValidUrl(newUrl))
 		{
-			SetState("не настроен — вставь ссылку вебхука", healthy: false);
+			SetState(L.T("не настроен — вставь ссылку вебхука"), healthy: false);
 			return;
 		}
 		url = newUrl;
 		cts = new CancellationTokenSource();
 		CancellationToken ct = cts.Token;
-		SetState("ждёт первого отчёта", healthy: false);
+		SetState(L.T("ждёт первого отчёта"), healthy: false);
 		Task.Run(() => Loop(ct));
 	}
 
@@ -215,7 +215,7 @@ public class DiscordWebhook
 			{
 				Name = DisplayName(account, n),
 				Main = account.main,
-				Text = (running ? "ждёт запуска" : "AutoRejoin остановлен")
+				Text = (running ? L.T("ждёт запуска") : L.T("AutoRejoin остановлен"))
 			};
 			string state = null;
 			string lastReason = null;
@@ -224,7 +224,7 @@ public class DiscordWebhook
 			{
 				state = Store.Str(view, "state");
 				row.InGame = state == "ingame" || state == "script";
-				row.Text = Store.Str(view, "text") ?? row.Text;
+				row.Text = L.Engine(Store.Str(view, "text")) ?? row.Text;
 				row.StartedAt = Store.Time(view, "startedAt");
 				lastReason = Store.Str(view, "lastReason");
 				lastReasonAt = Store.Time(view, "lastReasonAt");
@@ -246,7 +246,7 @@ public class DiscordWebhook
 			bool signedOut = Store.Flag(pot, "enabled") && Store.Flag(pot, "signedOut");
 			if (signedOut && !potassiumSignedOut && !main.Config.potassiumAutoLogin)
 			{
-				Enqueue("⚠️ Потассиум разлогинился — скрипт в новые окна не подключится. Войди в Потассиум (или включи «Автовход» в настройках AutoRejoin).", mention: true);
+				Enqueue(L.T("⚠️ Потассиум разлогинился — скрипт в новые окна не подключится. Войди в Потассиум (или включи «Автовход» в настройках AutoRejoin)."), mention: true);
 			}
 			potassiumSignedOut = signedOut;
 		}
@@ -278,14 +278,14 @@ public class DiscordWebhook
 			track.DropReported = !Planned.IsMatch(reason ?? "");
 			if (track.DropReported)
 			{
-				Enqueue("🔴 **" + Escape(row.Name) + "**" + (row.Main ? " ⭐" : "") + " вылетел: " + reason, mention: false);
+				Enqueue("🔴 **" + Escape(row.Name) + "**" + (row.Main ? " ⭐" : "") + L.T(" вылетел: ") + L.Engine(reason), mention: false);
 			}
 		}
 		else if (!track.InGame && row.InGame)
 		{
 			if (track.DropReported)
 			{
-				Enqueue("🟢 **" + Escape(row.Name) + "**" + (row.Main ? " ⭐" : "") + " снова в игре (не было " + Ago(track.DownSince) + ")", mention: false);
+				Enqueue("🟢 **" + Escape(row.Name) + "**" + (row.Main ? " ⭐" : "") + L.T(" снова в игре (не было ") + Ago(track.DownSince) + ")", mention: false);
 			}
 			track.DropReported = false;
 		}
@@ -347,7 +347,7 @@ public class DiscordWebhook
 			}
 			catch (Exception ex)
 			{
-				SetState("ошибка: " + ex.Message, healthy: false);
+				SetState(L.T("ошибка: ") + ex.Message, healthy: false);
 			}
 		}
 	}
@@ -385,7 +385,7 @@ public class DiscordWebhook
 				["users"] = ids
 			}
 		};
-		Report(await Post(body, ct), "сообщение отправлено");
+		Report(await Post(body, ct), L.T("сообщение отправлено"));
 	}
 
 	private async Task SendReport(CancellationToken ct)
@@ -403,7 +403,7 @@ public class DiscordWebhook
 			{
 				inGame++;
 			}
-			string line = (row.InGame ? "🟢" : "🔴") + " **" + Escape(row.Name) + "**" + (row.Main ? " ⭐" : "") + " — " + (row.InGame ? ("в игре" + (row.StartedAt.HasValue ? (" " + Ago(row.StartedAt.Value)) : "")) : ("не в игре (" + row.Text + ")"));
+			string line = (row.InGame ? "🟢" : "🔴") + " **" + Escape(row.Name) + "**" + (row.Main ? " ⭐" : "") + " — " + (row.InGame ? (L.T("в игре") + (row.StartedAt.HasValue ? (" " + Ago(row.StartedAt.Value)) : "")) : (L.T("не в игре (") + row.Text + ")"));
 			if (text.Length + line.Length > 3900)
 			{
 				text.Append("\n…");
@@ -413,7 +413,7 @@ public class DiscordWebhook
 		}
 		if (snap.Rows.Count == 0)
 		{
-			text.Append("Включённых аккаунтов нет.");
+			text.Append(L.T("Включённых аккаунтов нет."));
 		}
 		int total = snap.Rows.Count;
 		int color = ((!snap.Running || inGame == 0) ? 0xE5484D : ((inGame < total) ? 0xF5A524 : 0x30A46C));
@@ -425,7 +425,7 @@ public class DiscordWebhook
 			{
 				new Dictionary<string, object>
 				{
-					["title"] = (snap.Running ? ("В игре " + inGame + " из " + total) : "AutoRejoin остановлен"),
+					["title"] = (snap.Running ? (L.T("В игре ") + inGame + L.T(" из ") + total) : L.T("AutoRejoin остановлен")),
 					["description"] = text.ToString().TrimEnd(),
 					["color"] = color,
 					["footer"] = new Dictionary<string, object> { ["text"] = Owner.Credit + " · " + Environment.MachineName },
@@ -433,22 +433,22 @@ public class DiscordWebhook
 				}
 			}
 		};
-		Report(await Post(body, ct), "последний отчёт в " + DateTime.Now.ToString("HH:mm"));
+		Report(await Post(body, ct), L.T("последний отчёт в ") + DateTime.Now.ToString("HH:mm"));
 	}
 
 	private void Report(int code, string okText)
 	{
 		if (code >= 200 && code < 300)
 		{
-			SetState("работает — " + okText, healthy: true);
+			SetState(L.T("работает — ") + okText, healthy: true);
 		}
 		else if (code == 401 || code == 404)
 		{
-			SetState("вебхук не найден — его удалили или ссылка неверная", healthy: false);
+			SetState(L.T("вебхук не найден — его удалили или ссылка неверная"), healthy: false);
 		}
 		else
 		{
-			SetState("Discord ответил " + code, healthy: false);
+			SetState(L.T("Discord ответил ") + code, healthy: false);
 		}
 	}
 
@@ -528,7 +528,7 @@ public class DiscordWebhook
 		{
 			return account.userId;
 		}
-		return "Аккаунт " + n;
+		return L.T("Аккаунт ") + n;
 	}
 
 	private static string Ago(DateTime utc)
@@ -536,17 +536,17 @@ public class DiscordWebhook
 		TimeSpan span = DateTime.UtcNow - utc;
 		if (span.TotalMinutes < 1.0)
 		{
-			return (int)Math.Max(1.0, span.TotalSeconds) + " сек";
+			return (int)Math.Max(1.0, span.TotalSeconds) + L.T(" сек");
 		}
 		if (span.TotalHours < 1.0)
 		{
-			return (int)span.TotalMinutes + " мин";
+			return (int)span.TotalMinutes + L.T(" мин");
 		}
 		if (span.TotalDays < 1.0)
 		{
-			return (int)span.TotalHours + " ч " + span.Minutes + " мин";
+			return (int)span.TotalHours + L.T(" ч ") + span.Minutes + L.T(" мин");
 		}
-		return (int)span.TotalDays + " д " + span.Hours + " ч";
+		return (int)span.TotalDays + L.T(" д ") + span.Hours + L.T(" ч");
 	}
 
 	private static string Escape(string text)

@@ -69,22 +69,22 @@ public class Tray : IDisposable
 			BackColor = Color.FromArgb(26, 30, 41),
 			ForeColor = Color.FromArgb(236, 238, 245)
 		};
-		ToolStripMenuItem toolStripMenuItem = new ToolStripMenuItem("Открыть AutoRejoin", null, delegate
+		ToolStripMenuItem toolStripMenuItem = new ToolStripMenuItem(L.T("Открыть AutoRejoin"), null, delegate
 		{
 			Raise(this.OpenRequested);
 		})
 		{
 			Font = new Font(contextMenuStrip.Font, FontStyle.Bold)
 		};
-		startStopItem = new ToolStripMenuItem("Запустить", null, delegate
+		startStopItem = new ToolStripMenuItem(L.T("Запустить"), null, delegate
 		{
 			Raise(this.StartStopRequested);
 		});
-		ToolStripMenuItem toolStripMenuItem2 = new ToolStripMenuItem("Перезайти всеми аккаунтами", null, delegate
+		ToolStripMenuItem toolStripMenuItem2 = new ToolStripMenuItem(L.T("Перезайти всеми аккаунтами"), null, delegate
 		{
 			Raise(this.RejoinAllRequested);
 		});
-		ToolStripMenuItem toolStripMenuItem3 = new ToolStripMenuItem("Выход", null, delegate
+		ToolStripMenuItem toolStripMenuItem3 = new ToolStripMenuItem(L.T("Выход"), null, delegate
 		{
 			Raise(this.ExitRequested);
 		});
@@ -127,7 +127,7 @@ public class Tray : IDisposable
 
 	public void SetRunning(bool running)
 	{
-		startStopItem.Text = (running ? "Остановить" : "Запустить");
+		startStopItem.Text = (running ? L.T("Остановить") : L.T("Запустить"));
 	}
 
 	public void SetText(string text)

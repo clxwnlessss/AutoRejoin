@@ -22,7 +22,7 @@ public class AccountCard : Notify
 
 	private string memory = "";
 
-	private string memoryTip = "Память окна";
+	private string memoryTip = L.T("Память окна");
 
 	private string restarts = "0";
 
@@ -275,7 +275,7 @@ public class AccountCard : Notify
 
 	public void Update(VaultAccount entry)
 	{
-		Name = (string.IsNullOrEmpty(entry.name) ? "Аккаунт" : entry.name);
+		Name = (string.IsNullOrEmpty(entry.name) ? L.T("Аккаунт") : entry.name);
 		UserId = entry.userId;
 		Set(ref isMain, entry.main, "IsMain", "MainVisibility");
 		Set(ref ownLink, !string.IsNullOrWhiteSpace(entry.link), "OwnLinkVisibility");
@@ -293,7 +293,7 @@ public class AccountCard : Notify
 	public void ApplyEngine(IDictionary<string, object> data)
 	{
 		string text = Store.Str(data, "state") ?? "";
-		string text2 = Store.Str(data, "text") ?? "";
+		string text2 = L.Engine(Store.Str(data, "text") ?? "");
 		string text3 = Store.Str(data, "name");
 		if (!string.IsNullOrEmpty(text3) && text3 != "новый аккаунт")
 		{
@@ -302,34 +302,34 @@ public class AccountCard : Notify
 		switch (text)
 		{
 		case "ingame":
-			SetState(text, "В игре", Palette.Green, Palette.GreenSoft);
+			SetState(text, L.T("В игре"), Palette.Green, Palette.GreenSoft);
 			break;
 		case "script":
-			SetState(text, "Ждёт скрипт", Palette.Blue, Palette.BlueSoft);
+			SetState(text, L.T("Ждёт скрипт"), Palette.Blue, Palette.BlueSoft);
 			break;
 		case "loading":
-			SetState(text, "Заходит", Palette.Blue, Palette.BlueSoft);
+			SetState(text, L.T("Заходит"), Palette.Blue, Palette.BlueSoft);
 			break;
 		case "launching":
-			SetState(text, "Запуск", Palette.Blue, Palette.BlueSoft);
+			SetState(text, L.T("Запускается"), Palette.Blue, Palette.BlueSoft);
 			break;
 		case "queued":
-			SetState(text, "В очереди", Palette.Gray, Palette.GraySoft);
+			SetState(text, L.T("В очереди"), Palette.Gray, Palette.GraySoft);
 			break;
 		case "waiting":
-			SetState(text, "Пауза", Palette.Yellow, Palette.YellowSoft);
+			SetState(text, L.T("Пауза"), Palette.Yellow, Palette.YellowSoft);
 			break;
 		case "offline":
-			SetState(text, "Отключён", Palette.Yellow, Palette.YellowSoft);
+			SetState(text, L.T("Отключён"), Palette.Yellow, Palette.YellowSoft);
 			break;
 		case "deferred":
-			SetState(text, "Не пускает", Palette.Red, Palette.RedSoft);
+			SetState(text, L.T("Не пускает"), Palette.Red, Palette.RedSoft);
 			break;
 		case "problem":
-			SetState(text, "Ошибка", Palette.Red, Palette.RedSoft);
+			SetState(text, L.T("Ошибка"), Palette.Red, Palette.RedSoft);
 			break;
 		case "blocked":
-			SetState(text, "Нужна перезагрузка", Palette.Red, Palette.RedSoft);
+			SetState(text, L.T("Нужна перезагрузка"), Palette.Red, Palette.RedSoft);
 			break;
 		default:
 			SetState(text, "—", Palette.Gray, Palette.GraySoft);
@@ -341,7 +341,7 @@ public class AccountCard : Notify
 		Changed("MetricsVisibility");
 		double? num2 = Store.Num(data, "wsGB");
 		double? num3 = Store.Num(data, "capMB");
-		string text4 = (num.HasValue ? (num.Value.ToString("0.0", CultureInfo.InvariantCulture) + " ГБ") : "");
+		string text4 = (num.HasValue ? (num.Value.ToString("0.0", CultureInfo.InvariantCulture) + L.T(" ГБ")) : "");
 		if (num2.HasValue)
 		{
 			text4 = text4 + ((text4.Length > 0) ? " · " : "") + "RAM " + num2.Value.ToString("0.0", CultureInfo.InvariantCulture);
@@ -349,31 +349,31 @@ public class AccountCard : Notify
 			{
 				text4 = text4 + "/" + (num3.Value / 1024.0).ToString("0.0", CultureInfo.InvariantCulture);
 			}
-			text4 += " ГБ";
+			text4 += L.T(" ГБ");
 		}
 		Memory = text4;
-		MemoryTip = "Память окна: сколько оно заняло (вместе с файлом подкачки)" + (num2.HasValue ? " · RAM — сколько из этого сейчас в оперативной памяти" : "") + (num3.HasValue ? (" / потолок RAM (" + ((int)num3.Value).ToString(CultureInfo.InvariantCulture) + " МБ)") : "");
+		MemoryTip = L.T("Память окна: сколько оно заняло (вместе с файлом подкачки)") + (num2.HasValue ? L.T(" · RAM — сколько из этого сейчас в оперативной памяти") : "") + (num3.HasValue ? (L.T(" / потолок RAM (") + ((int)num3.Value).ToString(CultureInfo.InvariantCulture) + L.T(" МБ)")) : "");
 		Restarts = ((int)(Store.Num(data, "restarts") ?? 0.0)).ToString(CultureInfo.InvariantCulture);
 		RefreshUptime();
 		string text5 = Capitalize(text2);
 		string text6 = text5;
-		string text7 = Store.Str(data, "lastReason");
+		string text7 = L.Engine(Store.Str(data, "lastReason"));
 		DateTime? dateTime = Store.Time(data, "lastReasonAt");
 		if (!string.IsNullOrEmpty(text7) && dateTime.HasValue)
 		{
 			string text8 = dateTime.Value.ToLocalTime().ToString("HH:mm", CultureInfo.InvariantCulture);
 			string text9 = text6;
-			text6 = text9 + "\nПоследний перезаход в " + text8 + ": " + text7;
+			text6 = text9 + L.T("\nПоследний перезаход в ") + text8 + ": " + text7;
 			if (text == "ingame" || text == "script")
 			{
 				string text10 = text5;
-				text5 = text10 + " · перезаход в " + text8 + ": " + text7;
+				text5 = text10 + L.T(" · перезаход в ") + text8 + ": " + text7;
 			}
 		}
 		if (Store.Flag(data, "userOpen"))
 		{
-			text5 += " · окном управляешь ты";
-			text6 += "\nОкно открыто тобой — не сворачивается и не перезаходит из-за памяти.";
+			text5 += L.T(" · окном управляешь ты");
+			text6 += L.T("\nОкно открыто тобой — не сворачивается и не перезаходит из-за памяти.");
 		}
 		Detail = text5;
 		DetailTip = text6;
@@ -390,7 +390,7 @@ public class AccountCard : Notify
 	{
 		if (authNote != null)
 		{
-			SetState("auth", "Вход", Palette.Blue, Palette.BlueSoft);
+			SetState("auth", L.T("Вход"), Palette.Blue, Palette.BlueSoft);
 			Detail = authNote;
 			DetailTip = authNote;
 		}
@@ -402,13 +402,13 @@ public class AccountCard : Notify
 		Changed("MetricsVisibility");
 		if (!enabled)
 		{
-			SetState("disabled", "Выключен", Palette.Gray, Palette.GraySoft);
+			SetState("disabled", L.T("Выключен"), Palette.Gray, Palette.GraySoft);
 		}
 		else
 		{
 			SetState("idle", text, Palette.Gray, Palette.GraySoft);
 		}
-		Detail = (enabled ? detailText : "Выключен — AutoRejoin его не запускает и не трогает его окно");
+		Detail = (enabled ? detailText : L.T("Выключен — AutoRejoin его не запускает и не трогает его окно"));
 		DetailTip = Detail;
 		Memory = "";
 		Uptime = "";
@@ -432,19 +432,19 @@ public class AccountCard : Notify
 		}
 		if (timeSpan.TotalMinutes < 1.0)
 		{
-			Uptime = (int)timeSpan.TotalSeconds + " сек";
+			Uptime = (int)timeSpan.TotalSeconds + L.T(" сек");
 		}
 		else if (timeSpan.TotalHours < 1.0)
 		{
-			Uptime = (int)timeSpan.TotalMinutes + " мин";
+			Uptime = (int)timeSpan.TotalMinutes + L.T(" мин");
 		}
 		else if (timeSpan.TotalDays < 1.0)
 		{
-			Uptime = (int)timeSpan.TotalHours + " ч " + timeSpan.Minutes + " мин";
+			Uptime = (int)timeSpan.TotalHours + L.T(" ч ") + timeSpan.Minutes + L.T(" мин");
 		}
 		else
 		{
-			Uptime = (int)timeSpan.TotalDays + " д " + timeSpan.Hours + " ч";
+			Uptime = (int)timeSpan.TotalDays + L.T(" д ") + timeSpan.Hours + L.T(" ч");
 		}
 	}
 

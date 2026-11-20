@@ -1,0 +1,608 @@
+# AutoRejoin — English translation (russian<TAB>english). \n = new line, \s = space. ~regex = engine text pattern.
+# ---------- code ----------
+ (меняется на лету). Впишешь ссылку здесь — файл больше не читается.	 (updates live). Enter a link here and the file is no longer read.
+ / потолок RAM (	 / RAM cap (
+ · RAM — сколько из этого сейчас в оперативной памяти	 · RAM — how much of it is in physical memory now
+ · вход по логину и паролю, хранится зашифрованным	 · login & password, stored encrypted
+ · кука хранится зашифрованной	 · cookie stored encrypted
+ · место #	 · rank #
+ · обновлено 	 · updated\s
+ · окном управляешь ты	 · you control this window
+ · перезаход в 	 · rejoin at\s
+ · по поясу «	 · in time zone «
+ · пока не в топе	 · not ranked yet
+ · прошлый — 	 · last —\s
+ ГБ	 GB
+ ГБ + подкачка 	 GB + page file\s
+ МБ)	 MB)
+ Открываю страницу входа…	 Opening the login page…
+ Повторю через 2 мин.	 Retrying in 2 min.
+ Пробую ещё раз…	 Trying again…
+ акк.	 acc.
+ в 	 at\s
+ в игре	 in game
+ вылетел: 	 dropped:\s
+ д 	 d\s
+ до 	 until\s
+ добавлен. AutoRejoin сейчас остановлен.	 added. AutoRejoin is stopped right now.
+ заходят или ждут	 joining or waiting
+ из 	 of\s
+ мин	 min
+ на 	 for\s
+ нет файла 	 is missing the file\s
+ окон Роблокса. Windows попросит права администратора. Заработает после перезагрузки компьютера.	 Roblox windows. Windows will ask for admin rights. Takes effect after a restart.
+ процесс.).	 process(es)).
+ сек	 s
+ скопирован — открываю Discord.	 copied — opening Discord.
+ снова в игре (не было 	 is back in game (was out for\s
+ станет фиксированного размера под 	 will get a fixed size for\s
+ уже есть в списке	 is already in the list
+ ч	 h
+ ч 	 h\s
+ ч: 	 h:\s
+ шт.	 window(s).
+ — AutoRejoin перезапустится.	 — AutoRejoin will restart.
+ — кука получена, дальше AutoRejoin обновляет её сам.	 — cookie received, AutoRejoin will refresh it from now on.
+ — кука рабочая.	 — cookie works.
+ — нужно твоё действие в окне входа AutoRejoin.	 — your action is needed in the AutoRejoin login window.
+ — снять это нельзя, аккаунт ждёт конца срока.	 — this can't be lifted, the account waits for it to end.
+) — перезапускаю через 15 сек.	) — restarting in 15 s.
+). Войди в 	). Log in to\s
+). Нужна ссылка приглашения на приватный сервер.	). A private server invite link is needed.
+, а не 	, not\s
+, а не в 	, not\s
+, включено 	, enabled\s
+, вышла 	, available\s
+. Заменить 	. Replace\s
+. Попробуй ещё раз.	. Try again.
+. Попробую снова через 10 мин.	. Will retry in 10 min.
+. Прими предупреждение на roblox.com под этим аккаунтом, включи «Принимать предупреждения Роблокса» в настройках или переключи аккаунт на вход по логину и паролю.	. Accept the warning on roblox.com with this account, turn on «Accept Roblox warnings» in settings, or switch the account to login & password.
+. Ставятся с GitHub сами.	. Installed from GitHub automatically.
+0 — не трогать.	0 — leave as is.
+1 — минимум. Мейна не трогает.	1 — lowest. Main isn't affected.
+: Роблокс не пускает аккаунт (403)	: Roblox blocks the account (403)
+: кука устарела (401). Вставь новую или переключи аккаунт на вход по логину и паролю — тогда AutoRejoin будет обновлять куку сам.	: cookie expired (401). Paste a new one or switch the account to login & password — then AutoRejoin will refresh the cookie itself.
+AutoRejoin ещё запускается — перезайти можно, когда он заработает.	AutoRejoin is still starting — you can rejoin once it's running.
+AutoRejoin не следит за ним	AutoRejoin doesn't watch it
+AutoRejoin остановлен	AutoRejoin stopped
+AutoRejoin остановлен — аккаунт не перезаходит. Нажми «Запустить».	AutoRejoin is stopped — the account won't rejoin. Press «Start».
+AutoRejoin остановлен — сначала нажми «Запустить».	AutoRejoin is stopped — press «Start» first.
+AutoRejoin откроет его сам	AutoRejoin will open it
+AutoRejoin перестанет держать этот аккаунт в игре, кука и пароль удалятся из приложения. Окно Роблокса, если открыто, останется как есть.	AutoRejoin will stop keeping this account in game; its cookie and password will be removed. An open Roblox window stays as is.
+AutoRejoin работает без него	AutoRejoin works without it
+AutoRejoin работает в трее	AutoRejoin is running in the tray
+AutoRejoin сейчас остановлен — расписание срабатывает, только пока он запущен.	AutoRejoin is stopped — the schedule only runs while it's running.
+AutoRejoin: вход в 	AutoRejoin: login to\s
+AutoRejoin: нужна твоя помощь	AutoRejoin: needs your help
+Discord ID через запятую (необязательно)	Discord IDs, comma-separated (optional)
+Discord ответил 	Discord replied\s
+GitHub временно ограничил проверки — попробуй через час	GitHub is rate-limiting checks — try again in an hour
+GitHub ответил 	GitHub replied\s
+VIP-ссылка, ссылка на игру или ID плейса. Пусто — обычный BSS.	VIP link, game link or place ID. Empty — regular BSS.
+Windows перезагрузится сразу, окна Роблокса закроются. После перезагрузки AutoRejoin запустится сам (если включён автозапуск) и первым заведёт мейна.	Windows will restart right away and Roblox windows will close. After the restart AutoRejoin starts by itself (if autostart is on) and joins the main first.
+\n\nAutoRejoin скачает обновление, закроется и откроется уже новой версией. Окна Роблокса останутся открытыми, аккаунты и настройки сохранятся.	\n\nAutoRejoin will download the update, close and reopen as the new version. Roblox windows stay open; accounts and settings are kept.
+\nОкно открыто тобой — не сворачивается и не перезаходит из-за памяти.	\nYou opened this window — it isn't minimized or restarted for memory.
+\nПоследний перезаход в 	\nLast rejoin at\s
+» это 	» is\s
+». Проверь логин и пароль в окне ниже (или в настройках аккаунта в AutoRejoin).	». Check the login and password in the window below (or in the account settings in AutoRejoin).
+Автовход	Auto login
+Автозапуск	Autostart
+Автозапуск выключен: после перезагрузки AutoRejoin не запустится сам и аккаунты не зайдут.	Autostart is off: after a restart AutoRejoin won't start and accounts won't join.
+Автозапуск: даю Windows прогрузиться…	Autostart: letting Windows load…
+Автоперезагрузка при мёртвых окнах	Auto restart PC when windows die
+Аккаунт	Account
+Аккаунт 	Account\s
+Аккаунтов: 	Accounts:\s
+Аккаунты не перезаходят	Accounts don't rejoin
+Аккаунты перестанут перезаходить. Окна Роблокса останутся открытыми.	Accounts will stop rejoining. Roblox windows stay open.
+Аккаунты продолжают перезаходить. Открыть — значок у часов, выйти — правой кнопкой по нему.	Accounts keep rejoining. Open — the icon near the clock; exit — right-click it.
+Без подробностей.	No details.
+Берёт новую куку…	Getting a new cookie…
+В share-ссылке нет code=…	The share link has no code=…
+В игре	In game
+В игре 	In game\s
+В очереди	Queued
+В файле нет ни одной куки.	The file has no cookies.
+В этом месяце пока никто не стоял. Стань первым!	Nobody has stood AFK this month yet. Be the first!
+Введи логин аккаунта Роблокса (ник, почту или телефон).	Enter the Roblox login (username, email or phone).
+Введи пароль.	Enter the password.
+Ввожу логин и пароль…	Entering login and password…
+Версия 	Version\s
+Включает Auto attach обратно, если он выключился.	Turns Auto attach back on if it gets disabled.
+Включи переключатель вверху, чтобы задать время.	Turn on the switch above to set the time.
+Включить автозапуск	Enable autostart
+Включённых аккаунтов нет.	No enabled accounts.
+Войди и попади в топ	Log in and get on the board
+Войти	Log in
+Войти / создать аккаунт	Log in / create account
+Войти и добавить	Log in and add
+Восстановить	Restore
+Вошёл в 	Logged in to\s
+Время не идёт — нет аккаунтов в игре.	Time isn't counting — no accounts in game.
+Все в игре.	All in game.
+Все события	All events
+Вставь куку .ROBLOSECURITY этого аккаунта.	Paste this account's .ROBLOSECURITY cookie.
+Встроенный браузер не запускается: 	The built-in browser doesn't start:\s
+Вход	Login
+Вход в Roblox — 	Roblox login —\s
+Вход в аккаунты	Account login
+Вход в топ АФК: 	Logged in to AFK top:\s
+Вход выполнен в 	Logged in to\s
+Вход идёт дольше обычного — посмотри, что показывает Роблокс.	Login is taking longer than usual — check what Roblox shows.
+Вход не завершился сам — Роблокс что-то спрашивает. Закончи вход в окне ниже, куку AutoRejoin заберёт сам.	Login didn't finish — Roblox is asking something. Finish logging in below; AutoRejoin will grab the cookie.
+Вход отменён — аккаунт не сохранён.	Login cancelled — account not saved.
+Вход прошёл — проверяю куку…	Logged in — checking the cookie…
+Входит в аккаунт — новая кука…	Logging in — new cookie…
+Входит сам, если Потассиум разлогинился.	Logs in if Potassium gets signed out.
+Вхожу в Роблокс…	Logging in to Roblox…
+Выйти	Log out
+Выйти из AutoRejoin?	Exit AutoRejoin?
+Выключен	Off
+Выключен — AutoRejoin его не запускает и не трогает его окно	Off — AutoRejoin doesn't launch it or touch its window
+Вылет с причиной и возврат в игру. Проблемы — с упоминанием.	Drops with the reason and comebacks. Problems ping you.
+Высокий	High
+Выход	Exit
+Выше среднего	Above normal
+Вышла новая версия AutoRejoin 	New AutoRejoin version\s
+ГБ	GB
+Где лежит Potassium.exe	Where Potassium.exe is
+Готово: 	Done:\s
+Графика хелперов	Helper graphics
+Данные	Data
+Движок AutoRejoin неожиданно закрылся (код 	The AutoRejoin engine closed unexpectedly (code\s
+Движок AutoRejoin падает раз за разом (5 раз за 10 минут) — остановил. Подробности в журнале.	The AutoRejoin engine keeps crashing (5 times in 10 minutes) — stopped. Details in the log.
+Движок закрылся, через 15 сек запущу снова	Engine closed, restarting in 15 s
+Движок падает раз за разом — открой AutoRejoin.	The engine keeps crashing — open AutoRejoin.
+Держать автоаттач включённым	Keep auto attach on
+Держит аккаунты в игре.	Keeps accounts in game.
+Для входа по логину и паролю нужен Microsoft Edge WebView2 Runtime — скачай его с сайта Microsoft («WebView2 Runtime», Evergreen) и попробуй снова.	Login & password needs Microsoft Edge WebView2 Runtime — download it from Microsoft («WebView2 Runtime», Evergreen) and try again.
+Добавить аккаунт	Add account
+Добавь аккаунт, потом «Запустить»	Add an account, then «Start»
+Ещё не чистились.	Never cleaned yet.
+Ждать память перед запуском окна	Wait for memory before launching
+Жду другой вход…	Waiting for another login…
+Жду интернет…	Waiting for internet…
+Ждёт скрипт	Waiting script
+За месяц: 	This month:\s
+Загружаю топ…	Loading the board…
+Загружаю топ… (сервер может просыпаться до минуты)	Loading the board… (the server may take up to a minute to wake up)
+Загружаю…	Loading…
+Закрываю окна Роблокса	Closing Roblox windows
+Закрыл другой AutoRejoin (	Closed the other AutoRejoin (
+Закрыл окна Роблокса: 	Closed Roblox windows:\s
+Закрыт	Closed
+Закрыть другой и запустить этот	Close the other and start this one
+Заменить	Replace
+Запуск	Startup
+Запуск через Froststrap / Bloxstrap	Launch via Froststrap / Bloxstrap
+Запускается	Starting
+Запускать вместе с Windows	Start with Windows
+Запускать при открытии	Start on open
+Запускаюсь…	Starting…
+Запустить	Start
+Запустить снова	Start again
+Заходит	Joining
+Импорт	Import
+Импорт из accounts.txt	Import from accounts.txt
+Импорт: проверяю куку 	Import: checking cookie\s
+Импортировано аккаунтов: 	Accounts imported:\s
+Импорт…	Import…
+Как гость	As guest
+Канал → Интеграции → Вебхуки → «Копировать URL». Никому не показывай.	Channel → Integrations → Webhooks → «Copy URL». Never share it.
+Кого упоминать	Who to ping
+Компьютер перезагрузится через 	The PC will restart in\s
+Кто в игре 🟢, а кто нет 🔴 — раз в N минут.	Who's in game 🟢 and who isn't 🔴 — every N minutes.
+Кука на строку, ссылка — через пробел.	One cookie per line, link after a space.
+Кука не подходит: недействительна или устарела (Роблокс ответил 401).	Cookie rejected: invalid or expired (Roblox replied 401).
+Кука устарела — нужна новая.	Cookie expired — a new one is needed.
+Кука устарела.	Cookie expired.
+Лимит FPS мейна	Main FPS limit
+Лимит FPS хелперов	Helper FPS limit
+Лимит выше действует только на хелперов.	The limit above applies to helpers only.
+Логи Роблокса и журнал старше срока, раз в столько же часов.	Roblox logs and the journal older than this, every that many hours.
+Логин	Login
+Логин и пароль AutoRejoin вводит сам. Куку заберёт сам, как только вход пройдёт.	AutoRejoin enters the login and password and grabs the cookie as soon as you're in.
+МБ	MB
+Мгновенные оповещения	Instant alerts
+Мейн на весь экран	Main fullscreen
+Мейн не сворачивается никогда.	The main is never minimized.
+Мейна выбери кнопкой ✎ у аккаунта. Сам файл accounts.txt больше не нужен — удали его, в нём куки открытым текстом.	Pick the main with the ✎ button. accounts.txt is no longer needed — delete it, it holds cookies in plain text.
+Меньше нагрузка на видеокарту.	Less GPU load.
+НОВАЯ КУКА — ТОЛЬКО ЕСЛИ СТАРАЯ УСТАРЕЛА	NEW COOKIE — ONLY IF THE OLD ONE EXPIRED
+На часах этого компьютера — другой пояс: время пересчитается само.	This PC's clock uses another time zone: the time is converted automatically.
+Настроить	Set up
+Настроить файл подкачки?	Set up the page file?
+Настроить…	Set up…
+Не вышло:\n• 	Failed:\n•\s
+Не перезапускать мейна	Don't restart the main
+Не получилось войти: 	Couldn't log in:\s
+Не получилось запустить движок: 	Couldn't start the engine:\s
+Не получилось изменить автозапуск: 	Couldn't change autostart:\s
+Не получилось проверить	Couldn't check
+Не получилось проверить куку: 	Couldn't check the cookie:\s
+Не получилось проверить обновления: 	Couldn't check for updates:\s
+Не получилось сохранить аккаунты: 	Couldn't save accounts:\s
+Не получилось сохранить настройки: 	Couldn't save settings:\s
+Не понимаю ссылку: нужна ссылка на игру (/games/…), VIP- или share-ссылка.	Unknown link: a game link (/games/…), VIP or share link is needed.
+Не пускает	Blocked
+Не сохранилось	Not saved
+Не трогать	Leave as is
+Не чаще раза в 30 мин.	At most once per 30 min.
+Не читается список аккаунтов	Can't read the account list
+Нет пульса — окно перезаходит.	No pulse — the window rejoins.
+Нет ресурса 	Missing resource\s
+Нет связи с Роблоксом: 	No connection to Roblox:\s
+Нет связи с сервером.	No connection to the server.
+Ник 	Nickname\s
+Ник (3–20: латиница, цифры, _)	Nickname (3–20: letters, digits, _)
+Никому не отправляй. 	Never send it to anyone.\s
+Ничего не импортировано	Nothing imported
+Новая кука — от аккаунта 	The new cookie belongs to\s
+Новое окно — только при свободной памяти.	New windows only when memory is free.
+Нужен вход	Login needed
+Нужен загрузчик в автоэкзекуте. Нет скрипта — перезаход.	Needs the loader in autoexec. No script — rejoin.
+Нужна перезагрузка	Restart needed
+Нужна ссылка roblox.com (VIP/share-ссылка или ссылка на игру) или ID плейса.	A roblox.com link (VIP/share or game link) or a place ID is needed.
+ОЗУ 	RAM\s
+Обзор…	Browse…
+Обновить	Refresh
+Обновление не установилось: 	Update failed:\s
+Обновлений нет	No updates
+Обновления	Updates
+Обычный	Normal
+Ожидание	Waiting
+Окна	Windows
+Окна всех аккаунтов закроются разом и через 10 сек зайдут заново по одному.	All windows close at once and rejoin one by one after 10 s.
+Окно больше лимита перезаходит.	A window above the limit rejoins.
+Остальное уходит в подкачку. Мейна не трогает.	The rest goes to the page file. Main isn't affected.
+Останавливаю…	Stopping…
+Остановить	Stop
+Остановлен	Stopped
+Отключён	Disconnected
+Открывать и перезапускать Потассиум.	Open and restart Potassium.
+Открываю Потассиум…	Opening Potassium…
+Открываю окно входа Роблокса. Логин и пароль AutoRejoin введёт сам; если Роблокс попросит капчу или код — введи их там.	Opening the Roblox login window. AutoRejoin enters the login and password; if Roblox asks for a captcha or code, enter it there.
+Открываю страницу входа Роблокса…	Opening the Roblox login page…
+Открыт	Open
+Открыть	Open
+Открыть AutoRejoin	Open AutoRejoin
+Открыть аккаунт	Open account
+Открыть — значок у часов, выйти — правой кнопкой по нему.	Open — the icon near the clock; exit — right-click it.
+Отмена	Cancel
+Отменить перезагрузку	Cancel restart
+Отправить отчёт сейчас.	Send a report now.
+Отправить сейчас	Send now
+Отчёт в Discord	Discord report
+Очистить сейчас	Clean now
+Очистка логов	Log cleanup
+Очистка логов старше 	Cleaned logs older than\s
+Ошибка	Error
+Ошибка 403: принимать предупреждение самому. Баны не снимает.	Error 403: accept the warning automatically. Doesn't lift bans.
+ПКМ по себе → «Копировать ID» (нужен режим разработчика).	Right-click yourself → «Copy ID» (Developer Mode required).
+Памяти меньше — перезаходит самое большое окно.	Less memory than this — the biggest window rejoins.
+Память	Memory
+Память окна	Window memory
+Память окна: сколько оно заняло (вместе с файлом подкачки)	Window memory: how much it uses (including the page file)
+Папка данных	Data folder
+Пароль (от 6 символов)	Password (6+ characters)
+Пауза	Paused
+Пауза между аккаунтами	Delay between accounts
+Пауза при автозапуске	Autostart delay
+Первый — через минуту после запуска.	The first one — a minute after start.
+Перезагрузить	Restart
+Перезагрузить компьютер сейчас?	Restart the PC now?
+Перезагрузка компьютера	PC restart
+Перезайти	Rejoin
+Перезайти всеми аккаунтами	Rejoin all accounts
+Перезайти всеми аккаунтами сейчас?	Rejoin all accounts now?
+Перезайти всеми аккаунтами?	Rejoin all accounts?
+Перезапуск раздувшегося окна	Restart bloated windows
+Перезапуск…	Restarting…
+Перезаход всеми аккаунтами	Rejoin all accounts
+Перезаход по Balloon Blessing	Rejoin on Balloon Blessing
+Плановый перезапуск выключен	Scheduled restart is off
+Плановый перезапуск выполняет работающий AutoRejoin.	A running AutoRejoin performs the scheduled restart.
+Повторить	Retry
+Подключаюсь…	Connecting…
+Позже	Later
+Пока аккаунты в игре, сервер копит твоё АФК-время.	While your accounts are in game, the server counts your AFK time.
+Получаю куку…	Getting the cookie…
+После N продлений у мейна — перезаход всех.	After N extensions on the main — rejoin all.
+Последняя очистка: 	Last cleanup:\s
+Потассиум	Potassium
+Потассиум разлогинился	Potassium signed out
+Потолок RAM хелперов	Helper RAM cap
+Принимать предупреждения Роблокса	Accept Roblox warnings
+Приоритет процессора для мейна	Main CPU priority
+Присылать отчёт раз в	Send a report every
+Проверить и добавить	Check and add
+Проверить обновления	Check for updates
+Проверка	Test
+Проверять запуск скрипта	Check script start
+Проверять пульс скрипта	Check script pulse
+Проверяю куки аккаунтов…	Checking account cookies…
+Проверяю куку у Роблокса…	Checking the cookie with Roblox…
+Проверяю куку…	Checking the cookie…
+Проверяю…	Checking…
+Пропускать Balloon-перезаход, если скоро расписание.	Skip the Balloon rejoin if the schedule is soon.
+Против «Out of Virtual Memory». Нужна перезагрузка.	Fixes «Out of Virtual Memory». Restart required.
+Пусто — найдёт сам.	Empty — found automatically.
+Пусто — найдётся сам	Empty — found automatically
+Пусто — оставить текущую куку	Empty — keep the current cookie
+Путь к Potassium.exe	Path to Potassium.exe
+Работает	Running
+Работать с Потассиумом	Use Potassium
+Развернуть	Maximize
+Размер окна хелпера	Helper window size
+Роблокс не выдал билет на вход.	Roblox didn't issue a login ticket.
+Роблокс не выдал новую куку.	Roblox didn't issue a new cookie.
+Роблокс не ответил.	Roblox didn't respond.
+Роблокс не пускает аккаунт (403).	Roblox blocks the account (403).
+Роблокс не пускает аккаунт (предупреждение) — открываю вход, чтобы его принять.	Roblox blocks the account (warning) — opening login to accept it.
+Роблокс не пускает этот аккаунт (403): на нём предупреждение или бан — его нужно принять на roblox.com.	Roblox blocks this account (403): it has a warning or ban — accept it on roblox.com.
+Роблокс не пустил: «	Roblox refused: «
+Роблокс ответил 403 (доступ запрещён). Попробуй ещё раз.	Roblox replied 403 (forbidden). Try again.
+Роблокс ответил без ID аккаунта — попробуй ещё раз.	Roblox replied without an account ID — try again.
+Роблокс ответил ошибкой 	Roblox replied with error\s
+Роблокс показывает предупреждение для этого аккаунта (из-за него была ошибка 403). Прочитай его и нажми «I agree» / «Reactivate» — AutoRejoin продолжит сам.	Roblox shows a warning for this account (it caused error 403). Read it and press «I agree» / «Reactivate» — AutoRejoin continues on its own.
+Роблокс просит код подтверждения (из почты, SMS или приложения 2FA). Введи его в окне ниже — дальше AutoRejoin сам.	Roblox asks for a verification code (email, SMS or 2FA app). Enter it below — AutoRejoin does the rest.
+Роблокс просит подождать (слишком много запросов, 429). Попробуй через минуту.	Roblox asks to wait (too many requests, 429). Try again in a minute.
+Роблокс просит подтвердить, что ты не робот. Пройди проверку в окне ниже — куку AutoRejoin заберёт сам.	Roblox asks you to prove you're not a robot. Pass the check below — AutoRejoin grabs the cookie.
+Роблокс снова пускает аккаунт — взял новую куку из сохранённого входа.	Roblox lets the account in again — took a new cookie from the saved login.
+Роблокс: 	Roblox:\s
+Рядом с AutoRejoin.exe нет engine.ps1 — распакуй папку программы целиком.	engine.ps1 is missing next to AutoRejoin.exe — extract the whole program folder.
+Сворачивать окна хелперов	Minimize helper windows
+Сейчас 	Now\s
+Сейчас ссылка берётся из файла 	The link is currently read from the file\s
+Сейчас: 	Now:\s
+Сервер	Server
+Сервер не ответил — попробуй ещё раз через минуту.	The server didn't respond — try again in a minute.
+Сервер ответил 	The server replied\s
+Скачиваю обновление 	Downloading update\s
+Следующий — только когда предыдущий в игре. Мейн первый.	Next one only when the previous is in game. Main first.
+Следующий: 	Next:\s
+Сначала добавь аккаунты: размер подкачки считается по их числу.	Add accounts first: the page file size depends on their number.
+Сначала добавь хотя бы один аккаунт — без аккаунтов запускать нечего.	Add at least one account first — there's nothing to start.
+Сначала запусти AutoRejoin	Start AutoRejoin first
+Совпадает с часовым поясом этого компьютера.	Matches this PC's time zone.
+Создан аккаунт топа АФК: 	AFK top account created:\s
+Создать аккаунт	Create account
+Сохранить	Save
+Спасение при нехватке памяти	Low memory rescue
+Ссылка вебхука	Webhook URL
+Ссылка на сервер	Server link
+Старая сессия устарела — вхожу заново…	The old session expired — logging in again…
+Стартует в трее и заводит аккаунты сам.	Starts in the tray and joins accounts.
+Тишина перед расписанием	Quiet before schedule
+Только важное	Important only
+Только если прямой запуск не работает.	Only if direct launch doesn't work.
+Топ АФК: сессия устарела — войди заново.	AFK top: session expired — log in again.
+Топ видно, но твоё время не считается.	You see the board, but your time isn't counted.
+Топ стендеров за месяц	Top standers this month
+Ты гость	You're a guest
+У тебя последняя версия — 	You have the latest version —\s
+Удалить	Delete
+Удалить 	Delete\s
+Уже работает другой AutoRejoin — например, старая версия в окне консоли. Два сразу перезапускали бы одни и те же окна.	Another AutoRejoin is already running — e.g. an old version in a console window. Two at once would restart the same windows.
+Устанавливаю обновление 	Installing update\s
+Установить обновление 	Install update\s
+Файл vault.dat не расшифровывается — скорее всего, его скопировали с другого компьютера или из другой учётной записи Windows. Добавь аккаунты заново. Старый файл сохранён как vault.dat.broken.	vault.dat can't be decrypted — it was probably copied from another PC or Windows account. Add the accounts again. The old file is saved as vault.dat.broken.
+Файл подкачки	Page file
+Файл подкачки на диске 	Page file on drive\s
+Файл подкачки настроен	Page file set up
+Файл подкачки не изменён	Page file not changed
+Файл с куками (accounts.txt)	Cookie file (accounts.txt)
+Чистить старые логи	Clean old logs
+Чищу…	Cleaning…
+Это share-ссылка не на сервер (type=	This share link isn't a server (type=
+Это другой аккаунт	This is a different account
+Это другой аккаунт (	This is a different account (
+Это не ссылка вебхука Discord — она начинается с https://discord.com/api/webhooks/	That's not a Discord webhook URL — it starts with https://discord.com/api/webhooks/
+автоаттач включён	auto attach on
+автоаттач выключен!	auto attach off!
+бан (	ban (
+в архиве обновления нет AutoRejoin.exe или engine.ps1	the update archive has no AutoRejoin.exe or engine.ps1
+в игре	in game
+в релизе 	release\s
+вебхук не найден — его удалили или ссылка неверная	webhook not found — it was deleted or the URL is wrong
+вошёл по логину и паролю — кука обновлена.	logged in with login & password — cookie refreshed.
+все на месте	everyone's in
+встроенный браузер: 	built-in browser:\s
+вход отменён — без него аккаунт не зайдёт. Попробую снова через 30 мин (или нажми ↻ у аккаунта).	login cancelled — the account can't join without it. Will retry in 30 min (or press ↻ on the account).
+выключен	off
+добавлен в приложении.	added in the app.
+доступна версия 	version available:\s
+ждёт запуска	waiting to start
+ждёт первого отчёта	waiting for the first report
+завтра в 	tomorrow at\s
+запускается	starting
+кука устарела — взял новую из сохранённого входа (без пароля и капчи).	cookie expired — took a new one from the saved login (no password or captcha).
+кука устарела — вхожу заново по логину и паролю…	cookie expired — logging in again with login & password…
+меньше чем через минуту	in less than a minute
+мин	min
+на GitHub ещё нет ни одного релиза	there are no releases on GitHub yet
+настроить →	set up →
+не в игре (	not in game (
+не настроен — вставь ссылку вебхука	not set up — paste a webhook URL
+не получилось войти: 	couldn't log in:\s
+не получилось обновить куку: 	couldn't refresh the cookie:\s
+не получилось узнать, что за модерация: 	couldn't find out the moderation type:\s
+непонятный номер версии в релизе: 	unknown version in release:\s
+нет связи с GitHub (	no connection to GitHub (
+новая кука сохранена.	new cookie saved.
+остановлен	stopped
+откроется при запуске	opens on start
+ошибка: 	error:\s
+перезагрузка ПК	PC restart
+перезаход всеми	rejoin all
+перезаходов: 	rejoins:\s
+подключён к окнам: 	attached to windows:\s
+последний отчёт в 	last report at\s
+последняя версия — 	latest version —\s
+предупреждение	warning
+предупреждение принято — взял новую куку из сохранённого входа.	warning accepted — took a new cookie from the saved login.
+принял 	accepted\s
+проверка не удалась: 	check failed:\s
+продл.	ext.
+работает — 	running —\s
+сегодня в 	today at\s
+сек	s
+сообщение отправлено	message sent
+строка 	line\s
+удалено файлов: 	files deleted:\s
+удалять нечего	nothing to delete
+ур.	lvl
+ч	h
+через 	in\s
+это ты	that's you
+— выше: прошлые записи из rejoin.log —	— above: earlier entries from rejoin.log —
+● Время идёт — в игре 	● Time is counting — in game:\s
+● стоит	● standing
+⚠️ Потассиум разлогинился — скрипт в новые окна не подключится. Войди в Потассиум (или включи «Автовход» в настройках AutoRejoin).	⚠️ Potassium signed out — the script won't attach to new windows. Log in to Potassium (or turn on «Auto login» in AutoRejoin settings).
+# ---------- windows (XAML) ----------
+Discord: clxwnlesss — открыть профиль (ник скопируется)	Discord: clxwnlesss — open profile (nickname gets copied)
+Связь в Discord	Contact on Discord
+МЕНЮ	MENU
+Аккаунты	Accounts
+Топ АФК	Top AFK
+Расписание	Schedule
+Настройки	Settings
+Журнал	Log
+Помощь	Help
+Свернуть	Minimize
+В трей	To tray
+Скрыть	Hide
+Перезайти всеми	Rejoin all
+Добавить	Add
+МЕЙН	MAIN
+Своя ссылка на сервер	Own server link
+СВОЙ СЕРВЕР	OWN SERVER
+Перезаходов	Rejoins
+Изменить	Edit
+Держать в игре	Keep in game
+Аккаунтов пока нет	No accounts yet
+Добавь по логину и паролю или по куке.	Add one by login & password or by cookie.
+Импорт accounts.txt	Import accounts.txt
+Кто дольше всех простоял в АФК за месяц.	Who stood AFK the longest this month.
+Раз в день: перезагрузка ПК или перезаход всеми.	Once a day: restart the PC or rejoin all.
+Плановый перезапуск	Scheduled restart
+Каждый день в одно время	Every day at the same time
+ВРЕМЯ	TIME
+ЧАСОВОЙ ПОЯС	TIME ZONE
+ДЕЙСТВИЕ	ACTION
+Перезагрузить ПК	Restart PC
+После загрузки AutoRejoin зайдёт сам, мейн первым.	After boot AutoRejoin joins by itself, main first.
+Окна закроются и зайдут заново по одному.	Windows close and rejoin one by one.
+Сейчас	Now
+Для перезагрузки нужен автозапуск (Настройки → Запуск) и вход в Windows без пароля.	Restarting needs autostart (Settings → Startup) and Windows login without a password.
+Применяются сразу.	Applied instantly.
+Что и почему происходило.	What happened and why.
+Скопировать	Copy
+Открыть rejoin.log	Open rejoin.log
+Очистить экран	Clear screen
+Коротко о главном.	The essentials.
+ВЛАДЕЛЕЦ И РАЗРАБОТЧИК	OWNER & DEVELOPER
+Вопросы, баги, идеи — пиши в Discord.	Questions, bugs, ideas — message me on Discord.
+Как начать	Getting started
+1. Аккаунты → «Добавить» (логин и пароль или кука).	1. Accounts → «Add» (login & password or cookie).
+2. Настройки → «Ссылка на сервер» (пусто — обычный BSS).	2. Settings → «Server link» (empty — regular BSS).
+3. «Запустить» слева. Крестик — сворачивает в трей.	3. «Start» on the left. The X button minimizes to tray.
+Кука .ROBLOSECURITY	.ROBLOSECURITY cookie
+roblox.com → F12 → Application → Cookies → .ROBLOSECURITY → скопируй значение. Не жми потом «Выйти» в этом браузере.	roblox.com → F12 → Application → Cookies → .ROBLOSECURITY → copy the value. Don't press «Log out» in that browser afterwards.
+Если что-то не так	Troubleshooting
+• 401 — кука устарела: вставь новую или войди по логину и паролю.	• 401 — cookie expired: paste a new one or use login & password.
+• 403 — предупреждение Роблокса: прими его или включи автопринятие.	• 403 — Roblox warning: accept it or turn on auto-accept.
+• «Ждёт памяти» — увеличь файл подкачки (Настройки → Память).	• «Waiting for memory» — enlarge the page file (Settings → Memory).
+• Окна не запускаются — помогает только перезагрузка.	• Windows won't launch — only a restart helps.
+Безопасность	Security
+Куки и пароли зашифрованы под твою учётку Windows. Папку данных никому не отправляй.	Cookies and passwords are encrypted for your Windows account. Never send the data folder to anyone.
+Программа	Program
+1. Зайди на roblox.com под этим аккаунтом в браузере.	1. Log in to roblox.com with this account in a browser.
+2. F12 → Application (Приложение) → Cookies → https://www.roblox.com.	2. F12 → Application → Cookies → https://www.roblox.com.
+3. Строка .ROBLOSECURITY → скопируй значение целиком и вставь сюда.	3. The .ROBLOSECURITY row → copy the whole value and paste it here.
+AutoRejoin войдёт в аккаунт и узнает ник.	AutoRejoin logs in and finds out the username.
+Войти заново сейчас	Log in again now
+ВХОД В АККАУНТ	ACCOUNT LOGIN
+Входит сам и сам обновляет куку. Капчу или код из почты вводишь ты. Пароль зашифрован.	Logs in and refreshes the cookie itself. You enter captchas or email codes. The password is encrypted.
+Заходит первым, не сворачивается.	Joins first, never minimized.
+Как достать куку?	How to get the cookie?
+КУКА .ROBLOSECURITY	.ROBLOSECURITY COOKIE
+ЛОГИН (НИК, ПОЧТА ИЛИ ТЕЛЕФОН)	LOGIN (USERNAME, EMAIL OR PHONE)
+Логин и пароль	Login & password
+Мейн-аккаунт	Main account
+Не жми потом «Выйти» в браузере — кука умрёт.	Don't press «Log out» in that browser — the cookie will die.
+Ник аккаунта Роблокса	Roblox username
+ПАРОЛЬ	PASSWORD
+По куке	By cookie
+Пусто — общая ссылка из настроек	Empty — the shared link from settings
+Пусто — оставить сохранённый пароль	Empty — keep the saved password
+СВОЯ ССЫЛКА НА СЕРВЕР — НЕОБЯЗАТЕЛЬНО	OWN SERVER LINK — OPTIONAL
+Удалить аккаунт	Delete account
+AutoRejoin входит сам и заберёт куку, когда вход завершится.	AutoRejoin logs in and grabs the cookie once you're in.
+Вход в Roblox	Roblox login
+Открываю страницу входа…	Opening the login page…
+Отменить вход	Cancel login
+# ---------- server (leaderboard) errors ----------
+Ник: 3–20 символов, латиница, цифры и _.	Nickname: 3–20 characters, letters, digits and _.
+Пароль: от 6 до 100 символов.	Password: 6 to 100 characters.
+Такой ник уже занят.	This nickname is taken.
+Неверный ник или пароль.	Wrong nickname or password.
+Слишком много попыток. Подожди 10 минут.	Too many attempts. Wait 10 minutes.
+Нужно войти в аккаунт.	You need to log in.
+Сессия устарела — войди заново.	Session expired — log in again.
+Ошибка сервера.	Server error.
+# ---------- engine texts ----------
+заходит на сервер	joining the server
+отключился от сервера	disconnected from the server
+в игре, ждёт запуска скрипта	in game, waiting for the script
+в игре, скрипт работает	in game, script running
+новые окна Роблокса не запускаются — нужна перезагрузка компьютера	new Roblox windows won't launch — a PC restart is needed
+ждёт свободной памяти	waiting for free memory
+в очереди на запуск	queued to launch
+этот аккаунт уже есть в списке	this account is already in the list
+окно закрылось	window closed
+перезаход по кнопке	rejoin by button
+плановый перезаход	scheduled rejoin
+перезаход по Balloon Blessing мейна	rejoin on the main's Balloon Blessing
+уступил очередь мейну	gave way to the main
+Роблокс не пускает аккаунт — проверю позже	Roblox blocks the account — will check later
+вышел в меню Роблокса (неудачный прыжок на сервер)	left to the Roblox menu (failed server hop)
+вышел в меню	left to the menu
+кикнули из игры	kicked from the game
+Роблокс заподозрил стороннюю программу (Unexpected client behavior)	Roblox suspected a third-party program (Unexpected client behavior)
+аккаунт зашёл в игру с другого устройства	the account joined from another device
+сервер закрылся	server shut down
+сервер закрыт на обслуживание	server under maintenance
+потеряна связь с сервером	lost connection to the server
+кик за 20 минут бездействия	kicked for 20 minutes of inactivity
+не удалось подключиться к серверу	couldn't connect to the server
+клиент Роблокса устарел	the Roblox client is outdated
+вылет с сервера	dropped from the server
+~^(.+) \(код (\d+)\)$	$1 (code $2)
+~^отключился от сервера \((.+)\)$	disconnected from the server ($1)
+~^отключило от сервера \((.+)\)$	disconnected from the server ($1)
+~^отключило от сервера$	disconnected from the server
+~^перезайдёт через (\d+) сек$	rejoins in $1 s
+~^окно не отвечает уже (\d+) сек$	window not responding for $1 s
+~^не зашёл на сервер за (\d+) сек$	didn't join the server in $1 s
+~^окно раздулось до ([\d.,]+) ГБ памяти \(лимит ([\d.,]+) ГБ\)$	window grew to $1 GB of memory (limit $2 GB)
+~^Роблокс не пускает аккаунт \(403\): (.+)$	Roblox blocks the account (403): $1
+# ---------- internal labels ----------
+config.json не читается, беру настройки по умолчанию	config.json is unreadable, using default settings
+vault.dat не расшифровывается	vault.dat can't be decrypted
+В разметке нет элемента 	Missing element in markup\s
+вход из окна аккаунта	login from the account window
+вход не завершён за час	login not finished within an hour
+вход отменён	login cancelled
+вход по логину и паролю	login & password
+движок не запустился	engine didn't start
+не открылась ссылка на Discord	couldn't open the Discord link
+не сохранился config.json	config.json not saved
+не сохранился vault.dat	vault.dat not saved
+необработанная ошибка	unhandled error
+обновление куки	cookie refresh
+обновление не установилось	update failed
+отдельная сессия после входа	separate session after login
+ошибка в окне	window error
+ошибка фоновой задачи	background task error
+принятие предупреждения при входе	accepting a warning at login

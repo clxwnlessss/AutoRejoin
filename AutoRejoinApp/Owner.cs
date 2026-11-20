@@ -34,7 +34,7 @@ public static class Owner
 		}
 		catch (Exception error)
 		{
-			App.LogError("не открылась ссылка на Discord", error);
+			App.LogError(L.T("не открылась ссылка на Discord"), error);
 		}
 	}
 }

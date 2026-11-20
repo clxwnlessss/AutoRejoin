@@ -13,6 +13,10 @@
 [Releases](../../releases/latest) → `AutoRejoin.zip` → распакуй → `AutoRejoin.exe`. Windows 10/11.
 Дальше обновляется сама (Настройки → Данные → «Проверить обновления»).
 
+## Что нового в 2.3 / What's new in 2.3
+
+- **English language** — переключатель RU/EN в настройках (по умолчанию — по языку Windows). / RU/EN switch in Settings (defaults to your Windows language).
+
 ## Что нового в 2.2
 
 - **Топ АФК за месяц**: создай аккаунт в программе (или зайди гостем) — пока твои аккаунты в игре,

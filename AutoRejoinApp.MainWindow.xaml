@@ -667,7 +667,7 @@
                                     </Grid>
                                 </Border>
 
-                                <TextBlock Text="AutoRejoin 2.0 · © clxwnlesss" Foreground="{StaticResource Text3}" FontSize="11.5" Margin="4,18,0,0"/>
+                                <TextBlock Text="AutoRejoin · © clxwnlesss" Foreground="{StaticResource Text3}" FontSize="11.5" Margin="4,18,0,0"/>
                             </StackPanel>
                         </ScrollViewer>
                     </Grid>

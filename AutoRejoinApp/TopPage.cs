@@ -127,15 +127,15 @@ public class TopPage
 		StackPanel panel = new StackPanel();
 		panel.Children.Add(new TextBlock
 		{
-			Text = "Войди и попади в топ",
+			Text = L.T("Войди и попади в топ"),
 			Style = (Style)host.FindResource("H2"),
 			FontSize = 17.0
 		});
-		panel.Children.Add(Hint("Пока аккаунты в игре, сервер копит твоё АФК-время."));
+		panel.Children.Add(Hint(L.T("Пока аккаунты в игре, сервер копит твоё АФК-время.")));
 		TextBox nick = new TextBox
 		{
 			Style = Res("Field"),
-			Tag = "Ник (3–20: латиница, цифры, _)",
+			Tag = L.T("Ник (3–20: латиница, цифры, _)"),
 			MaxLength = 20,
 			Margin = new Thickness(0.0, 16.0, 0.0, 0.0)
 		};
@@ -145,7 +145,7 @@ public class TopPage
 			MaxLength = 100,
 			Margin = new Thickness(0.0, 10.0, 0.0, 0.0)
 		};
-		TextBlock passLabel = Hint("Пароль (от 6 символов)");
+		TextBlock passLabel = Hint(L.T("Пароль (от 6 символов)"));
 		passLabel.Margin = new Thickness(2.0, 10.0, 0.0, -6.0);
 		TextBlock error = Hint("");
 		error.Foreground = Palette.Red;
@@ -160,9 +160,9 @@ public class TopPage
 			Orientation = Orientation.Horizontal,
 			Margin = new Thickness(0.0, 16.0, 0.0, 0.0)
 		};
-		Button login = Btn("Войти", "BtnPrimary");
-		Button register = Btn("Создать аккаунт", "Btn");
-		Button guest = Btn("Как гость", "BtnGhost");
+		Button login = Btn(L.T("Войти"), "BtnPrimary");
+		Button register = Btn(L.T("Создать аккаунт"), "Btn");
+		Button guest = Btn(L.T("Как гость"), "BtnGhost");
 		register.Margin = new Thickness(10.0, 0.0, 0.0, 0.0);
 		guest.Margin = new Thickness(10.0, 0.0, 0.0, 0.0);
 		buttons.Children.Add(login);
@@ -182,12 +182,12 @@ public class TopPage
 			login.IsEnabled = register.IsEnabled = guest.IsEnabled = false;
 			Button pressed = create ? register : login;
 			object label = pressed.Content;
-			pressed.Content = "Подключаюсь…";
+			pressed.Content = L.T("Подключаюсь…");
 			try
 			{
 				Tuple<string, string> session = create ? (await Leaderboard.Register(BaseUrl, n, p)) : (await Leaderboard.Login(BaseUrl, n, p));
 				main.SetLeaderboardSession(session.Item1, session.Item2);
-				main.AppLog(null, (create ? "Создан аккаунт топа АФК: " : "Вход в топ АФК: ") + session.Item2, "Cyan");
+				main.AppLog(null, (create ? L.T("Создан аккаунт топа АФК: ") : L.T("Вход в топ АФК: ")) + session.Item2, "Cyan");
 				busy = false;
 				Build();
 				Anim.SlideIn(host, 12.0, 0.3);
@@ -250,11 +250,11 @@ public class TopPage
 		};
 		text.Children.Add(new TextBlock
 		{
-			Text = "Ты гость",
+			Text = L.T("Ты гость"),
 			Style = (Style)host.FindResource("H2")
 		});
-		text.Children.Add(Hint("Топ видно, но твоё время не считается."));
-		Button enter = Btn("Войти / создать аккаунт", "BtnPrimary");
+		text.Children.Add(Hint(L.T("Топ видно, но твоё время не считается.")));
+		Button enter = Btn(L.T("Войти / создать аккаунт"), "BtnPrimary");
 		enter.VerticalAlignment = VerticalAlignment.Center;
 		enter.Click += delegate
 		{
@@ -325,7 +325,7 @@ public class TopPage
 		});
 		meStats = new TextBlock
 		{
-			Text = "Загружаю…",
+			Text = L.T("Загружаю…"),
 			FontSize = 13.5,
 			FontWeight = FontWeights.SemiBold,
 			Margin = new Thickness(0.0, 3.0, 0.0, 0.0)
@@ -334,7 +334,7 @@ public class TopPage
 		meState.Margin = new Thickness(0.0, 2.0, 0.0, 0.0);
 		info.Children.Add(meStats);
 		info.Children.Add(meState);
-		Button logout = Btn("Выйти", "Btn");
+		Button logout = Btn(L.T("Выйти"), "Btn");
 		logout.VerticalAlignment = VerticalAlignment.Center;
 		logout.Click += async delegate
 		{
@@ -368,10 +368,10 @@ public class TopPage
 		}
 		if (lastMe != null)
 		{
-			meStats.Text = "За месяц: " + Leaderboard.FormatHours(lastMe.Seconds) + (lastMe.Rank.HasValue ? (" · место #" + lastMe.Rank.Value) : " · пока не в топе");
+			meStats.Text = L.T("За месяц: ") + Leaderboard.FormatHours(lastMe.Seconds) + (lastMe.Rank.HasValue ? (L.T(" · место #") + lastMe.Rank.Value) : L.T(" · пока не в топе"));
 		}
 		int inGame = main.InGameCount;
-		meState.Text = (inGame > 0) ? ("● Время идёт — в игре " + inGame + " акк.") : "Время не идёт — нет аккаунтов в игре.";
+		meState.Text = (inGame > 0) ? (L.T("● Время идёт — в игре ") + inGame + L.T(" акк.")) : L.T("Время не идёт — нет аккаунтов в игре.");
 		meState.Foreground = (inGame > 0) ? Palette.Green : Palette.Text3;
 	}
 
@@ -394,7 +394,7 @@ public class TopPage
 			if (ex.Status == 401)
 			{
 				main.SetLeaderboardSession(null, null);
-				main.AppLog(null, "Топ АФК: сессия устарела — войди заново.", "DarkYellow");
+				main.AppLog(null, L.T("Топ АФК: сессия устарела — войди заново."), "DarkYellow");
 				Build();
 				return;
 			}
@@ -421,7 +421,7 @@ public class TopPage
 		StackPanel title = new StackPanel();
 		title.Children.Add(new TextBlock
 		{
-			Text = "Топ стендеров за месяц",
+			Text = L.T("Топ стендеров за месяц"),
 			Style = (Style)host.FindResource("H2")
 		});
 		monthText = Hint("");
@@ -430,7 +430,7 @@ public class TopPage
 		{
 			Style = Res("IconBtn"),
 			Content = "",
-			ToolTip = "Обновить",
+			ToolTip = L.T("Обновить"),
 			HorizontalAlignment = HorizontalAlignment.Right,
 			VerticalAlignment = VerticalAlignment.Center
 		};
@@ -441,7 +441,7 @@ public class TopPage
 		head.Children.Add(title);
 		head.Children.Add(refresh);
 		panel.Children.Add(head);
-		topState = Hint("Загружаю топ…");
+		topState = Hint(L.T("Загружаю топ…"));
 		topState.Margin = new Thickness(0.0, 14.0, 0.0, 4.0);
 		panel.Children.Add(topState);
 		topList = new StackPanel
@@ -461,7 +461,7 @@ public class TopPage
 	{
 		if (topState != null && lastTop == null)
 		{
-			topState.Text = "Загружаю топ… (сервер может просыпаться до минуты)";
+			topState.Text = L.T("Загружаю топ… (сервер может просыпаться до минуты)");
 		}
 		try
 		{
@@ -487,10 +487,10 @@ public class TopPage
 		{
 			return;
 		}
-		monthText.Text = MonthName(month) + " · обновлено " + DateTime.Now.ToString("HH:mm");
+		monthText.Text = MonthName(month) + L.T(" · обновлено ") + DateTime.Now.ToString("HH:mm");
 		topList.Children.Clear();
 		topState.Visibility = (entries.Count == 0) ? Visibility.Visible : Visibility.Collapsed;
-		topState.Text = "В этом месяце пока никто не стоял. Стань первым!";
+		topState.Text = L.T("В этом месяце пока никто не стоял. Стань первым!");
 		int i = 0;
 		foreach (Leaderboard.Entry entry in entries)
 		{
@@ -579,7 +579,7 @@ public class TopPage
 		{
 			name.Children.Add(new TextBlock
 			{
-				Text = "● стоит",
+				Text = L.T("● стоит"),
 				Foreground = Palette.Green,
 				FontSize = 11.5,
 				FontWeight = FontWeights.SemiBold,
@@ -591,7 +591,7 @@ public class TopPage
 		{
 			name.Children.Add(new TextBlock
 			{
-				Text = "это ты",
+				Text = L.T("это ты"),
 				Foreground = Palette.Make("#A78BFA"),
 				FontSize = 11.5,
 				Margin = new Thickness(10.0, 1.0, 0.0, 0.0),
@@ -648,7 +648,7 @@ public class TopPage
 	{
 		if (DateTime.TryParseExact(month + "-01", "yyyy-MM-dd", CultureInfo.InvariantCulture, DateTimeStyles.None, out var date))
 		{
-			string name = date.ToString("MMMM yyyy", CultureInfo.GetCultureInfo("ru-RU"));
+			string name = date.ToString("MMMM yyyy", CultureInfo.GetCultureInfo(L.IsEnglish ? "en-US" : "ru-RU"));
 			return char.ToUpper(name[0]) + name.Substring(1);
 		}
 		return month;

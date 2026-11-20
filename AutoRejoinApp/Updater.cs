@@ -65,23 +65,23 @@ public static class Updater
 		{
 			if ((int)http.StatusCode == 404)
 			{
-				throw new Exception("на GitHub ещё нет ни одного релиза");
+				throw new Exception(L.T("на GitHub ещё нет ни одного релиза"));
 			}
 			if ((int)http.StatusCode == 403)
 			{
-				throw new Exception("GitHub временно ограничил проверки — попробуй через час");
+				throw new Exception(L.T("GitHub временно ограничил проверки — попробуй через час"));
 			}
-			throw new Exception("GitHub ответил " + (int)http.StatusCode);
+			throw new Exception(L.T("GitHub ответил ") + (int)http.StatusCode);
 		}
 		catch (WebException ex)
 		{
-			throw new Exception("нет связи с GitHub (" + ex.Message + ")");
+			throw new Exception(L.T("нет связи с GitHub (") + ex.Message + ")");
 		}
 		IDictionary<string, object> json = Store.Json().DeserializeObject(body) as IDictionary<string, object>;
 		string tag = Store.Str(json, "tag_name") ?? "";
 		if (!Version.TryParse(tag.TrimStart('v', 'V'), out var version))
 		{
-			throw new Exception("непонятный номер версии в релизе: " + tag);
+			throw new Exception(L.T("непонятный номер версии в релизе: ") + tag);
 		}
 		if (version.Build < 0)
 		{
@@ -94,7 +94,7 @@ public static class Updater
 		IDictionary<string, object> asset = Store.List(json, "assets").FirstOrDefault((IDictionary<string, object> a) => string.Equals(Store.Str(a, "name"), AssetName, StringComparison.OrdinalIgnoreCase));
 		if (asset == null)
 		{
-			throw new Exception("в релизе " + tag + " нет файла " + AssetName);
+			throw new Exception(L.T("в релизе ") + tag + L.T(" нет файла ") + AssetName);
 		}
 		return new Release
 		{
@@ -136,7 +136,7 @@ public static class Updater
 		}
 		if (!File.Exists(Path.Combine(root, "AutoRejoin.exe")) || !File.Exists(Path.Combine(root, "engine.ps1")))
 		{
-			throw new Exception("в архиве обновления нет AutoRejoin.exe или engine.ps1");
+			throw new Exception(L.T("в архиве обновления нет AutoRejoin.exe или engine.ps1"));
 		}
 		string appDir = AppPaths.AppDir.TrimEnd('\\');
 		string exe = Path.Combine(appDir, "AutoRejoin.exe");

@@ -37,7 +37,7 @@ public static class Store
 		}
 		catch (Exception error)
 		{
-			App.LogError("config.json не читается, беру настройки по умолчанию", error);
+			App.LogError(L.T("config.json не читается, беру настройки по умолчанию"), error);
 			try
 			{
 				File.Copy(AppPaths.ConfigFile, AppPaths.ConfigFile + ".broken", overwrite: true);

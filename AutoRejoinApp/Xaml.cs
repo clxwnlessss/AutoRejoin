@@ -14,16 +14,18 @@ public static class Xaml
 		using Stream stream = Assembly.GetExecutingAssembly().GetManifestResourceStream("AutoRejoinApp." + name);
 		if (stream == null)
 		{
-			throw new InvalidOperationException("Нет ресурса " + name);
+			throw new InvalidOperationException(L.T("Нет ресурса ") + name);
 		}
-		return (T)XamlReader.Load(stream);
+		T loaded = (T)XamlReader.Load(stream);
+		L.Apply(loaded);
+		return loaded;
 	}
 
 	public static T Find<T>(FrameworkElement root, string name) where T : class
 	{
 		if (!(root.FindName(name) is T result))
 		{
-			throw new InvalidOperationException("В разметке нет элемента " + name);
+			throw new InvalidOperationException(L.T("В разметке нет элемента ") + name);
 		}
 		return result;
 	}

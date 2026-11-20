@@ -30,10 +30,10 @@ public class ModerationInfo
 
 	public string Describe()
 	{
-		string text = (IsWarning ? "предупреждение" : ("бан (" + Type + ")"));
+		string text = (IsWarning ? L.T("предупреждение") : (L.T("бан (") + Type + ")"));
 		if (!IsWarning && EndUtc.HasValue)
 		{
-			text = text + " до " + EndUtc.Value.ToLocalTime().ToString("dd.MM HH:mm");
+			text = text + L.T(" до ") + EndUtc.Value.ToLocalTime().ToString("dd.MM HH:mm");
 		}
 		if (!string.IsNullOrEmpty(Message))
 		{

@@ -4,8 +4,8 @@ using System.Runtime.Versioning;
 
 [assembly: AssemblyProduct("AutoRejoin")]
 [assembly: AssemblyCopyright("clxwnlesss (Даниил Арзамасов)")]
-[assembly: AssemblyFileVersion("2.2.0.0")]
+[assembly: AssemblyFileVersion("2.3.0.0")]
 [assembly: AssemblyCompany("clxwnlesss")]
 [assembly: AssemblyDescription("Держит аккаунты Роблокса в игре и перезаходит сам")]
 [assembly: AssemblyTitle("AutoRejoin")]
-[assembly: AssemblyVersion("2.2.0.0")]
+[assembly: AssemblyVersion("2.3.0.0")]

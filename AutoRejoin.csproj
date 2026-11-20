@@ -21,13 +21,13 @@
     <None Remove="AutoRejoinApp.AccountDialog.xaml" />
     <None Remove="AutoRejoinApp.MessageDialog.xaml" />
     <None Remove="AutoRejoinApp.LoginWindow.xaml" />
-    <None Remove="AutoRejoinApp.app.ico" />
+    <None Remove="AutoRejoinApp.app.ico" /><None Remove="AutoRejoinApp.lang-en.tsv" />
     <EmbeddedResource Include="AutoRejoinApp.Theme.xaml" LogicalName="AutoRejoinApp.Theme.xaml" />
     <EmbeddedResource Include="AutoRejoinApp.MainWindow.xaml" LogicalName="AutoRejoinApp.MainWindow.xaml" />
     <EmbeddedResource Include="AutoRejoinApp.AccountDialog.xaml" LogicalName="AutoRejoinApp.AccountDialog.xaml" />
     <EmbeddedResource Include="AutoRejoinApp.MessageDialog.xaml" LogicalName="AutoRejoinApp.MessageDialog.xaml" />
     <EmbeddedResource Include="AutoRejoinApp.LoginWindow.xaml" LogicalName="AutoRejoinApp.LoginWindow.xaml" />
-    <EmbeddedResource Include="AutoRejoinApp.app.ico" LogicalName="AutoRejoinApp.app.ico" />
+    <EmbeddedResource Include="AutoRejoinApp.app.ico" LogicalName="AutoRejoinApp.app.ico" /><EmbeddedResource Include="AutoRejoinApp.lang-en.tsv" LogicalName="AutoRejoinApp.lang-en.tsv" />
   </ItemGroup>
   <ItemGroup>
     <Reference Include="PresentationCore" /><Reference Include="PresentationFramework" /><Reference Include="System.Xaml" />
@@ -44,5 +44,6 @@
     <Reference Include="System.Security" /><Reference Include="System.IO.Compression" /><Reference Include="System.IO.Compression.FileSystem" />
   </ItemGroup>
 </Project>
+
 
 

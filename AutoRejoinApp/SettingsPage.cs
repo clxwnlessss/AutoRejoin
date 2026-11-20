@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Collections.Generic;
 using System.Globalization;
 using System.Linq;
@@ -35,7 +35,7 @@ public class SettingsPage
 	{
 		if (discordState != null)
 		{
-			discordState.Text = "Сейчас: " + main.Discord.State;
+			discordState.Text = L.T("Сейчас: ") + main.Discord.State;
 			discordState.Foreground = main.Discord.Healthy ? Palette.Green : Palette.Text2;
 		}
 	}
@@ -43,7 +43,7 @@ public class SettingsPage
 	private void BuildDiscord()
 	{
 		StackPanel section = Section("", "Discord");
-		AddRow(section, "Отчёт в Discord", "Кто в игре 🟢, а кто нет 🔴 — раз в N минут.", Switch(Cfg.discordOn, delegate(bool v)
+		AddRow(section, L.T("Отчёт в Discord"), L.T("Кто в игре 🟢, а кто нет 🔴 — раз в N минут."), Switch(Cfg.discordOn, delegate(bool v)
 		{
 			Cfg.discordOn = v;
 			main.ConfigChanged();
@@ -53,7 +53,7 @@ public class SettingsPage
 			Style = Res("PasswordField"),
 			Password = (main.Vault.discordWebhook ?? "")
 		};
-		TextBlock urlError = HintBlock("Это не ссылка вебхука Discord — она начинается с https://discord.com/api/webhooks/");
+		TextBlock urlError = HintBlock(L.T("Это не ссылка вебхука Discord — она начинается с https://discord.com/api/webhooks/"));
 		urlError.Foreground = Palette.Red;
 		urlError.Visibility = Visibility.Collapsed;
 		urlError.Margin = new Thickness(0.0, 6.0, 0.0, 0.0);
@@ -70,18 +70,18 @@ public class SettingsPage
 		StackPanel urlPanel = new StackPanel();
 		urlPanel.Children.Add(urlBox);
 		urlPanel.Children.Add(urlError);
-		AddStacked(section, "Ссылка вебхука", "Канал → Интеграции → Вебхуки → «Копировать URL». Никому не показывай.", urlPanel);
-		AddRow(section, "Присылать отчёт раз в", "Первый — через минуту после запуска.", WithSuffix(NumberBox(Cfg.discordInterval, 1.0, 1440.0, integer: true, delegate(double v)
+		AddStacked(section, L.T("Ссылка вебхука"), L.T("Канал → Интеграции → Вебхуки → «Копировать URL». Никому не показывай."), urlPanel);
+		AddRow(section, L.T("Присылать отчёт раз в"), L.T("Первый — через минуту после запуска."), WithSuffix(NumberBox(Cfg.discordInterval, 1.0, 1440.0, integer: true, delegate(double v)
 		{
 			Cfg.discordInterval = (int)v;
 			main.ConfigChanged();
-		}), "мин"));
-		AddRow(section, "Мгновенные оповещения", "Вылет с причиной и возврат в игру. Проблемы — с упоминанием.", Switch(Cfg.discordEvents, delegate(bool v)
+		}), L.T("мин")));
+		AddRow(section, L.T("Мгновенные оповещения"), L.T("Вылет с причиной и возврат в игру. Проблемы — с упоминанием."), Switch(Cfg.discordEvents, delegate(bool v)
 		{
 			Cfg.discordEvents = v;
 			main.ConfigChanged();
 		}));
-		TextBox mentionBox = Field("Discord ID через запятую (необязательно)", Cfg.discordMentions);
+		TextBox mentionBox = Field(L.T("Discord ID через запятую (необязательно)"), Cfg.discordMentions);
 		mentionBox.LostKeyboardFocus += delegate
 		{
 			string text = string.Join(", ", DiscordWebhook.ParseIds(mentionBox.Text).Distinct());
@@ -92,10 +92,10 @@ public class SettingsPage
 				main.ConfigChanged();
 			}
 		};
-		AddStacked(section, "Кого упоминать", "ПКМ по себе → «Копировать ID» (нужен режим разработчика).", mentionBox);
+		AddStacked(section, L.T("Кого упоминать"), L.T("ПКМ по себе → «Копировать ID» (нужен режим разработчика)."), mentionBox);
 		discordState = HintBlock("");
 		discordState.Margin = new Thickness(0.0, 3.0, 0.0, 0.0);
-		FrameworkElement row = AddRow(section, "Проверка", "Отправить отчёт сейчас.", Button("Отправить сейчас", delegate
+		FrameworkElement row = AddRow(section, L.T("Проверка"), L.T("Отправить отчёт сейчас."), Button(L.T("Отправить сейчас"), delegate
 		{
 			main.Discord.SendNow();
 		}));
@@ -111,6 +111,7 @@ public class SettingsPage
 	public void Build()
 	{
 		host.Children.Clear();
+		BuildLanguage();
 		BuildServer();
 		BuildWindows();
 		BuildMemory();
@@ -121,10 +122,46 @@ public class SettingsPage
 		BuildData();
 	}
 
+	private void BuildLanguage()
+	{
+		StackPanel section = Section("", "Language / Язык");
+		ChoiceItem[] items = new ChoiceItem[3]
+		{
+			new ChoiceItem
+			{
+				Value = "",
+				Name = "Auto (Windows)"
+			},
+			new ChoiceItem
+			{
+				Value = "en",
+				Name = "English"
+			},
+			new ChoiceItem
+			{
+				Value = "ru",
+				Name = "Русский"
+			}
+		};
+		AddRow(section, "Interface language / Язык интерфейса", "Restart required / Нужен перезапуск", Choice(items, Cfg.language ?? "", delegate(string v)
+		{
+			if ((Cfg.language ?? "") == v)
+			{
+				return;
+			}
+			Cfg.language = v;
+			main.ConfigChanged();
+			if (MessageDialog.Ask(main.Window, "Restart AutoRejoin? / Перезапустить AutoRejoin?", "The new language applies after a restart. Roblox windows stay open.\n\nНовый язык включится после перезапуска. Окна Роблокса останутся открытыми.", "Restart / Перезапустить", MessageDialog.Kind.Info, "Later / Позже"))
+			{
+				main.RestartApp();
+			}
+		}, 180.0));
+	}
+
 	private void BuildAccounts()
 	{
-		StackPanel section = Section("\ue716", "Вход в аккаунты");
-		AddRow(section, "Принимать предупреждения Роблокса", "Ошибка 403: принимать предупреждение самому. Баны не снимает.", Switch(Cfg.autoAcceptWarnings, delegate(bool v)
+		StackPanel section = Section("\ue716", L.T("Вход в аккаунты"));
+		AddRow(section, L.T("Принимать предупреждения Роблокса"), L.T("Ошибка 403: принимать предупреждение самому. Баны не снимает."), Switch(Cfg.autoAcceptWarnings, delegate(bool v)
 		{
 			Cfg.autoAcceptWarnings = v;
 			main.ConfigChanged();
@@ -133,7 +170,7 @@ public class SettingsPage
 
 	private void BuildServer()
 	{
-		StackPanel section = Section("\ue774", "Сервер");
+		StackPanel section = Section("\ue774", L.T("Сервер"));
 		TextBox linkBox = Field("https://www.roblox.com/share?code=…&type=Server", Cfg.link);
 		TextBlock error = HintBlock("");
 		error.Foreground = Palette.Red;
@@ -163,18 +200,18 @@ public class SettingsPage
 		stackPanel.Children.Add(error);
 		if (!string.IsNullOrEmpty(Cfg.linkFile))
 		{
-			TextBlock textBlock = HintBlock("Сейчас ссылка берётся из файла " + Cfg.linkFile + " (меняется на лету). Впишешь ссылку здесь — файл больше не читается.");
+			TextBlock textBlock = HintBlock(L.T("Сейчас ссылка берётся из файла ") + Cfg.linkFile + L.T(" (меняется на лету). Впишешь ссылку здесь — файл больше не читается."));
 			textBlock.Margin = new Thickness(0.0, 8.0, 0.0, 0.0);
 			textBlock.Foreground = Palette.Yellow;
 			stackPanel.Children.Add(textBlock);
 		}
-		AddStacked(section, "Ссылка на сервер", "VIP-ссылка, ссылка на игру или ID плейса. Пусто — обычный BSS.", stackPanel);
+		AddStacked(section, L.T("Ссылка на сервер"), L.T("VIP-ссылка, ссылка на игру или ID плейса. Пусто — обычный BSS."), stackPanel);
 	}
 
 	private void BuildWindows()
 	{
-		StackPanel section = Section("\ue7f4", "Окна");
-		AddRow(section, "Сворачивать окна хелперов", "Меньше нагрузка на видеокарту.", Switch(Cfg.minimizeWindows, delegate(bool v)
+		StackPanel section = Section("\ue7f4", L.T("Окна"));
+		AddRow(section, L.T("Сворачивать окна хелперов"), L.T("Меньше нагрузка на видеокарту."), Switch(Cfg.minimizeWindows, delegate(bool v)
 		{
 			Cfg.minimizeWindows = v;
 			main.ConfigChanged();
@@ -201,23 +238,23 @@ public class SettingsPage
 			VerticalAlignment = VerticalAlignment.Center
 		});
 		stackPanel2.Children.Add(element2);
-		AddRow(section, "Размер окна хелпера", "", stackPanel2);
-		AddRow(section, "Мейн на весь экран", "Мейн не сворачивается никогда.", Switch(Cfg.mainFullscreen, delegate(bool v)
+		AddRow(section, L.T("Размер окна хелпера"), "", stackPanel2);
+		AddRow(section, L.T("Мейн на весь экран"), L.T("Мейн не сворачивается никогда."), Switch(Cfg.mainFullscreen, delegate(bool v)
 		{
 			Cfg.mainFullscreen = v;
 			main.ConfigChanged();
 		}));
-		AddRow(section, "Лимит FPS мейна", "0 — не трогать.", WithSuffix(NumberBox(Cfg.mainFps, 0.0, 1000.0, integer: true, delegate(double v)
+		AddRow(section, L.T("Лимит FPS мейна"), L.T("0 — не трогать."), WithSuffix(NumberBox(Cfg.mainFps, 0.0, 1000.0, integer: true, delegate(double v)
 		{
 			Cfg.mainFps = (int)v;
 			main.ConfigChanged();
 		}), "FPS"));
-		AddRow(section, "Лимит FPS хелперов", "0 — не трогать.", WithSuffix(NumberBox(Cfg.helperFps, 0.0, 1000.0, integer: true, delegate(double v)
+		AddRow(section, L.T("Лимит FPS хелперов"), L.T("0 — не трогать."), WithSuffix(NumberBox(Cfg.helperFps, 0.0, 1000.0, integer: true, delegate(double v)
 		{
 			Cfg.helperFps = (int)v;
 			main.ConfigChanged();
 		}), "FPS"));
-		AddRow(section, "Графика хелперов", "1 — минимум. Мейна не трогает.", NumberWithSwitch(Cfg.helperQualityOn, Cfg.helperQuality, 1.0, 10.0, integer: true, "ур.", delegate(bool on)
+		AddRow(section, L.T("Графика хелперов"), L.T("1 — минимум. Мейна не трогает."), NumberWithSwitch(Cfg.helperQualityOn, Cfg.helperQuality, 1.0, 10.0, integer: true, L.T("ур."), delegate(bool on)
 		{
 			Cfg.helperQualityOn = on;
 			main.ConfigChanged();
@@ -231,25 +268,25 @@ public class SettingsPage
 			new ChoiceItem
 			{
 				Value = "",
-				Name = "Не трогать"
+				Name = L.T("Не трогать")
 			},
 			new ChoiceItem
 			{
 				Value = "Normal",
-				Name = "Обычный"
+				Name = L.T("Обычный")
 			},
 			new ChoiceItem
 			{
 				Value = "AboveNormal",
-				Name = "Выше среднего"
+				Name = L.T("Выше среднего")
 			},
 			new ChoiceItem
 			{
 				Value = "High",
-				Name = "Высокий"
+				Name = L.T("Высокий")
 			}
 		};
-		AddRow(section, "Приоритет процессора для мейна", "", Choice(items, Cfg.mainPriority ?? "", delegate(string v)
+		AddRow(section, L.T("Приоритет процессора для мейна"), "", Choice(items, Cfg.mainPriority ?? "", delegate(string v)
 		{
 			Cfg.mainPriority = v;
 			main.ConfigChanged();
@@ -258,8 +295,8 @@ public class SettingsPage
 
 	private void BuildMemory()
 	{
-		StackPanel section = Section("\ue9d9", "Память");
-		AddRow(section, "Перезапуск раздувшегося окна", "Окно больше лимита перезаходит.", NumberWithSwitch(Cfg.memoryLimitOn, Cfg.memoryLimitGB, 1.0, 256.0, integer: false, "ГБ", delegate(bool on)
+		StackPanel section = Section("\ue9d9", L.T("Память"));
+		AddRow(section, L.T("Перезапуск раздувшегося окна"), L.T("Окно больше лимита перезаходит."), NumberWithSwitch(Cfg.memoryLimitOn, Cfg.memoryLimitGB, 1.0, 256.0, integer: false, L.T("ГБ"), delegate(bool on)
 		{
 			Cfg.memoryLimitOn = on;
 			main.ConfigChanged();
@@ -268,12 +305,12 @@ public class SettingsPage
 			Cfg.memoryLimitGB = v;
 			main.ConfigChanged();
 		}));
-		AddRow(section, "Не перезапускать мейна", "Лимит выше действует только на хелперов.", Switch(Cfg.memoryLimitSkipMain, delegate(bool v)
+		AddRow(section, L.T("Не перезапускать мейна"), L.T("Лимит выше действует только на хелперов."), Switch(Cfg.memoryLimitSkipMain, delegate(bool v)
 		{
 			Cfg.memoryLimitSkipMain = v;
 			main.ConfigChanged();
 		}));
-		AddRow(section, "Ждать память перед запуском окна", "Новое окно — только при свободной памяти.", NumberWithSwitch(Cfg.windowMemoryOn, Cfg.windowMemoryGB, 0.5, 64.0, integer: false, "ГБ", delegate(bool on)
+		AddRow(section, L.T("Ждать память перед запуском окна"), L.T("Новое окно — только при свободной памяти."), NumberWithSwitch(Cfg.windowMemoryOn, Cfg.windowMemoryGB, 0.5, 64.0, integer: false, L.T("ГБ"), delegate(bool on)
 		{
 			Cfg.windowMemoryOn = on;
 			main.ConfigChanged();
@@ -282,7 +319,7 @@ public class SettingsPage
 			Cfg.windowMemoryGB = v;
 			main.ConfigChanged();
 		}));
-		AddRow(section, "Спасение при нехватке памяти", "Памяти меньше — перезаходит самое большое окно.", NumberWithSwitch(Cfg.minFreeMemoryOn, Cfg.minFreeMemoryGB, 0.2, 64.0, integer: false, "ГБ", delegate(bool on)
+		AddRow(section, L.T("Спасение при нехватке памяти"), L.T("Памяти меньше — перезаходит самое большое окно."), NumberWithSwitch(Cfg.minFreeMemoryOn, Cfg.minFreeMemoryGB, 0.2, 64.0, integer: false, L.T("ГБ"), delegate(bool on)
 		{
 			Cfg.minFreeMemoryOn = on;
 			main.ConfigChanged();
@@ -291,7 +328,7 @@ public class SettingsPage
 			Cfg.minFreeMemoryGB = v;
 			main.ConfigChanged();
 		}));
-		AddRow(section, "Потолок RAM хелперов", "Остальное уходит в подкачку. Мейна не трогает.", NumberWithSwitch(Cfg.helperMemCapOn, Cfg.helperMemCapMB, 300.0, 4096.0, integer: true, "МБ", delegate(bool on)
+		AddRow(section, L.T("Потолок RAM хелперов"), L.T("Остальное уходит в подкачку. Мейна не трогает."), NumberWithSwitch(Cfg.helperMemCapOn, Cfg.helperMemCapMB, 300.0, 4096.0, integer: true, L.T("МБ"), delegate(bool on)
 		{
 			Cfg.helperMemCapOn = on;
 			main.ConfigChanged();
@@ -300,16 +337,16 @@ public class SettingsPage
 			Cfg.helperMemCapMB = (int)v;
 			main.ConfigChanged();
 		}));
-		pagefileButton = Button("Настроить…", delegate
+		pagefileButton = Button(L.T("Настроить…"), delegate
 		{
 			main.SetupPagefile(pagefileButton);
 		});
-		AddRow(section, "Файл подкачки", "Против «Out of Virtual Memory». Нужна перезагрузка.", pagefileButton);
+		AddRow(section, L.T("Файл подкачки"), L.T("Против «Out of Virtual Memory». Нужна перезагрузка."), pagefileButton);
 	}
 
 	private void BuildPotassium()
 	{
-		StackPanel section = Section("\ue943", "Потассиум");
+		StackPanel section = Section("\ue943", L.T("Потассиум"));
 		List<UIElement> dependent = new List<UIElement>();
 		StackPanel credentials = null;
 		Action refresh = delegate
@@ -325,8 +362,8 @@ public class SettingsPage
 			refresh();
 			main.ConfigChanged();
 		});
-		AddRow(section, "Работать с Потассиумом", "Открывать и перезапускать Потассиум.", control);
-		TextBox pathBox = Field("Пусто — найдётся сам", Cfg.potassiumPath);
+		AddRow(section, L.T("Работать с Потассиумом"), L.T("Открывать и перезапускать Потассиум."), control);
+		TextBox pathBox = Field(L.T("Пусто — найдётся сам"), Cfg.potassiumPath);
 		pathBox.LostKeyboardFocus += delegate
 		{
 			string text = (pathBox.Text ?? "").Trim().Trim('"');
@@ -336,12 +373,12 @@ public class SettingsPage
 				main.ConfigChanged();
 			}
 		};
-		Button button = Button("Обзор…", delegate
+		Button button = Button(L.T("Обзор…"), delegate
 		{
 			OpenFileDialog openFileDialog = new OpenFileDialog
 			{
 				Filter = "Potassium.exe|Potassium.exe|Программы (*.exe)|*.exe",
-				Title = "Где лежит Potassium.exe"
+				Title = L.T("Где лежит Potassium.exe")
 			};
 			if (openFileDialog.ShowDialog(main.Window) == true)
 			{
@@ -364,15 +401,15 @@ public class SettingsPage
 		Grid.SetColumn(button, 1);
 		grid.Children.Add(button);
 		dependent.Add(grid);
-		AddStacked(section, "Путь к Potassium.exe", "Пусто — найдёт сам.", grid);
+		AddStacked(section, L.T("Путь к Potassium.exe"), L.T("Пусто — найдёт сам."), grid);
 		CheckBox checkBox = Switch(Cfg.keepAutoAttach, delegate(bool v)
 		{
 			Cfg.keepAutoAttach = v;
 			main.ConfigChanged();
 		});
 		dependent.Add(checkBox);
-		AddRow(section, "Держать автоаттач включённым", "Включает Auto attach обратно, если он выключился.", checkBox);
-		TextBox loginBox = Field("Логин", main.Vault.potassium.user);
+		AddRow(section, L.T("Держать автоаттач включённым"), L.T("Включает Auto attach обратно, если он выключился."), checkBox);
+		TextBox loginBox = Field(L.T("Логин"), main.Vault.potassium.user);
 		loginBox.Width = 200.0;
 		PasswordBox passwordBox = new PasswordBox
 		{
@@ -407,10 +444,10 @@ public class SettingsPage
 			main.ConfigChanged();
 		});
 		dependent.Add(checkBox2);
-		FrameworkElement frameworkElement = AddRow(section, "Автовход", "Входит сам, если Потассиум разлогинился.", checkBox2);
+		FrameworkElement frameworkElement = AddRow(section, L.T("Автовход"), L.T("Входит сам, если Потассиум разлогинился."), checkBox2);
 		((StackPanel)((Grid)frameworkElement).Children[0]).Children.Add(credentials);
 		dependent.Add(credentials);
-		AddRow(section, "Проверять запуск скрипта", "Нужен загрузчик в автоэкзекуте. Нет скрипта — перезаход.", Track(dependent, NumberWithSwitch(Cfg.scriptCheck, Cfg.scriptStartTimeout, 15.0, 600.0, integer: true, "сек", delegate(bool on)
+		AddRow(section, L.T("Проверять запуск скрипта"), L.T("Нужен загрузчик в автоэкзекуте. Нет скрипта — перезаход."), Track(dependent, NumberWithSwitch(Cfg.scriptCheck, Cfg.scriptStartTimeout, 15.0, 600.0, integer: true, L.T("сек"), delegate(bool on)
 		{
 			Cfg.scriptCheck = on;
 			main.ConfigChanged();
@@ -419,7 +456,7 @@ public class SettingsPage
 			Cfg.scriptStartTimeout = (int)v;
 			main.ConfigChanged();
 		})));
-		AddRow(section, "Проверять пульс скрипта", "Нет пульса — окно перезаходит.", Track(dependent, NumberWithSwitch(Cfg.pulseCheck, Cfg.scriptTimeout, 30.0, 1800.0, integer: true, "сек", delegate(bool on)
+		AddRow(section, L.T("Проверять пульс скрипта"), L.T("Нет пульса — окно перезаходит."), Track(dependent, NumberWithSwitch(Cfg.pulseCheck, Cfg.scriptTimeout, 30.0, 1800.0, integer: true, L.T("сек"), delegate(bool on)
 		{
 			Cfg.pulseCheck = on;
 			main.ConfigChanged();
@@ -428,7 +465,7 @@ public class SettingsPage
 			Cfg.scriptTimeout = (int)v;
 			main.ConfigChanged();
 		})));
-		AddRow(section, "Перезаход по Balloon Blessing", "После N продлений у мейна — перезаход всех.", Track(dependent, NumberWithSwitch(Cfg.balloonRejoin, Cfg.balloonRejoinCount, 1.0, 50.0, integer: true, "продл.", delegate(bool on)
+		AddRow(section, L.T("Перезаход по Balloon Blessing"), L.T("После N продлений у мейна — перезаход всех."), Track(dependent, NumberWithSwitch(Cfg.balloonRejoin, Cfg.balloonRejoinCount, 1.0, 50.0, integer: true, L.T("продл."), delegate(bool on)
 		{
 			Cfg.balloonRejoin = on;
 			main.ConfigChanged();
@@ -437,42 +474,42 @@ public class SettingsPage
 			Cfg.balloonRejoinCount = (int)v;
 			main.ConfigChanged();
 		})));
-		AddRow(section, "Тишина перед расписанием", "Пропускать Balloon-перезаход, если скоро расписание.", Track(dependent, WithSuffix(NumberBox(Cfg.balloonQuietMinutes, 0.0, 720.0, integer: true, delegate(double v)
+		AddRow(section, L.T("Тишина перед расписанием"), L.T("Пропускать Balloon-перезаход, если скоро расписание."), Track(dependent, WithSuffix(NumberBox(Cfg.balloonQuietMinutes, 0.0, 720.0, integer: true, delegate(double v)
 		{
 			Cfg.balloonQuietMinutes = (int)v;
 			main.ConfigChanged();
-		}), "мин")));
+		}), L.T("мин"))));
 		refresh();
 	}
 
 	private void BuildStartup()
 	{
-		StackPanel section = Section("\ue7e8", "Запуск");
-		AddRow(section, "Запускать вместе с Windows", "Стартует в трее и заводит аккаунты сам.", Switch(SystemTools.IsAutostartOn(), delegate(bool v)
+		StackPanel section = Section("\ue7e8", L.T("Запуск"));
+		AddRow(section, L.T("Запускать вместе с Windows"), L.T("Стартует в трее и заводит аккаунты сам."), Switch(SystemTools.IsAutostartOn(), delegate(bool v)
 		{
 			main.SetAutostart(v);
 		}));
-		AddRow(section, "Пауза при автозапуске", "", WithSuffix(NumberBox(Cfg.startupDelay, 0.0, 600.0, integer: true, delegate(double v)
+		AddRow(section, L.T("Пауза при автозапуске"), "", WithSuffix(NumberBox(Cfg.startupDelay, 0.0, 600.0, integer: true, delegate(double v)
 		{
 			Cfg.startupDelay = (int)v;
 			main.ConfigChanged();
-		}), "сек"));
-		AddRow(section, "Запускать при открытии", "", Switch(Cfg.autoStartEngine, delegate(bool v)
+		}), L.T("сек")));
+		AddRow(section, L.T("Запускать при открытии"), "", Switch(Cfg.autoStartEngine, delegate(bool v)
 		{
 			Cfg.autoStartEngine = v;
 			main.ConfigChanged();
 		}));
-		AddRow(section, "Пауза между аккаунтами", "Следующий — только когда предыдущий в игре. Мейн первый.", WithSuffix(NumberBox(Cfg.advanced.launchCooldown, 0.0, 600.0, integer: true, delegate(double v)
+		AddRow(section, L.T("Пауза между аккаунтами"), L.T("Следующий — только когда предыдущий в игре. Мейн первый."), WithSuffix(NumberBox(Cfg.advanced.launchCooldown, 0.0, 600.0, integer: true, delegate(double v)
 		{
 			Cfg.advanced.launchCooldown = (int)v;
 			main.ConfigChanged();
-		}), "сек"));
-		AddRow(section, "Запуск через Froststrap / Bloxstrap", "Только если прямой запуск не работает.", Switch(Cfg.useBootstrapper, delegate(bool v)
+		}), L.T("сек")));
+		AddRow(section, L.T("Запуск через Froststrap / Bloxstrap"), L.T("Только если прямой запуск не работает."), Switch(Cfg.useBootstrapper, delegate(bool v)
 		{
 			Cfg.useBootstrapper = v;
 			main.ConfigChanged();
 		}));
-		AddRow(section, "Автоперезагрузка при мёртвых окнах", "Не чаще раза в 30 мин.", Switch(Cfg.autoReboot, delegate(bool v)
+		AddRow(section, L.T("Автоперезагрузка при мёртвых окнах"), L.T("Не чаще раза в 30 мин."), Switch(Cfg.autoReboot, delegate(bool v)
 		{
 			Cfg.autoReboot = v;
 			main.ConfigChanged();
@@ -484,19 +521,19 @@ public class SettingsPage
 		DateTime? last = LogCleaner.LastRunUtc;
 		if (last.HasValue)
 		{
-			return "Последняя очистка: " + last.Value.ToLocalTime().ToString("dd.MM HH:mm");
+			return L.T("Последняя очистка: ") + last.Value.ToLocalTime().ToString("dd.MM HH:mm");
 		}
-		return "Ещё не чистились.";
+		return L.T("Ещё не чистились.");
 	}
 
 	private void BuildData()
 	{
-		StackPanel section = Section("\ue8b7", "Данные");
-		AddRow(section, "Папка данных", "Никому не отправляй. " + AppPaths.DataDir, Button("Открыть", delegate
+		StackPanel section = Section("\ue8b7", L.T("Данные"));
+		AddRow(section, L.T("Папка данных"), L.T("Никому не отправляй. ") + AppPaths.DataDir, Button(L.T("Открыть"), delegate
 		{
 			SystemTools.OpenFolder(AppPaths.DataDir);
 		}));
-		AddRow(section, "Чистить старые логи", "Логи Роблокса и журнал старше срока, раз в столько же часов.", NumberWithSwitch(Cfg.logCleanupOn, Cfg.logCleanupHours, 1.0, 720.0, integer: true, "ч", delegate(bool on)
+		AddRow(section, L.T("Чистить старые логи"), L.T("Логи Роблокса и журнал старше срока, раз в столько же часов."), NumberWithSwitch(Cfg.logCleanupOn, Cfg.logCleanupHours, 1.0, 720.0, integer: true, L.T("ч"), delegate(bool on)
 		{
 			Cfg.logCleanupOn = on;
 			main.ConfigChanged();
@@ -508,30 +545,30 @@ public class SettingsPage
 		TextBlock cleanState = HintBlock(CleanupText());
 		cleanState.Margin = new Thickness(0.0, 3.0, 0.0, 0.0);
 		Button cleanButton = null;
-		cleanButton = Button("Очистить сейчас", async delegate
+		cleanButton = Button(L.T("Очистить сейчас"), async delegate
 		{
 			cleanButton.IsEnabled = false;
-			cleanState.Text = "Чищу…";
+			cleanState.Text = L.T("Чищу…");
 			string result = await main.CleanLogsNow();
-			cleanState.Text = (result != null) ? ("Готово: " + result) : CleanupText();
+			cleanState.Text = (result != null) ? (L.T("Готово: ") + result) : CleanupText();
 			cleanButton.IsEnabled = true;
 		});
-		FrameworkElement cleanRow = AddRow(section, "Очистка логов", "", cleanButton);
+		FrameworkElement cleanRow = AddRow(section, L.T("Очистка логов"), "", cleanButton);
 		((StackPanel)((Grid)cleanRow).Children[0]).Children.Add(cleanState);
 		TextBlock updateState = HintBlock("");
 		updateState.Margin = new Thickness(0.0, 3.0, 0.0, 0.0);
 		Button updateButton = null;
-		updateButton = Button("Проверить обновления", async delegate
+		updateButton = Button(L.T("Проверить обновления"), async delegate
 		{
 			updateButton.IsEnabled = false;
-			updateState.Text = "Проверяю…";
+			updateState.Text = L.T("Проверяю…");
 			string result = await main.CheckForUpdates(interactive: true);
 			updateState.Text = result ?? "";
 			updateButton.IsEnabled = true;
 		});
-		FrameworkElement updateRow = AddRow(section, "Обновления", "Версия " + Updater.CurrentText + ". Ставятся с GitHub сами.", updateButton);
+		FrameworkElement updateRow = AddRow(section, L.T("Обновления"), L.T("Версия ") + Updater.CurrentText + L.T(". Ставятся с GitHub сами."), updateButton);
 		((StackPanel)((Grid)updateRow).Children[0]).Children.Add(updateState);
-		AddRow(section, "Импорт из accounts.txt", "Кука на строку, ссылка — через пробел.", Button("Импорт…", delegate
+		AddRow(section, L.T("Импорт из accounts.txt"), L.T("Кука на строку, ссылка — через пробел."), Button(L.T("Импорт…"), delegate
 		{
 			main.ImportAccountsTxt();
 		}));

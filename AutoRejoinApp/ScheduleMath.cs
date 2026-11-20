@@ -63,28 +63,28 @@ public static class ScheduleMath
 		string text = dateTime.ToString("HH:mm", CultureInfo.InvariantCulture);
 		if (dateTime.Date == date)
 		{
-			return "сегодня в " + text;
+			return L.T("сегодня в ") + text;
 		}
 		if (dateTime.Date == date.AddDays(1.0))
 		{
-			return "завтра в " + text;
+			return L.T("завтра в ") + text;
 		}
-		return dateTime.ToString("ddd, dd.MM", Russian) + " в " + text;
+		return dateTime.ToString("ddd, dd.MM", Russian) + L.T(" в ") + text;
 	}
 
 	public static string DescribeIn(TimeSpan span)
 	{
 		if (span.TotalSeconds < 60.0)
 		{
-			return "меньше чем через минуту";
+			return L.T("меньше чем через минуту");
 		}
 		int num = (int)span.TotalHours;
 		int minutes = span.Minutes;
 		if (num == 0)
 		{
-			return "через " + minutes + " мин";
+			return L.T("через ") + minutes + L.T(" мин");
 		}
-		return "через " + num + " ч " + minutes + " мин";
+		return L.T("через ") + num + L.T(" ч ") + minutes + L.T(" мин");
 	}
 
 	public static string ShortZoneName(TimeZoneInfo zone)

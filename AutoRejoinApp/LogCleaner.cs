@@ -24,9 +24,9 @@ public static class LogCleaner
 			{
 				if (Files != 0)
 				{
-					return "удалено файлов: " + Files + " (" + ((double)Bytes / 1048576.0).ToString("0.#", CultureInfo.InvariantCulture) + " МБ)";
+					return L.T("удалено файлов: ") + Files + " (" + ((double)Bytes / 1048576.0).ToString("0.#", CultureInfo.InvariantCulture) + L.T(" МБ)");
 				}
-				return "удалять нечего";
+				return L.T("удалять нечего");
 			}
 		}
 	}

@@ -58,7 +58,7 @@ public static class RobloxApi
 			string text = Store.Str(data, "id");
 			if (string.IsNullOrEmpty(text))
 			{
-				throw new CookieException("Роблокс ответил без ID аккаунта — попробуй ещё раз.");
+				throw new CookieException(L.T("Роблокс ответил без ID аккаунта — попробуй ещё раз."));
 			}
 			RobloxUser robloxUser = new RobloxUser();
 			robloxUser.Id = text;
@@ -74,19 +74,19 @@ public static class RobloxApi
 		switch (answer.Status)
 		{
 		case 0:
-			return new CookieException("Нет связи с Роблоксом: " + answer.Body, 0);
+			return new CookieException(L.T("Нет связи с Роблоксом: ") + answer.Body, 0);
 		case 401:
-			return new CookieException("Кука не подходит: недействительна или устарела (Роблокс ответил 401).", 401);
+			return new CookieException(L.T("Кука не подходит: недействительна или устарела (Роблокс ответил 401)."), 401);
 		case 403:
 			if (answer.Body.IndexOf("moderated", StringComparison.OrdinalIgnoreCase) >= 0)
 			{
-				return new ModeratedException("Роблокс не пускает этот аккаунт (403): на нём предупреждение или бан — его нужно принять на roblox.com.");
+				return new ModeratedException(L.T("Роблокс не пускает этот аккаунт (403): на нём предупреждение или бан — его нужно принять на roblox.com."));
 			}
-			return new CookieException("Роблокс ответил 403 (доступ запрещён). Попробуй ещё раз.", 403);
+			return new CookieException(L.T("Роблокс ответил 403 (доступ запрещён). Попробуй ещё раз."), 403);
 		case 429:
-			return new CookieException("Роблокс просит подождать (слишком много запросов, 429). Попробуй через минуту.", 429);
+			return new CookieException(L.T("Роблокс просит подождать (слишком много запросов, 429). Попробуй через минуту."), 429);
 		default:
-			return new CookieException("Роблокс ответил ошибкой " + answer.Status + ". Попробуй ещё раз.", answer.Status);
+			return new CookieException(L.T("Роблокс ответил ошибкой ") + answer.Status + L.T(". Попробуй ещё раз."), answer.Status);
 		}
 	}
 
@@ -95,7 +95,7 @@ public static class RobloxApi
 		ApiAnswer apiAnswer = SendWithCsrf("POST", "https://auth.roblox.com/v1/authentication-ticket", cookie, "");
 		if (apiAnswer.Status != 200 || !apiAnswer.Headers.TryGetValue("rbx-authentication-ticket", out var value) || string.IsNullOrEmpty(value))
 		{
-			throw (apiAnswer.Status == 200) ? new CookieException("Роблокс не выдал билет на вход.") : Explain(apiAnswer);
+			throw (apiAnswer.Status == 200) ? new CookieException(L.T("Роблокс не выдал билет на вход.")) : Explain(apiAnswer);
 		}
 		string body = Store.Json().Serialize(new Dictionary<string, object> { { "authenticationTicket", value } });
 		ApiAnswer apiAnswer2 = SendWithCsrf("POST", "https://auth.roblox.com/v1/authentication-ticket/redeem", null, body);
@@ -107,7 +107,7 @@ public static class RobloxApi
 		Match match = Regex.Match(value2 ?? "", "\\.ROBLOSECURITY=([^;]+)");
 		if (!match.Success || match.Groups[1].Value.Length < 100)
 		{
-			throw new CookieException("Роблокс не выдал новую куку.");
+			throw new CookieException(L.T("Роблокс не выдал новую куку."));
 		}
 		return match.Groups[1].Value;
 	}
@@ -263,20 +263,20 @@ public static class RobloxApi
 		}
 		if (!Regex.IsMatch(link, "^https?://(www\\.)?roblox\\.com/", RegexOptions.IgnoreCase))
 		{
-			problem = "Нужна ссылка roblox.com (VIP/share-ссылка или ссылка на игру) или ID плейса.";
+			problem = L.T("Нужна ссылка roblox.com (VIP/share-ссылка или ссылка на игру) или ID плейса.");
 			return false;
 		}
 		if (Regex.IsMatch(link, "/share\\b", RegexOptions.IgnoreCase))
 		{
 			if (!Regex.IsMatch(link, "[?&]code=[^&]+", RegexOptions.IgnoreCase))
 			{
-				problem = "В share-ссылке нет code=…";
+				problem = L.T("В share-ссылке нет code=…");
 				return false;
 			}
 			Match match = Regex.Match(link, "[?&]type=([^&#]+)", RegexOptions.IgnoreCase);
 			if (match.Success && !match.Groups[1].Value.Equals("Server", StringComparison.OrdinalIgnoreCase))
 			{
-				problem = "Это share-ссылка не на сервер (type=" + match.Groups[1].Value + "). Нужна ссылка приглашения на приватный сервер.";
+				problem = L.T("Это share-ссылка не на сервер (type=") + match.Groups[1].Value + L.T("). Нужна ссылка приглашения на приватный сервер.");
 				return false;
 			}
 			return true;
@@ -285,7 +285,7 @@ public static class RobloxApi
 		{
 			return true;
 		}
-		problem = "Не понимаю ссылку: нужна ссылка на игру (/games/…), VIP- или share-ссылка.";
+		problem = L.T("Не понимаю ссылку: нужна ссылка на игру (/games/…), VIP- или share-ссылка.");
 		return false;
 	}
 }

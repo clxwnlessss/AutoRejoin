@@ -54,6 +54,14 @@ public static class App
 			}
 		}
 		AppPaths.Init(dataOverride);
+		try
+		{
+			L.Init(Store.LoadConfig().language);
+		}
+		catch
+		{
+			L.Init("");
+		}
 		string text4 = InstanceId(AppPaths.DataDir);
 		instanceMutex = new Mutex(initiallyOwned: true, "Local\\AutoRejoinApp_" + text4, out var createdNew);
 		if (!createdNew && text == null)
@@ -78,16 +86,16 @@ public static class App
 		};
 		app.DispatcherUnhandledException += delegate(object s, DispatcherUnhandledExceptionEventArgs e)
 		{
-			LogError("ошибка в окне", e.Exception);
+			LogError(L.T("ошибка в окне"), e.Exception);
 			e.Handled = true;
 		};
 		AppDomain.CurrentDomain.UnhandledException += delegate(object s, UnhandledExceptionEventArgs e)
 		{
-			LogError("необработанная ошибка", e.ExceptionObject as Exception);
+			LogError(L.T("необработанная ошибка"), e.ExceptionObject as Exception);
 		};
 		TaskScheduler.UnobservedTaskException += delegate(object s, UnobservedTaskExceptionEventArgs e)
 		{
-			LogError("ошибка фоновой задачи", e.Exception);
+			LogError(L.T("ошибка фоновой задачи"), e.Exception);
 			e.SetObserved();
 		};
 		app.Resources.MergedDictionaries.Add(Xaml.Load<ResourceDictionary>("Theme.xaml"));

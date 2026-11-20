@@ -82,6 +82,8 @@ public class AppConfig
 
 	public bool trayHintShown { get; set; }
 
+	public string language { get; set; }
+
 	public bool leaderboardGuest { get; set; }
 
 	public string leaderboardUrl { get; set; }
@@ -138,6 +140,7 @@ public class AppConfig
 		autoAcceptWarnings = false;
 		schedule = new ScheduleConfig();
 		advanced = new AdvancedConfig();
+		language = "";
 		leaderboardGuest = false;
 		leaderboardUrl = "";
 		logCleanupOn = true;
@@ -153,6 +156,10 @@ public class AppConfig
 		if (discordMentions == null)
 		{
 			discordMentions = "";
+		}
+		if (language == null)
+		{
+			language = "";
 		}
 		if (leaderboardUrl == null)
 		{
