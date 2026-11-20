@@ -1,0 +1,5 @@
+# Free Render instances sleep after 15 min without traffic; a sleeping server answers Discord too late.
+# Pings /health (no database) every 10 minutes so the AutoRejoin bot replies instantly.
+name: keep server awake
+on: {schedule: [{cron: '*/10 * * * *'}], workflow_dispatch: {}}
+jobs: {ping: {runs-on: ubuntu-latest, timeout-minutes: 3, steps: [{run: 'curl -fsS --max-time 90 https://autorejoin-server.onrender.com/health || true'}]}}
