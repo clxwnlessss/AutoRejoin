@@ -4,6 +4,7 @@
 // токены входа — как sha256 (сам токен знает только программа пользователя).
 const express = require('express');
 const crypto = require('crypto');
+const { createDiscord, DISCORD_SCHEMA } = require('./discord');
 
 const HEARTBEAT_MAX_GAP = 150; // сек: дольше между пульсами — промежуток не засчитывается (ПК спал, интернет пропал)
 const ONLINE_WINDOW = 180;     // сек: пульс свежее — человек «сейчас стоит»
@@ -67,7 +68,7 @@ function rateLimiter(limit, windowMs) {
 }
 
 async function initDb(pool) {
-  for (const sql of SCHEMA) await pool.query(sql);
+  for (const sql of SCHEMA.concat(DISCORD_SCHEMA)) await pool.query(sql);
 }
 
 function createApp(pool, options = {}) {
@@ -75,7 +76,11 @@ function createApp(pool, options = {}) {
   const app = express();
   app.set('trust proxy', 1);
   app.disable('x-powered-by');
-  app.use(express.json({ limit: '8kb' }));
+  const discord = createDiscord(pool, { now, ...(options.discord || {}) });
+  app.locals.discord = discord;
+  // Discord interactions need the raw body (signature check), so this route goes before the JSON parser.
+  app.post('/discord/interactions', express.raw({ type: '*/*', limit: '64kb' }), discord.interactions);
+  app.use(express.json({ limit: '32kb' }));
 
   const authLimit = rateLimiter(options.authLimit || 10, 10 * 60 * 1000);
 
@@ -147,6 +152,7 @@ function createApp(pool, options = {}) {
 
   app.post('/api/logout', auth, async (req, res, next) => {
     try {
+      sessionCache.delete(req.tokenHash);
       await pool.query('DELETE FROM sessions WHERE token_hash = $1', [req.tokenHash]);
       res.json({ ok: true });
     } catch (e) { next(e); }
@@ -206,6 +212,38 @@ function createApp(pool, options = {}) {
         }))
       });
     } catch (e) { next(e); }
+  });
+
+  // ---------- Discord bot: link code, link state, agent sync ----------
+  const inviteUrl = () => (options.discord && options.discord.appId)
+    ? `https://discord.com/oauth2/authorize?client_id=${options.discord.appId}&scope=applications.commands%20bot&permissions=19456`
+    : null;
+
+  app.post('/api/discord/code', auth, async (req, res, next) => {
+    try { res.json({ ...discord.newCode(req.user.id), invite: inviteUrl() }); } catch (e) { next(e); }
+  });
+  app.get('/api/discord/link', auth, async (req, res, next) => {
+    try { res.json({ ...(await discord.linkInfo(req.user.id)), invite: inviteUrl() }); } catch (e) { next(e); }
+  });
+  app.delete('/api/discord/link', auth, async (req, res, next) => {
+    try { await discord.unlinkUser(req.user.id); res.json({ ok: true }); } catch (e) { next(e); }
+  });
+  // The app reports its accounts and receives queued commands. Session lookups are cached so that
+  // frequent syncs do not hit the database.
+  const sessionCache = new Map(); // tokenHash -> { user, exp }
+  async function cachedAuth(req, res, next) {
+    const header = req.get('authorization') || '';
+    const token = header.startsWith('Bearer ') ? header.slice(7).trim() : '';
+    const hit = token && sessionCache.get(sha256(token));
+    if (hit && hit.exp > Date.now()) { req.user = hit.user; return next(); }
+    return auth(req, res, () => {
+      if (sessionCache.size > 5000) sessionCache.clear();
+      sessionCache.set(req.tokenHash, { user: { id: req.user.id, nickname: req.user.nickname }, exp: Date.now() + 10 * 60 * 1000 });
+      next();
+    });
+  }
+  app.post('/api/agent/sync', cachedAuth, async (req, res, next) => {
+    try { res.json(await discord.sync(req.user.id, req.body || {})); } catch (e) { next(e); }
   });
 
   app.use((req, res) => res.status(404).json({ error: 'Не найдено.' }));

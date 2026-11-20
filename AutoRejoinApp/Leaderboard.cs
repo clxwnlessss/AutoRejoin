@@ -106,6 +106,41 @@ public static class Leaderboard
 		return Tuple.Create(Store.Str(r, "month") ?? "", list);
 	}
 
+	// ---------- Discord bot ----------
+
+	public class BotCode
+	{
+		public string Code;
+		public int ExpiresIn;
+		public string Invite;
+	}
+
+	public static async Task<BotCode> DiscordCode(string baseUrl, string token)
+	{
+		IDictionary<string, object> r = await Call(baseUrl, "POST", "/api/discord/code", null, token);
+		return new BotCode
+		{
+			Code = Store.Str(r, "code"),
+			ExpiresIn = (int)(Store.Num(r, "expiresIn") ?? 600.0),
+			Invite = Store.Str(r, "invite")
+		};
+	}
+
+	public static Task<IDictionary<string, object>> DiscordLink(string baseUrl, string token)
+	{
+		return Call(baseUrl, "GET", "/api/discord/link", null, token, 20000);
+	}
+
+	public static async Task DiscordUnlink(string baseUrl, string token)
+	{
+		await Call(baseUrl, "DELETE", "/api/discord/link", null, token);
+	}
+
+	public static Task<IDictionary<string, object>> AgentSync(string baseUrl, string token, object state)
+	{
+		return Call(baseUrl, "POST", "/api/agent/sync", state, token, 20000);
+	}
+
 	private static Me ToMe(IDictionary<string, object> r, string nickname)
 	{
 		double? rank = Store.Num(r, "rank");
@@ -118,12 +153,12 @@ public static class Leaderboard
 	}
 
 	// Бесплатный сервер Render засыпает без запросов и просыпается до минуты — отсюда большой таймаут.
-	private static async Task<IDictionary<string, object>> Call(string baseUrl, string method, string path, object body, string token)
+	private static async Task<IDictionary<string, object>> Call(string baseUrl, string method, string path, object body, string token, int timeoutMs = 70000)
 	{
 		HttpWebRequest req = (HttpWebRequest)WebRequest.Create(baseUrl + path);
 		req.Method = method;
-		req.Timeout = 70000;
-		req.ReadWriteTimeout = 70000;
+		req.Timeout = timeoutMs;
+		req.ReadWriteTimeout = timeoutMs;
 		req.UserAgent = "AutoRejoin/" + Updater.CurrentText;
 		req.Accept = "application/json";
 		if (token != null)

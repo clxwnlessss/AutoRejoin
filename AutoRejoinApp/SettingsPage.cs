@@ -29,6 +29,15 @@ public class SettingsPage
 		this.host = host;
 		Build();
 		main.Discord.StateChanged += UpdateDiscordState;
+		main.Bot.StateChanged += RenderBot;
+		// Login/logout in Top AFK changes what the bot section shows.
+		host.IsVisibleChanged += delegate
+		{
+			if (host.IsVisible)
+			{
+				RenderBot();
+			}
+		};
 	}
 
 	private void UpdateDiscordState()
@@ -103,6 +112,141 @@ public class SettingsPage
 		UpdateDiscordState();
 	}
 
+	// ---------- Discord bot: link button and code ----------
+
+	private StackPanel botBody;
+
+	private Leaderboard.BotCode botCode;
+
+	private DateTime botCodeUntil;
+
+	private void BuildBot()
+	{
+		StackPanel section = Section("", L.T("Discord-бот"));
+		botBody = new StackPanel();
+		section.Children.Add(botBody);
+		RenderBot();
+	}
+
+	private void RenderBot()
+	{
+		if (botBody == null)
+		{
+			return;
+		}
+		botBody.Children.Clear();
+		bool loggedIn = !string.IsNullOrEmpty(main.Vault.leaderboardToken);
+		if (!loggedIn)
+		{
+			AddRow(botBody, L.T("Привязать бота"), L.T("Бот привязывается к аккаунту Топа АФК — сначала войди в него."), Button(L.T("Открыть Топ АФК"), delegate
+			{
+				main.ShowPage("top");
+			}));
+			return;
+		}
+		if (main.Bot.Linked)
+		{
+			botCode = null;
+			string who = string.IsNullOrEmpty(main.Bot.LinkedName) ? "" : (" — " + main.Bot.LinkedName);
+			AddRow(botBody, L.T("Бот привязан") + who, L.T("В Discord: /status — какие аккаунты стоят, кнопки «Запустить», «Остановить», «Перезайти»."), Button(L.T("Отвязать"), async delegate(object s, RoutedEventArgs e)
+			{
+				((Button)s).IsEnabled = false;
+				try
+				{
+					await Leaderboard.DiscordUnlink(Leaderboard.BaseUrl(Cfg), main.Vault.leaderboardToken);
+					main.Bot.Reset();
+				}
+				catch (Leaderboard.ApiException ex)
+				{
+					MessageDialog.Ask(main.Window, L.T("Не получилось отвязать"), ex.Message, "OK", MessageDialog.Kind.Warning, null);
+				}
+				RenderBot();
+			}));
+			return;
+		}
+		AddRow(botBody, L.T("Привязать бота"), L.T("Смотри, какие аккаунты стоят, и управляй ими прямо из Discord."), Button(L.T("Привязать бота"), async delegate(object s, RoutedEventArgs e)
+		{
+			Button b = (Button)s;
+			b.IsEnabled = false;
+			b.Content = L.T("Секунду…");
+			try
+			{
+				botCode = await Leaderboard.DiscordCode(Leaderboard.BaseUrl(Cfg), main.Vault.leaderboardToken);
+				botCodeUntil = DateTime.UtcNow.AddSeconds(botCode.ExpiresIn);
+				main.Bot.ExpectLink();
+			}
+			catch (Leaderboard.ApiException ex)
+			{
+				MessageDialog.Ask(main.Window, L.T("Не получилось получить код"), ex.Message, "OK", MessageDialog.Kind.Warning, null);
+			}
+			RenderBot();
+		}));
+		if (botCode == null || DateTime.UtcNow >= botCodeUntil)
+		{
+			return;
+		}
+		// Code card: the code, how to use it, invite + copy buttons.
+		Border card = new Border
+		{
+			Background = Palette.AccentSoft,
+			CornerRadius = new CornerRadius(12.0),
+			Padding = new Thickness(18.0, 14.0, 18.0, 16.0),
+			Margin = new Thickness(0.0, 0.0, 0.0, 14.0)
+		};
+		StackPanel panel = new StackPanel();
+		panel.Children.Add(new TextBlock
+		{
+			Text = botCode.Code.Substring(0, 3) + " " + botCode.Code.Substring(3),
+			FontSize = 34.0,
+			FontWeight = FontWeights.Bold,
+			Foreground = Palette.Accent,
+			FontFamily = new FontFamily("Consolas")
+		});
+		TextBlock steps = HintBlock(L.T("1. Добавь бота на свой сервер (кнопка ниже) или открой его в личке.\n2. Нажми у бота «Привязать аккаунт» (или напиши /panel) и введи этот код.\nКод одноразовый, действует 10 минут и привяжет только этот аккаунт: ") + main.Vault.leaderboardNick);
+		steps.TextWrapping = TextWrapping.Wrap;
+		steps.Margin = new Thickness(0.0, 6.0, 0.0, 12.0);
+		panel.Children.Add(steps);
+		StackPanel buttons = new StackPanel
+		{
+			Orientation = Orientation.Horizontal
+		};
+		if (!string.IsNullOrEmpty(botCode.Invite))
+		{
+			string invite = botCode.Invite;
+			buttons.Children.Add(Button(L.T("Добавить бота на сервер"), delegate
+			{
+				try
+				{
+					System.Diagnostics.Process.Start(new System.Diagnostics.ProcessStartInfo(invite)
+					{
+						UseShellExecute = true
+					});
+				}
+				catch (Exception error)
+				{
+					App.LogError(L.T("не открылась ссылка"), error);
+				}
+			}));
+		}
+		string code = botCode.Code;
+		Button copy = Button(L.T("Копировать код"), delegate(object s, RoutedEventArgs e)
+		{
+			try
+			{
+				Clipboard.SetText(code);
+				((Button)s).Content = L.T("Скопировано ✓");
+			}
+			catch
+			{
+			}
+		});
+		copy.Margin = new Thickness(10.0, 0.0, 0.0, 0.0);
+		buttons.Children.Add(copy);
+		panel.Children.Add(buttons);
+		card.Child = panel;
+		botBody.Children.Add(card);
+	}
+
 	private Style Res(string key)
 	{
 		return (Style)host.FindResource(key);
@@ -118,6 +262,7 @@ public class SettingsPage
 		BuildPotassium();
 		BuildAccounts();
 		BuildStartup();
+		BuildBot();
 		BuildDiscord();
 		BuildData();
 	}

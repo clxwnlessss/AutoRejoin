@@ -187,8 +187,55 @@ public class MainController
 		}
 	}
 
+	private BotAgent bot;
+
+	public BotAgent Bot => bot;
+
+	public IEnumerable<AccountCard> Cards => cards;
+
+	// Commands from the Discord bot. Same rules as the buttons in the window, but without dialogs.
+	public void RemoteCommand(string cmd, string arg)
+	{
+		bool ready = engine.IsRunning && phase == "running";
+		switch (cmd)
+		{
+		case "start":
+			AppLog(null, L.T("Discord: команда «Запустить»"), "Cyan");
+			StartEngine(0);
+			break;
+		case "stop":
+			AppLog(null, L.T("Discord: команда «Остановить»"), "Cyan");
+			StopEngine();
+			break;
+		case "rejoin-all":
+			AppLog(null, L.T("Discord: команда «Перезайти всеми»"), "Cyan");
+			if (ready)
+			{
+				engine.Send("rejoin-all");
+			}
+			break;
+		case "rejoin":
+		{
+			AccountCard card = cards.FirstOrDefault((AccountCard c) => c.Key == arg);
+			if (card != null)
+			{
+				AppLog(card.Name, L.T("Discord: команда «Перезайти»"), "Cyan");
+				if (ready && card.Enabled)
+				{
+					engine.Send("rejoin " + card.Key);
+				}
+			}
+			break;
+		}
+		}
+	}
+
 	public void SetLeaderboardSession(string token, string nickname)
 	{
+		if (string.IsNullOrEmpty(token))
+		{
+			bot?.Reset();
+		}
 		vault.leaderboardToken = token ?? "";
 		vault.leaderboardNick = nickname ?? "";
 		if (token != null)
@@ -373,6 +420,7 @@ public class MainController
 		WireSchedule();
 		WireLog();
 		discord = new DiscordWebhook(this, window.Dispatcher);
+		bot = new BotAgent(this, window.Dispatcher);
 		settingsPage = new SettingsPage(this, Find<StackPanel>("SettingsHost"));
 		topPage = new TopPage(this, Find<StackPanel>("TopHost"));
 		Find<Button>("ContactButton").Click += delegate

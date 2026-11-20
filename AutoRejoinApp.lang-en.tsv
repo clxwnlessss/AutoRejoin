@@ -605,4 +605,26 @@ vault.dat не расшифровывается	vault.dat can't be decrypted
 отдельная сессия после входа	separate session after login
 ошибка в окне	window error
 ошибка фоновой задачи	background task error
-принятие предупреждения при входе	accepting a warning at login
+принятие предупреждения при входе	accepting a warning at login# ---------- discord bot ----------
+1. Добавь бота на свой сервер (кнопка ниже) или открой его в личке.\n2. Нажми у бота «Привязать аккаунт» (или напиши /panel) и введи этот код.\nКод одноразовый, действует 10 минут и привяжет только этот аккаунт:\s	1. Add the bot to your server (button below) or open it in DMs.\n2. Press "Link account" in the bot (or type /panel) and enter this code.\nThe code works once, for 10 minutes, and links only this account:\s
+Discord-бот	Discord bot
+Discord-бот привязан	Discord bot linked
+Discord-бот: ошибка синхронизации	Discord bot: sync error
+Discord: команда «Запустить»	Discord: "Start" command
+Discord: команда «Остановить»	Discord: "Stop" command
+Discord: команда «Перезайти всеми»	Discord: "Rejoin all" command
+Discord: команда «Перезайти»	Discord: "Rejoin" command
+Бот привязан	Bot linked
+Бот привязывается к аккаунту Топа АФК — сначала войди в него.	The bot links to your Top AFK account — sign in to it first.
+В Discord: /status — какие аккаунты стоят, кнопки «Запустить», «Остановить», «Перезайти».	In Discord: /status — which accounts are in game, plus Start, Stop and Rejoin buttons.
+Добавить бота на сервер	Add bot to server
+Копировать код	Copy code
+Не получилось отвязать	Could not unlink
+Не получилось получить код	Could not get a code
+Отвязать	Unlink
+Открыть Топ АФК	Open Top AFK
+Привязать бота	Link bot
+Секунду…	One moment…
+Скопировано ✓	Copied ✓
+Смотри, какие аккаунты стоят, и управляй ими прямо из Discord.	See which accounts are in game and control them right from Discord.
+не открылась ссылка	could not open the link

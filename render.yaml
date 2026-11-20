@@ -16,3 +16,10 @@ services:
         sync: false
       - key: NODE_VERSION
         value: "20"
+      # Discord bot (Developer Portal → your app). DISCORD_TOKEN is secret — paste it only into Render.
+      - key: DISCORD_APP_ID
+        sync: false
+      - key: DISCORD_PUBLIC_KEY
+        sync: false
+      - key: DISCORD_TOKEN
+        sync: false
