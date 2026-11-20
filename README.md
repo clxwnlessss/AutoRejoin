@@ -1,7 +1,7 @@
 # AutoRejoin 2.0
 
 **Владелец и разработчик — [clxwnlesss](https://discord.com/users/1505693601932382241) (Даниил Арзамасов).**
-Связь: Discord **clxwnlesss** · Сервер сообщества: **https://discord.gg/XJ2kMF8BpX**
+Связь: Discord **clxwnlesss** · Сервер сообщества: **https://discord.gg/bZFB8dwBdw**
 
 Держит аккаунты Роблокса (Bee Swarm Simulator) в игре и перезаходит сам: вылет, кик, ошибка, зависание,
 раздувшаяся память, упавший скрипт. Аккаунты заходят строго по очереди, мейн первым.
