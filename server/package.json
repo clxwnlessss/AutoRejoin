@@ -11,9 +11,10 @@
   },
   "scripts": {
     "start": "node index.js",
-    "test": "node test.js && node test-discord.js"
+    "test": "node test.js && node test-discord.js && node test-guild.js"
   },
   "dependencies": {
+    "discord.js": "^14.16.3",
     "express": "4.21.2",
     "pg": "8.13.1"
   },

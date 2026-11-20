@@ -216,7 +216,7 @@ function createApp(pool, options = {}) {
 
   // ---------- Discord bot: link code, link state, agent sync ----------
   const inviteUrl = () => (options.discord && options.discord.appId)
-    ? `https://discord.com/oauth2/authorize?client_id=${options.discord.appId}&scope=applications.commands%20bot&permissions=19456`
+    ? `https://discord.com/oauth2/authorize?client_id=${options.discord.appId}&scope=applications.commands%20bot&permissions=1099780156486`
     : null;
 
   app.post('/api/discord/code', auth, async (req, res, next) => {

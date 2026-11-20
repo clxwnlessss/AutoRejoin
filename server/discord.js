@@ -6,6 +6,7 @@
 // Agent state and the command queue live in memory on purpose: nothing about accounts is written to the database,
 // and frequent syncs do not keep the free database awake.
 const crypto = require('crypto');
+const { createGuildBot, GUILD_SCHEMA, GUILD_COMMANDS } = require('./guild');
 
 const CODE_TTL = 10 * 60 * 1000;
 const STATE_STALE = 60 * 1000;       // app silent longer than this = offline
@@ -19,7 +20,7 @@ const DISCORD_SCHEMA = [
      discord_name TEXT,
      created_at TIMESTAMPTZ NOT NULL DEFAULT NOW()
    )`
-];
+].concat(GUILD_SCHEMA);
 
 // ---------- slash command definitions ----------
 const CTX = { integration_types: [0, 1], contexts: [0, 1, 2] };
@@ -67,6 +68,7 @@ function createDiscord(pool, options = {}) {
   const links = new Map();   // discordId -> { userId, nickname, name }
   let warmed = null;
   let cmdSeq = 0;
+  const guild = options.guildBot || createGuildBot(pool, { token: options.token, now, api: options.guildApi });
 
   function warm() {
     if (!warmed) {
@@ -241,6 +243,11 @@ function createDiscord(pool, options = {}) {
     const user = (i.member && i.member.user) || i.user || {};
     if (i.type === 1) return { type: 1 };
 
+    // Server-management commands (roles, automod, moderation, logs, welcome, tags…)
+    if (i.type === 4 && guild.isCommand(i.data.name)) return guild.handleAutocomplete(i);
+    if (i.type === 2 && guild.isCommand(i.data.name)) return guild.handleCommand(i, ru);
+    if (i.type === 3 && String(i.data.custom_id).startsWith('rr:')) return guild.handleComponent(i, ru);
+
     // Autocomplete for /rejoin account
     if (i.type === 4) {
       const link = await linkOf(user.id);
@@ -336,13 +343,13 @@ function createDiscord(pool, options = {}) {
     const res = await fetch(`https://discord.com/api/v10/applications/${options.appId}/commands`, {
       method: 'PUT',
       headers: { authorization: `Bot ${options.token}`, 'content-type': 'application/json' },
-      body: JSON.stringify(COMMANDS)
+      body: JSON.stringify(COMMANDS.concat(GUILD_COMMANDS))
     });
     if (!res.ok) throw new Error(`Discord ${res.status}: ${(await res.text()).slice(0, 300)}`);
     return true;
   }
 
-  return { interactions, handle, newCode, linkInfo, unlinkUser, sync, registerCommands, enqueue, warm };
+  return { interactions, handle, newCode, linkInfo, unlinkUser, sync, registerCommands, enqueue, warm, guild };
 }
 
 module.exports = { createDiscord, DISCORD_SCHEMA, COMMANDS };
