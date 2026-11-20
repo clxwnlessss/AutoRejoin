@@ -23,6 +23,7 @@ initDb(pool)
     const port = process.env.PORT || 3000;
     const app = createApp(pool, { discord });
     app.listen(port, () => console.log(`AutoRejoin Server слушает порт ${port}`));
+    app.locals.discord.warm().catch((e) => console.error('Discord: не удалось загрузить привязки:', e.message));
     app.locals.discord.registerCommands()
       .then((done) => console.log(done ? 'Discord: слэш-команды зарегистрированы' : 'Discord: бот не настроен (нет DISCORD_APP_ID/DISCORD_TOKEN)'))
       .catch((e) => console.error('Discord: не удалось зарегистрировать команды:', e.message));

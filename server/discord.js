@@ -62,23 +62,31 @@ function createDiscord(pool, options = {}) {
   const verify = options.verify || verifier(options.publicKey);
   const codes = new Map();   // code -> { userId, exp }
   const agents = new Map();  // userId -> { state, at, queue: [] }
-  const links = new Map();   // discordId -> { userId, nickname } (cache)
+  // All links are held in memory (loaded once; every change goes through this process), so Discord replies
+  // never wait for the database — a sleeping free database takes seconds to wake, Discord allows 3.
+  const links = new Map();   // discordId -> { userId, nickname, name }
+  let warmed = null;
   let cmdSeq = 0;
 
+  function warm() {
+    if (!warmed) {
+      warmed = pool.query('SELECT l.discord_id, l.user_id, l.discord_name, u.nickname FROM discord_links l JOIN users u ON u.id = l.user_id')
+        .then(({ rows }) => { for (const r of rows) links.set(r.discord_id, { userId: r.user_id, nickname: r.nickname, name: r.discord_name }); })
+        .catch((e) => { warmed = null; throw e; });
+    }
+    return warmed;
+  }
   async function linkOf(discordId) {
-    if (links.has(discordId)) return links.get(discordId);
-    const { rows } = await pool.query('SELECT l.user_id, u.nickname FROM discord_links l JOIN users u ON u.id = l.user_id WHERE l.discord_id = $1', [discordId]);
-    const v = rows.length ? { userId: rows[0].user_id, nickname: rows[0].nickname } : null;
-    links.set(discordId, v);
-    return v;
+    await warm();
+    return links.get(discordId) || null;
   }
   async function linkedForUser(userId) {
-    for (const v of links.values()) if (v && v.userId === userId) return true;
-    const { rows } = await pool.query('SELECT discord_id FROM discord_links WHERE user_id = $1', [userId]);
-    return rows.length > 0;
+    await warm();
+    for (const v of links.values()) if (v.userId === userId) return v;
+    return null;
   }
   function forgetUser(userId) {
-    for (const [k, v] of links) if (v && v.userId === userId) links.delete(k);
+    for (const [k, v] of links) if (v.userId === userId) links.delete(k);
     agents.delete(userId);
   }
 
@@ -93,11 +101,12 @@ function createDiscord(pool, options = {}) {
   }
 
   async function linkInfo(userId) {
-    const { rows } = await pool.query('SELECT discord_name FROM discord_links WHERE user_id = $1', [userId]);
-    return rows.length ? { linked: true, name: rows[0].discord_name } : { linked: false };
+    const v = await linkedForUser(userId);
+    return v ? { linked: true, name: v.name } : { linked: false };
   }
 
   async function unlinkUser(userId) {
+    await warm();
     await pool.query('DELETE FROM discord_links WHERE user_id = $1', [userId]);
     forgetUser(userId);
   }
@@ -206,11 +215,15 @@ function createDiscord(pool, options = {}) {
     codes.delete(String(code).trim());
     attempts.delete(user.id);
     // One Discord user <-> one AutoRejoin account: drop any previous link on either side.
+    await warm();
+    const name = clip(user.global_name || user.username || '', 64);
     await pool.query('DELETE FROM discord_links WHERE discord_id = $1 OR user_id = $2', [user.id, entry.userId]);
-    await pool.query('INSERT INTO discord_links (discord_id, user_id, discord_name) VALUES ($1, $2, $3)', [user.id, entry.userId, clip(user.global_name || user.username || '', 64)]);
+    await pool.query('INSERT INTO discord_links (discord_id, user_id, discord_name) VALUES ($1, $2, $3)', [user.id, entry.userId, name]);
+    const nick = (await pool.query('SELECT nickname FROM users WHERE id = $1', [entry.userId])).rows[0].nickname;
     forgetUser(entry.userId);
-    links.clear();
-    const link = await linkOf(user.id);
+    links.delete(user.id);
+    links.set(user.id, { userId: entry.userId, nickname: nick, name });
+    const link = links.get(user.id);
     return ephemeral(ru ? `✅ Привязано к аккаунту **${esc(link.nickname)}**. Жми «Мои аккаунты» или пиши \`/status\`.` : `✅ Linked to **${esc(link.nickname)}**. Press "My accounts" or type \`/status\`.`,
       [{ type: 1, components: [{ type: 2, style: 2, custom_id: 'ar:status', emoji: { name: '📋' }, label: ru ? 'Мои аккаунты' : 'My accounts' }] }]);
   }
@@ -248,7 +261,6 @@ function createDiscord(pool, options = {}) {
       if (!link) return notLinked(ru);
       if (name === 'unlink') {
         await unlinkUser(link.userId);
-        links.delete(user.id);
         return ephemeral(ru ? '✅ Discord отвязан.' : '✅ Discord unlinked.');
       }
       if (name === 'status') return { type: 4, data: statusMessage(link, ru) };
@@ -301,7 +313,21 @@ function createDiscord(pool, options = {}) {
       if (!sig || !ts || !verify(sig, ts, raw)) return res.status(401).send('invalid request signature');
       let i;
       try { i = JSON.parse(raw.toString('utf8')); } catch { return res.status(400).send('bad json'); }
-      res.json(await handle(i));
+      // Discord gives 3 s. If the reply is not ready in ~2 s (database waking up), acknowledge now
+      // ("thinking…") and put the real reply in place when it is ready.
+      const work = handle(i);
+      const late = Symbol('late');
+      const first = await Promise.race([work, new Promise((r) => setTimeout(() => r(late), options.deferAfterMs || 2000))]);
+      if (first !== late) return res.json(first);
+      if (i.type === 4 || !options.appId) return res.json(await work); // autocomplete cannot be deferred
+      res.json(i.type === 3 ? { type: 6 } : { type: 5, data: { flags: 64 } });
+      let result;
+      try { result = await work; } catch (e) { console.error('Discord: deferred reply failed:', e.message); result = ephemeral('⚠️ Server error, try again.'); }
+      if (!result || !result.data || result.type === 9) return;
+      const { flags, ...data } = result.data;
+      await fetch(`https://discord.com/api/v10/webhooks/${options.appId}/${i.token}/messages/@original`, {
+        method: 'PATCH', headers: { 'content-type': 'application/json' }, body: JSON.stringify(data)
+      }).catch((e) => console.error('Discord: follow-up failed:', e.message));
     } catch (e) { next(e); }
   }
 
@@ -316,7 +342,7 @@ function createDiscord(pool, options = {}) {
     return true;
   }
 
-  return { interactions, handle, newCode, linkInfo, unlinkUser, sync, registerCommands, enqueue };
+  return { interactions, handle, newCode, linkInfo, unlinkUser, sync, registerCommands, enqueue, warm };
 }
 
 module.exports = { createDiscord, DISCORD_SCHEMA, COMMANDS };
