@@ -218,6 +218,7 @@ function createGuildBot(pool, options = {}) {
   const history = new Map();   // guild:user -> [{t, content}]
   const timers = new Map();    // reminder id -> timeout
   let client = null;
+  let timersStarted = false;
 
   // ---------- Discord REST ----------
   const api = options.api || (async (method, path, body, reason) => {
@@ -697,8 +698,13 @@ function createGuildBot(pool, options = {}) {
   async function startGateway() {
     if (!token) return false;
     await warm();
-    await loadReminders().catch(() => {});
-    setInterval(() => loadReminders().catch(() => {}), 10 * 60 * 1000).unref();
+    if (!timersStarted) {
+      timersStarted = true;
+      await loadReminders().catch(() => {});
+      setInterval(() => loadReminders().catch(() => {}), 10 * 60 * 1000).unref();
+      setInterval(() => { if (client && client.isReady()) for (const g of client.guilds.cache.values()) sweepAutoroles(g).catch(() => {}); }, 30 * 60 * 1000).unref();
+    }
+    if (client) { try { client.destroy(); } catch { /* old connection */ } }
     const { Client, GatewayIntentBits, Partials, Options } = require('discord.js');
     client = new Client({
       intents: [GatewayIntentBits.Guilds, GatewayIntentBits.GuildMembers, GatewayIntentBits.GuildMessages, GatewayIntentBits.MessageContent,
@@ -729,7 +735,6 @@ function createGuildBot(pool, options = {}) {
         try { const n = await sweepAutoroles(g); if (n) console.log(`Автороль: досыпано ${n} участникам на ${g.name}`); } catch (e) { console.error('sweep:', e.message); }
       }
     });
-    setInterval(() => { if (client && client.isReady()) for (const g of client.guilds.cache.values()) sweepAutoroles(g).catch(() => {}); }, 30 * 60 * 1000).unref();
     client.on('error', (e) => console.error('gateway:', e.message));
     await client.login(token);
     return true;

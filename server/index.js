@@ -25,9 +25,13 @@ initDb(pool)
     app.listen(port, () => console.log(`AutoRejoin Server слушает порт ${port}`));
     app.locals.discord.warm().catch((e) => console.error('Discord: не удалось загрузить привязки:', e.message));
     // Gateway connection for member joins, automod, logs and reaction roles.
-    app.locals.discord.guild.startGateway()
+    const connect = () => app.locals.discord.guild.startGateway()
       .then((on) => { if (!on) console.log('Discord gateway: нет DISCORD_TOKEN — автороли и автомод выключены'); })
-      .catch((e) => console.error('Discord gateway не подключился (включи Server Members и Message Content Intent в Developer Portal → Bot):', e.message));
+      .catch((e) => {
+        console.error('Discord gateway не подключился (включи Server Members и Message Content Intent в Developer Portal → Bot):', e.message, '— повтор через 2 мин');
+        setTimeout(connect, 2 * 60 * 1000);
+      });
+    connect();
     app.locals.discord.registerCommands()
       .then((done) => console.log(done ? 'Discord: слэш-команды зарегистрированы' : 'Discord: бот не настроен (нет DISCORD_APP_ID/DISCORD_TOKEN)'))
       .catch((e) => console.error('Discord: не удалось зарегистрировать команды:', e.message));
