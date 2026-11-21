@@ -3,6 +3,7 @@ import { Link } from 'react-router-dom';
 import { useLang, errorText } from '../i18n.jsx';
 import { useAuth } from '../auth.jsx';
 import { api, formatHours, DISCORD } from '../api.js';
+import ChangePassword from '../components/ChangePassword.jsx';
 
 const BADGE = { ingame: 'b-green', script: 'b-cyan', loading: 'b-cyan', launching: 'b-cyan', queued: 'b-orange', waiting: 'b-orange', offline: 'b-orange', problem: 'b-red', blocked: 'b-red', deferred: 'b-red' };
 
@@ -75,7 +76,10 @@ export default function Dashboard() {
           <h1 style={{ marginBottom: 4 }}>👋 {session.nickname}</h1>
           <span className="muted">{t('Твой аккаунт AutoRejoin', 'Your AutoRejoin account')}</span>
         </div>
-        <button className="btn btn-sm btn-ghost" onClick={signOut}>{t('Выйти', 'Sign out')}</button>
+        <div className="row">
+          {me && me.admin && <Link to="/admin" className="btn btn-sm btn-ghost">🛠️ {t('Админка', 'Admin')}</Link>}
+          <button className="btn btn-sm btn-ghost" onClick={signOut}>{t('Выйти', 'Sign out')}</button>
+        </div>
       </div>
       {err && <div className="error">{errorText(err, t)}</div>}
 
@@ -143,6 +147,8 @@ export default function Dashboard() {
           </>
         )}
       </div>
+
+      <ChangePassword token={token} onExpired={expired} />
     </div>
   );
 }

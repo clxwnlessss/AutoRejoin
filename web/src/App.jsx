@@ -11,6 +11,7 @@ import Dashboard from './pages/Dashboard.jsx';
 import Changelog from './pages/Changelog.jsx';
 import Faq from './pages/Faq.jsx';
 import NotFound from './pages/NotFound.jsx';
+import Admin from './pages/Admin.jsx';
 
 const ICON = `${import.meta.env.BASE_URL}icon.png`;
 
@@ -86,6 +87,7 @@ function Title() {
       '/register': t('Регистрация', 'Sign up'),
       '/dashboard': t('Мой аккаунт', 'My account'),
       '/faq': 'FAQ',
+      '/admin': t('Админка', 'Admin'),
       '/changelog': t('Обновления', 'Changelog')
     };
     document.title = names[pathname] ? `${names[pathname]} — AutoRejoin` : 'AutoRejoin — free auto rejoin for Bee Swarm Simulator (Roblox)';
@@ -108,6 +110,7 @@ export default function App() {
           <Route path="/login" element={<Auth mode="login" />} />
           <Route path="/register" element={<Auth mode="register" />} />
           <Route path="/dashboard" element={<Private><Dashboard /></Private>} />
+          <Route path="/admin" element={<Private><Admin /></Private>} />
           <Route path="/changelog" element={<Changelog />} />
           <Route path="/faq" element={<Faq />} />
           <Route path="*" element={<NotFound />} />

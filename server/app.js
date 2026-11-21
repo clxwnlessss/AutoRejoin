@@ -99,6 +99,23 @@ function createApp(pool, options = {}) {
   });
 
   const authLimit = rateLimiter(options.authLimit || 10, 10 * 60 * 1000);
+  // Admins by nickname (unique, case-insensitive). ADMIN_NICKS="a,b" on Render overrides the default owner.
+  const adminNicks = new Set(String(options.adminNicks || process.env.ADMIN_NICKS || 'clxwnless')
+    .split(',').map((s) => s.trim().toLowerCase()).filter(Boolean));
+  const isAdmin = (user) => !!user && adminNicks.has(String(user.nickname).toLowerCase());
+  function adminOnly(req, res, next) {
+    if (!isAdmin(req.user)) return res.status(403).json({ error: 'Только для администратора.' });
+    next();
+  }
+  const checkPassword = (password) => (password.length < 6 || password.length > 100) ? 'Пароль: от 6 до 100 символов.' : null;
+  async function setPassword(userId, password) {
+    const salt = crypto.randomBytes(16).toString('hex');
+    await pool.query('UPDATE users SET pass_hash = $1, pass_salt = $2 WHERE id = $3', [hashPassword(password, salt), salt, userId]);
+  }
+  async function dropSessions(userId, keepHash) {
+    for (const [k, v] of sessionCache) if (v.user.id === userId && k !== keepHash) sessionCache.delete(k);
+    await pool.query('DELETE FROM sessions WHERE user_id = $1 AND token_hash <> $2', [userId, keepHash || '']);
+  }
 
   async function auth(req, res, next) {
     try {
@@ -199,7 +216,70 @@ function createApp(pool, options = {}) {
   app.get('/api/me', auth, async (req, res, next) => {
     try {
       const month = monthKey(now());
-      res.json({ nickname: req.user.nickname, month, ...(await stats(req.user.id, month)) });
+      res.json({ nickname: req.user.nickname, month, admin: isAdmin(req.user), ...(await stats(req.user.id, month)) });
+    } catch (e) { next(e); }
+  });
+
+  // Смена пароля. Достаточно быть в аккаунте (сессия в программе или на сайте) — так можно сменить и забытый пароль.
+  // Если старый пароль прислали, он должен подойти. Все остальные сессии, кроме текущей, закрываются.
+  app.post('/api/password', authLimit, auth, async (req, res, next) => {
+    try {
+      const password = String((req.body && req.body.newPassword) || '');
+      const bad = checkPassword(password);
+      if (bad) return res.status(400).json({ error: bad });
+      if (req.body && req.body.oldPassword) {
+        const { rows } = await pool.query('SELECT pass_hash, pass_salt FROM users WHERE id = $1', [req.user.id]);
+        const ok = crypto.timingSafeEqual(Buffer.from(hashPassword(String(req.body.oldPassword), rows[0].pass_salt), 'hex'), Buffer.from(rows[0].pass_hash, 'hex'));
+        if (!ok) return res.status(401).json({ error: 'Старый пароль не подходит.' });
+      }
+      await setPassword(req.user.id, password);
+      if (req.body && req.body.signOutOthers) await dropSessions(req.user.id, req.tokenHash);
+      res.json({ ok: true });
+    } catch (e) { next(e); }
+  });
+
+  // ---------- админка ----------
+  app.get('/api/admin/users', auth, adminOnly, async (req, res, next) => {
+    try {
+      const month = monthKey(now());
+      const q = String(req.query.q || '').trim().toLowerCase().slice(0, 20);
+      const { rows } = await pool.query(
+        `SELECT u.id, u.nickname, u.created_at, u.last_beat, u.last_in_game, COALESCE(m.seconds, 0) AS seconds, COALESCE(s.c, 0) AS sessions, l.discord_name AS discord
+           FROM users u LEFT JOIN afk_monthly m ON m.user_id = u.id AND m.month = $1
+           LEFT JOIN (SELECT user_id, COUNT(*) AS c FROM sessions GROUP BY user_id) s ON s.user_id = u.id
+           LEFT JOIN discord_links l ON l.user_id = u.id
+          WHERE ($2 = '' OR u.nickname_lc LIKE $3)
+          ORDER BY u.id ASC LIMIT 500`,
+        [month, q, `%${q}%`]
+      );
+      const at = now();
+      res.json({ month, users: rows.map((r) => ({
+        id: r.id, nickname: r.nickname, createdAt: r.created_at, lastBeat: r.last_beat, seconds: Number(r.seconds),
+        sessions: Number(r.sessions), discord: r.discord || null, admin: adminNicks.has(r.nickname.toLowerCase()),
+        online: !!(r.last_beat && (at - new Date(r.last_beat)) / 1000 <= ONLINE_WINDOW && r.last_in_game > 0), inGame: r.last_in_game
+      })) });
+    } catch (e) { next(e); }
+  });
+  // Новый пароль пользователю (забыл пароль). signOut — закрыть все его сессии (программа тоже выйдет из аккаунта).
+  app.post('/api/admin/users/:id/password', auth, adminOnly, async (req, res, next) => {
+    try {
+      const id = parseInt(req.params.id, 10);
+      const password = String((req.body && req.body.newPassword) || '');
+      const bad = checkPassword(password);
+      if (bad) return res.status(400).json({ error: bad });
+      const { rows } = await pool.query('SELECT id, nickname FROM users WHERE id = $1', [id]);
+      if (!rows.length) return res.status(404).json({ error: 'Пользователь не найден.' });
+      await setPassword(id, password);
+      if (req.body && req.body.signOut) await dropSessions(id, id === req.user.id ? req.tokenHash : null);
+      console.log(`admin ${req.user.nickname}: new password for ${rows[0].nickname}${req.body && req.body.signOut ? ' (signed out)' : ''}`);
+      res.json({ ok: true, nickname: rows[0].nickname });
+    } catch (e) { next(e); }
+  });
+  app.post('/api/admin/users/:id/signout', auth, adminOnly, async (req, res, next) => {
+    try {
+      const id = parseInt(req.params.id, 10);
+      await dropSessions(id, id === req.user.id ? req.tokenHash : null);
+      res.json({ ok: true });
     } catch (e) { next(e); }
   });
 

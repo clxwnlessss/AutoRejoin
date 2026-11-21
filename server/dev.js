@@ -11,7 +11,7 @@ const { createApp, initDb, monthKey } = require('./app');
   const pool = new Pool();
   await initDb(pool);
   const port = parseInt(process.argv[2], 10) || 3999;
-  createApp(pool).listen(port, '127.0.0.1');
+  createApp(pool, { adminNicks: 'clxwnlesss' }).listen(port, '127.0.0.1');
   const base = `http://127.0.0.1:${port}`;
   const post = async (path, body, token) => (await fetch(base + path, {
     method: 'POST',

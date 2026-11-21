@@ -11,7 +11,7 @@ const { createApp, initDb } = require('./app');
   await initDb(pool);
 
   let clock = new Date('2026-11-19T12:00:00Z');
-  const app = createApp(pool, { now: () => clock, authLimit: 1000 });
+  const app = createApp(pool, { now: () => clock, authLimit: 1000, adminNicks: 'clxwnlesss' });
   const server = app.listen(0);
   const base = `http://127.0.0.1:${server.address().port}`;
   const call = async (method, path, body, token) => {
@@ -100,6 +100,46 @@ const { createApp, initDb } = require('./app');
   ok(r.status === 400, 'сайт: неизвестная команда отклонена');
   r = await call('GET', '/api/agent/state');
   ok(r.status === 401, 'сайт: панель без входа закрыта');
+
+  // Смена пароля и админка
+  const adm = (await call('POST', '/api/login', { nickname: 'clxwnlesss', password: 'secret123' })).body.token;
+  const bee1 = (await call('POST', '/api/login', { nickname: 'Helper_Bee', password: 'secret456' })).body.token;
+  const bee2 = (await call('POST', '/api/login', { nickname: 'Helper_Bee', password: 'secret456' })).body.token;
+  r = await call('GET', '/api/me', null, adm);
+  ok(r.body.admin === true, 'админка: владелец — администратор');
+  r = await call('GET', '/api/me', null, bee1);
+  ok(r.body.admin === false, 'админка: обычный игрок — не администратор');
+  r = await call('GET', '/api/admin/users', null, bee1);
+  ok(r.status === 403, 'админка: игроку список пользователей закрыт');
+  r = await call('GET', '/api/admin/users', null, adm);
+  const beeRow = r.body.users.find((u) => u.nickname === 'Helper_Bee');
+  ok(r.status === 200 && beeRow && beeRow.sessions >= 2 && !('pass_hash' in beeRow) && !('passHash' in beeRow), 'админка: список пользователей без паролей');
+  r = await call('GET', '/api/admin/users?q=helper', null, adm);
+  ok(r.body.users.length === 1 && r.body.users[0].nickname === 'Helper_Bee', 'админка: поиск по нику');
+  r = await call('POST', `/api/admin/users/${beeRow.id}/password`, { newPassword: '123' }, adm);
+  ok(r.status === 400, 'админка: короткий новый пароль отклонён');
+  r = await call('POST', `/api/admin/users/${beeRow.id}/password`, { newPassword: 'newpass789' }, bee1);
+  ok(r.status === 403, 'админка: игрок не может сбросить чужой пароль');
+  r = await call('POST', `/api/admin/users/${beeRow.id}/password`, { newPassword: 'newpass789' }, adm);
+  ok(r.status === 200 && r.body.nickname === 'Helper_Bee', 'админка: новый пароль выдан');
+  r = await call('POST', '/api/login', { nickname: 'Helper_Bee', password: 'secret456' });
+  ok(r.status === 401, 'админка: старый пароль больше не подходит');
+  r = await call('POST', '/api/login', { nickname: 'Helper_Bee', password: 'newpass789' });
+  ok(r.status === 200, 'админка: вход с новым паролем');
+  r = await call('GET', '/api/me', null, bee1);
+  ok(r.status === 200, 'админка: без «выйти везде» программа остаётся в аккаунте');
+  r = await call('POST', '/api/password', { newPassword: 'mine12345', oldPassword: 'wrong' }, bee1);
+  ok(r.status === 401, 'смена пароля: неверный старый пароль отклонён');
+  r = await call('POST', '/api/password', { newPassword: 'mine12345', signOutOthers: true }, bee1);
+  ok(r.status === 200, 'смена пароля из сессии (старый пароль забыт)');
+  r = await call('GET', '/api/me', null, bee2);
+  const still = await call('GET', '/api/me', null, bee1);
+  ok(r.status === 401 && still.status === 200, 'смена пароля: другие сессии закрыты, текущая работает');
+  r = await call('POST', '/api/login', { nickname: 'Helper_Bee', password: 'mine12345' });
+  ok(r.status === 200, 'смена пароля: вход с новым паролем');
+  r = await call('POST', `/api/admin/users/${beeRow.id}/signout`, null, adm);
+  r = await call('GET', '/api/me', null, bee1);
+  ok(r.status === 401, 'админка: «выйти везде» закрывает все сессии игрока');
 
   // Выход
   r = await call('POST', '/api/logout', null, owner);

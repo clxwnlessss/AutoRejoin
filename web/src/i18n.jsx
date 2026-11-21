@@ -39,6 +39,8 @@ export function errorText(e, t) {
     'Слишком много попыток. Подожди 10 минут.': 'Too many attempts. Wait 10 minutes.',
     'Сессия устарела — войди заново.': 'Session expired — sign in again.',
     'Нужно войти в аккаунт.': 'Please sign in.',
+    'Только для администратора.': 'Admins only.',
+    'Пользователь не найден.': 'User not found.',
     'Сначала привяжи Discord-бота в программе: Настройки → Привязать бота.': 'Link the Discord bot in the app first: Settings → Link bot.'
   };
   return map[e.message] || e.message;

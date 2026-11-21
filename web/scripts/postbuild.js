@@ -9,7 +9,7 @@ copyFileSync(join(out, 'index.html'), join(out, '404.html'));
 const base = 'https://clxwnlessss.github.io/AutoRejoin/';
 const pages = ['', 'download', 'top', 'faq', 'changelog'];
 // Real files for every route, so they answer 200 (not the 404 fallback) — better for search engines.
-for (const p of [...pages.filter(Boolean), 'login', 'register', 'dashboard']) {
+for (const p of [...pages.filter(Boolean), 'login', 'register', 'dashboard', 'admin']) {
   mkdirSync(join(out, p), { recursive: true });
   copyFileSync(join(out, 'index.html'), join(out, p, 'index.html'));
 }
