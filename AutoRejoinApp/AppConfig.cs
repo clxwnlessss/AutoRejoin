@@ -1,4 +1,4 @@
-namespace AutoRejoinApp;
+﻿namespace AutoRejoinApp;
 
 public class AppConfig
 {
@@ -98,6 +98,8 @@ public class AppConfig
 
 	public bool discordEvents { get; set; }
 
+	public bool discordErrors { get; set; }
+
 	public string discordMentions { get; set; }
 
 	public AppConfig()
@@ -148,6 +150,7 @@ public class AppConfig
 		discordOn = false;
 		discordInterval = 15;
 		discordEvents = true;
+		discordErrors = true;
 		discordMentions = "";
 	}
 

@@ -1,4 +1,4 @@
-using System;
+﻿using System;
 using System.Collections.Generic;
 using System.Collections.ObjectModel;
 using System.ComponentModel;
@@ -968,15 +968,19 @@ public class MainController
 		switch (Store.Str(data, "t"))
 		{
 		case "log":
-			AddLog(new LogLine
+		{
+			LogLine line = new LogLine
 			{
 				Time = Store.Str(data, "time"),
 				Account = Store.Str(data, "acc"),
 				Key = Store.Str(data, "key"),
 				Message = Store.Str(data, "msg"),
 				Color = Store.Str(data, "color")
-			});
+			};
+			AddLog(line);
+			discord?.OnLog(line);
 			break;
+		}
 		case "status":
 			ApplyStatus(data);
 			break;

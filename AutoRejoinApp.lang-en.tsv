@@ -1,5 +1,38 @@
-# AutoRejoin — English translation (russian<TAB>english). \n = new line, \s = space. ~regex = engine text pattern.
+﻿# AutoRejoin — English translation (russian<TAB>english). \n = new line, \s = space. ~regex = engine text pattern.
 # ---------- code ----------
+Ошибки и анализ перезаходов	Errors and rejoin analysis
+Ошибки движка — сразу. Не может перезайти 5 / 30 / 120 мин — на чём застрял и что делать.	Engine errors right away. Can't rejoin for 5 / 30 / 120 min — where it got stuck and what to do.
+Анализ перезаходов	Rejoin analysis
+ не может перезайти уже 	 can't rejoin for\s
+ · неудачных попыток: 	 · failed attempts:\s
+ · последняя: 	 · last:\s
+ · сейчас: 	 · now:\s
+, неудачных попыток: 	, failed attempts:\s
+Роблокс не принял вход	Roblox rejected the login
+сессия аккаунта сброшена — войди в аккаунт в AutoRejoin заново	the account session was reset — sign in to the account in AutoRejoin again
+кука перестала работать	cookie stopped working
+войди в аккаунт в AutoRejoin заново	sign in to the account in AutoRejoin again
+Роблокс не пускает аккаунт	Roblox blocks the account
+проверь аккаунт на сайте Роблокса (бан или предупреждение)	check the account on the Roblox website (ban or warning)
+окно умирает сразу после запуска	window dies right after launch
+так бывает после падения окна с Потассиумом — поможет перезагрузка компьютера	this happens after a Potassium window crash — restart the PC
+окно не открылось	window didn't open
+Роблокс или Froststrap завис при запуске — закрой лишние процессы Роблокса	Roblox or Froststrap hung on launch — close stray Roblox processes
+ошибка запуска	launch error
+не удалось получить билет или запустить Роблокс — проверь интернет	couldn't get a ticket or start Roblox — check your internet
+не зашёл на сервер	didn't join the server
+сервер полон или недоступен, либо устарела ссылка на приватный сервер	the server is full or down, or the private server link is outdated
+прыжок на сервер не удался	server teleport failed
+сервер полон или закрылся — проверь ссылку	the server is full or closed — check the link
+окно зависло при загрузке	window hung while loading
+не хватает памяти или ЦП — уменьши число окон или графику	not enough RAM or CPU — run fewer windows or lower graphics
+окну не хватило памяти	window ran out of memory
+уменьши число окон или подними лимит памяти	run fewer windows or raise the memory limit
+скрипт не запустился	script didn't start
+проверь, что Потассиум запущен и вошёл в аккаунт	make sure Potassium is running and signed in
+окно закрылось до захода	window closed before joining
+Роблокс падает при загрузке — проверь, не зашёл ли аккаунт с другого устройства	Roblox crashes while loading — check the account isn't signed in on another device
+причина неизвестна	unknown reason
  (меняется на лету). Впишешь ссылку здесь — файл больше не читается.	 (updates live). Enter a link here and the file is no longer read.
  / потолок RAM (	 / RAM cap (
  · RAM — сколько из этого сейчас в оперативной памяти	 · RAM — how much of it is in physical memory now
@@ -628,3 +661,11 @@ Discord: команда «Перезайти»	Discord: "Rejoin" command
 Скопировано ✓	Copied ✓
 Смотри, какие аккаунты стоят, и управляй ими прямо из Discord.	See which accounts are in game and control them right from Discord.
 не открылась ссылка	could not open the link
+~^окно закрылось до захода на сервер$	window closed before joining the server
+~^окно не открылось за (\d+) сек$	window didn't open within $1 s
+окно умерло сразу после запуска	window died right after launch
+~^не получилось запустить: (.+)$	failed to launch: $1
+~^не зашёл на сервер за (\d+) сек$	didn't join the server within $1 s
+~^окно не отвечает уже (\d+) сек$	window not responding for $1 s
+кука перестала работать (401)	cookie stopped working (401)
+Роблокс не пускает аккаунт (модерация)	Roblox blocks the account (moderation)

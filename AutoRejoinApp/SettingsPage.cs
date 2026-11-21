@@ -1,4 +1,4 @@
-using System;
+﻿using System;
 using System.Collections.Generic;
 using System.Globalization;
 using System.Linq;
@@ -88,6 +88,11 @@ public class SettingsPage
 		AddRow(section, L.T("Мгновенные оповещения"), L.T("Вылет с причиной и возврат в игру. Проблемы — с упоминанием."), Switch(Cfg.discordEvents, delegate(bool v)
 		{
 			Cfg.discordEvents = v;
+			main.ConfigChanged();
+		}));
+		AddRow(section, L.T("Ошибки и анализ перезаходов"), L.T("Ошибки движка — сразу. Не может перезайти 5 / 30 / 120 мин — на чём застрял и что делать."), Switch(Cfg.discordErrors, delegate(bool v)
+		{
+			Cfg.discordErrors = v;
 			main.ConfigChanged();
 		}));
 		TextBox mentionBox = Field(L.T("Discord ID через запятую (необязательно)"), Cfg.discordMentions);

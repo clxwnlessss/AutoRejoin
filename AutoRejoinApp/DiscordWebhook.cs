@@ -1,4 +1,4 @@
-using System;
+﻿using System;
 using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.Globalization;
@@ -18,6 +18,9 @@ namespace AutoRejoinApp;
 //  • Сразу (если включено): аккаунт вылетел — с причиной; снова в игре — сколько его не было.
 //  • Сразу, с упоминанием: проблемы, которые сами не чинятся (кука, предупреждение Роблокса, вход с капчей,
 //    Потассиум разлогинился, сообщения движка «нужна твоя помощь»).
+//  • Ошибки движка (красные строки журнала) — сразу, одинаковые не чаще раза в 10 минут.
+//  • Анализ перезаходов: аккаунт не может зайти 5 / 30 / 120 минут — на чём именно он застрял и что сделать;
+//    в отчёте — сколько заходов удалось и на чём срывались неудачные, по каждому аккаунту.
 public class DiscordWebhook
 {
 	private class Row
@@ -42,7 +45,31 @@ public class DiscordWebhook
 		public bool DropReported;
 		public DateTime DownSince;
 		public string Problem;
+		public DateTime? OutSince;   // с какого момента аккаунт не в игре (вылет или ещё не зашёл после запуска)
+		public int FailsAtOut;       // счётчик неудачных попыток движка в этот момент
+		public int StuckLevel;       // сколько порогов «не может перезайти» уже отправлено
 	}
+
+	// Статистика перезаходов аккаунта за этот запуск движка — для анализа «на чём он не перезаходит».
+	private class Stat
+	{
+		public string Name;
+		public bool Main;
+		public int FailTotal;
+		public int JoinOk;
+		public int Drops;
+		public string LastError;
+		public readonly Dictionary<string, int> Causes = new Dictionary<string, int>();
+	}
+
+	private struct Diagnosis
+	{
+		public string Cause;
+		public string Hint;
+	}
+
+	// Пороги «не может перезайти», минуты.
+	private static readonly int[] StuckMinutes = new int[3] { 5, 30, 120 };
 
 	private class Event
 	{
@@ -60,6 +87,16 @@ public class DiscordWebhook
 	private readonly Dictionary<string, Track> tracks = new Dictionary<string, Track>();
 
 	private readonly ConcurrentQueue<Event> events = new ConcurrentQueue<Event>();
+
+	private readonly Dictionary<string, Stat> stats = new Dictionary<string, Stat>();
+
+	private volatile string analysisText;
+
+	private readonly Dictionary<string, DateTime> errorSeen = new Dictionary<string, DateTime>();
+
+	private bool wasRunning;
+
+	private volatile bool errorsOn = true;
 
 	private bool potassiumSignedOut;
 
@@ -122,6 +159,7 @@ public class DiscordWebhook
 		string newUrl = (main.Vault.discordWebhook ?? "").Trim();
 		intervalMinutes = Math.Max(1, Math.Min(1440, cfg.discordInterval));
 		eventsOn = cfg.discordEvents;
+		errorsOn = cfg.discordErrors;
 		mentionIds = ParseIds(cfg.discordMentions).Distinct().ToArray();
 		Update();
 		string key = cfg.discordOn + "|" + newUrl;
@@ -179,6 +217,31 @@ public class DiscordWebhook
 		}
 	}
 
+	// Строка журнала движка. Красные — ошибки: пишем в Discord сразу (одинаковые — не чаще раза в 10 минут).
+	public void OnLog(LogLine line)
+	{
+		if (line == null || !errorsOn || cts == null || !string.Equals(line.Color, "Red", StringComparison.OrdinalIgnoreCase) || string.IsNullOrWhiteSpace(line.Message))
+		{
+			return;
+		}
+		DateTime now = DateTime.UtcNow;
+		string key = (line.Key ?? "") + "|" + Regex.Replace(line.Message, "\\d+", "#");
+		if (errorSeen.TryGetValue(key, out var seen) && (now - seen).TotalMinutes < 10.0)
+		{
+			return;
+		}
+		errorSeen[key] = now;
+		if (errorSeen.Count > 200)
+		{
+			foreach (string old in errorSeen.Where((KeyValuePair<string, DateTime> p) => (now - p.Value).TotalMinutes >= 10.0).Select((KeyValuePair<string, DateTime> p) => p.Key).ToList())
+			{
+				errorSeen.Remove(old);
+			}
+		}
+		string who = string.IsNullOrEmpty(line.Account) ? "" : ("**" + Escape(line.Account) + "**: ");
+		Enqueue("❌ " + who + L.Engine(line.Message.Trim()), mention: false, force: true);
+	}
+
 	// Снимок для отчёта + поиск переходов для мгновенных сообщений. Вызывается на каждый статус движка (раз в секунду).
 	public void Update()
 	{
@@ -202,6 +265,12 @@ public class DiscordWebhook
 			tracks.Clear();
 			potassiumSignedOut = false;
 		}
+		// Новый запуск движка — статистика перезаходов с нуля (у движка счётчики тоже обнулились).
+		if (running && !wasRunning)
+		{
+			stats.Clear();
+		}
+		wasRunning = running;
 		DateTime now = DateTime.UtcNow;
 		int n = 0;
 		foreach (VaultAccount account in main.Vault.accounts)
@@ -235,6 +304,10 @@ public class DiscordWebhook
 				}
 			}
 			snap.Rows.Add(row);
+			if (view != null)
+			{
+				Count(account.id, row, view);
+			}
 			if (watch && view != null)
 			{
 				Watch(account.id, row, state, lastReason, lastReasonAt, now);
@@ -251,6 +324,150 @@ public class DiscordWebhook
 			potassiumSignedOut = signedOut;
 		}
 		snapshot = snap;
+		analysisText = Analysis();
+	}
+
+	// Движок считает неудачные попытки зайти и пишет последнюю ошибку — копим, на чём именно срывался аккаунт.
+	private void Count(string key, Row row, IDictionary<string, object> view)
+	{
+		if (!stats.TryGetValue(key, out var stat))
+		{
+			stat = (stats[key] = new Stat());
+		}
+		stat.Name = row.Name;
+		stat.Main = row.Main;
+		int failTotal = (int)(Store.Num(view, "failTotal") ?? 0.0);
+		stat.JoinOk = (int)(Store.Num(view, "joinOk") ?? 0.0);
+		string lastError = Store.Str(view, "lastError");
+		if (failTotal > stat.FailTotal)
+		{
+			string cause = Classify(lastError).Cause;
+			stat.Causes.TryGetValue(cause, out var had);
+			stat.Causes[cause] = had + (failTotal - stat.FailTotal);
+		}
+		stat.FailTotal = failTotal;
+		if (!string.IsNullOrEmpty(lastError))
+		{
+			stat.LastError = lastError;
+		}
+	}
+
+	// По тексту ошибки движка — что это за причина и что с ней делать.
+	private static Diagnosis Classify(string error)
+	{
+		string e = (error ?? "").ToLowerInvariant();
+		string cause;
+		string hint;
+		if (e.Contains("не принял вход"))
+		{
+			cause = "Роблокс не принял вход";
+			hint = "сессия аккаунта сброшена — войди в аккаунт в AutoRejoin заново";
+		}
+		else if (e.Contains("401") || e.Contains("кука"))
+		{
+			cause = "кука перестала работать";
+			hint = "войди в аккаунт в AutoRejoin заново";
+		}
+		else if (e.Contains("модерац") || e.Contains("не пускает"))
+		{
+			cause = "Роблокс не пускает аккаунт";
+			hint = "проверь аккаунт на сайте Роблокса (бан или предупреждение)";
+		}
+		else if (e.Contains("умерло сразу"))
+		{
+			cause = "окно умирает сразу после запуска";
+			hint = "так бывает после падения окна с Потассиумом — поможет перезагрузка компьютера";
+		}
+		else if (e.Contains("не открылось"))
+		{
+			cause = "окно не открылось";
+			hint = "Роблокс или Froststrap завис при запуске — закрой лишние процессы Роблокса";
+		}
+		else if (e.Contains("не получилось запустить"))
+		{
+			cause = "ошибка запуска";
+			hint = "не удалось получить билет или запустить Роблокс — проверь интернет";
+		}
+		else if (e.Contains("не зашёл на сервер"))
+		{
+			cause = "не зашёл на сервер";
+			hint = "сервер полон или недоступен, либо устарела ссылка на приватный сервер";
+		}
+		else if (e.Contains("меню"))
+		{
+			cause = "прыжок на сервер не удался";
+			hint = "сервер полон или закрылся — проверь ссылку";
+		}
+		else if (e.Contains("не отвечает"))
+		{
+			cause = "окно зависло при загрузке";
+			hint = "не хватает памяти или ЦП — уменьши число окон или графику";
+		}
+		else if (e.Contains("раздулось"))
+		{
+			cause = "окну не хватило памяти";
+			hint = "уменьши число окон или подними лимит памяти";
+		}
+		else if (e.Contains("скрипт"))
+		{
+			cause = "скрипт не запустился";
+			hint = "проверь, что Потассиум запущен и вошёл в аккаунт";
+		}
+		else if (e.Contains("закрылось"))
+		{
+			cause = "окно закрылось до захода";
+			hint = "Роблокс падает при загрузке — проверь, не зашёл ли аккаунт с другого устройства";
+		}
+		else
+		{
+			cause = (e.Length == 0) ? "причина неизвестна" : ((error.Length > 60) ? (error.Substring(0, 60) + "…") : error);
+			hint = null;
+		}
+		return new Diagnosis
+		{
+			Cause = cause,
+			Hint = hint
+		};
+	}
+
+	// Аккаунт не в игре дольше порога — пишем, на чём именно он не перезаходит.
+	private void CheckStuck(Track track, string key, Row row, bool problem, DateTime now)
+	{
+		if (row.InGame || !track.OutSince.HasValue || track.StuckLevel >= StuckMinutes.Length)
+		{
+			return;
+		}
+		if ((now - track.OutSince.Value).TotalMinutes < StuckMinutes[track.StuckLevel])
+		{
+			return;
+		}
+		track.StuckLevel++;
+		// Проблему, которая сама не чинится (кука, модерация, перезагрузка), уже прислали с упоминанием.
+		if (problem)
+		{
+			return;
+		}
+		stats.TryGetValue(key, out var stat);
+		int tries = (stat != null) ? Math.Max(0, stat.FailTotal - track.FailsAtOut) : 0;
+		StringBuilder line = new StringBuilder();
+		line.Append("🟠 **").Append(Escape(row.Name)).Append("**").Append(row.Main ? " ⭐" : "")
+			.Append(L.T(" не может перезайти уже ")).Append(Ago(track.OutSince.Value))
+			.Append(L.T(" · неудачных попыток: ")).Append(tries);
+		string error = stat?.LastError;
+		if (tries > 0 && !string.IsNullOrEmpty(error))
+		{
+			Diagnosis d = Classify(error);
+			line.Append(L.T(" · последняя: ")).Append(L.Engine(error));
+			if (d.Hint != null)
+			{
+				line.Append("\n   ↳ ").Append(L.T(d.Hint));
+			}
+		}
+		else
+		{
+			line.Append(L.T(" · сейчас: ")).Append(row.Text);
+		}
+		Enqueue(line.ToString(), mention: track.StuckLevel >= 2, force: true);
 	}
 
 	private void Watch(string key, Row row, string state, string lastReason, DateTime? lastReasonAt, DateTime now)
@@ -259,10 +476,13 @@ public class DiscordWebhook
 		if (!tracks.TryGetValue(key, out var track))
 		{
 			// Первый статус после запуска: просто запоминаем, иначе каждый аккаунт, который ещё грузится, «вылетел» бы.
+			stats.TryGetValue(key, out var first);
 			tracks[key] = new Track
 			{
 				InGame = row.InGame,
-				Problem = (problem ? row.Text : null)
+				Problem = (problem ? row.Text : null),
+				OutSince = (row.InGame ? ((DateTime?)null) : new DateTime?(now)),
+				FailsAtOut = (first?.FailTotal ?? 0)
 			};
 			if (problem)
 			{
@@ -275,6 +495,13 @@ public class DiscordWebhook
 			// Причина — та, что движок записал при перезапуске (свежая), иначе текущее состояние окна.
 			string reason = (lastReasonAt.HasValue && (now - lastReasonAt.Value).TotalSeconds < 90.0 && !string.IsNullOrEmpty(lastReason)) ? lastReason : row.Text;
 			track.DownSince = now;
+			track.OutSince = now;
+			track.StuckLevel = 0;
+			track.FailsAtOut = stats.TryGetValue(key, out var st) ? st.FailTotal : 0;
+			if (st != null)
+			{
+				st.Drops++;
+			}
 			track.DropReported = !Planned.IsMatch(reason ?? "");
 			if (track.DropReported)
 			{
@@ -283,13 +510,18 @@ public class DiscordWebhook
 		}
 		else if (!track.InGame && row.InGame)
 		{
-			if (track.DropReported)
+			if (track.DropReported || track.StuckLevel > 0)
 			{
-				Enqueue("🟢 **" + Escape(row.Name) + "**" + (row.Main ? " ⭐" : "") + L.T(" снова в игре (не было ") + Ago(track.DownSince) + ")", mention: false);
+				int tries = stats.TryGetValue(key, out var st2) ? Math.Max(0, st2.FailTotal - track.FailsAtOut) : 0;
+				string since = track.OutSince.HasValue ? Ago(track.OutSince.Value) : Ago(track.DownSince);
+				Enqueue("🟢 **" + Escape(row.Name) + "**" + (row.Main ? " ⭐" : "") + L.T(" снова в игре (не было ") + since + ((tries > 0) ? (L.T(", неудачных попыток: ") + tries) : "") + ")", mention: false, force: track.StuckLevel > 0);
 			}
 			track.DropReported = false;
+			track.OutSince = null;
+			track.StuckLevel = 0;
 		}
 		track.InGame = row.InGame;
+		CheckStuck(track, key, row, problem, now);
 		if (problem)
 		{
 			if (track.Problem != row.Text)
@@ -304,9 +536,10 @@ public class DiscordWebhook
 		}
 	}
 
-	private void Enqueue(string text, bool mention)
+	private void Enqueue(string text, bool mention, bool force = false)
 	{
-		if (cts == null || !eventsOn)
+		// force — ошибки и анализ перезаходов: у них свой переключатель «Ошибки и анализ перезаходов».
+		if (cts == null || (force ? !errorsOn : !eventsOn))
 		{
 			return;
 		}
@@ -416,6 +649,7 @@ public class DiscordWebhook
 			text.Append(L.T("Включённых аккаунтов нет."));
 		}
 		int total = snap.Rows.Count;
+		string analysis = errorsOn ? analysisText : null;
 		int color = ((!snap.Running || inGame == 0) ? 0xE5484D : ((inGame < total) ? 0xF5A524 : 0x30A46C));
 		Dictionary<string, object> body = new Dictionary<string, object>
 		{
@@ -428,12 +662,43 @@ public class DiscordWebhook
 					["title"] = (snap.Running ? (L.T("В игре ") + inGame + L.T(" из ") + total) : L.T("AutoRejoin остановлен")),
 					["description"] = text.ToString().TrimEnd(),
 					["color"] = color,
+					["fields"] = ((analysis == null) ? new object[0] : new object[1]
+					{
+						new Dictionary<string, object>
+						{
+							["name"] = L.T("Анализ перезаходов"),
+							["value"] = analysis
+						}
+					}),
 					["footer"] = new Dictionary<string, object> { ["text"] = Owner.Credit + " · " + Environment.MachineName },
 					["timestamp"] = DateTime.UtcNow.ToString("o")
 				}
 			}
 		};
 		Report(await Post(body, ct), L.T("последний отчёт в ") + DateTime.Now.ToString("HH:mm"));
+	}
+
+	// По каждому аккаунту с неудачными попытками: сколько заходов удалось и на чём срывались остальные.
+	private string Analysis()
+	{
+		Stat[] list = stats.Values.Where((Stat s) => s.FailTotal > 0).OrderByDescending((Stat s) => s.FailTotal).ToArray();
+		if (list.Length == 0)
+		{
+			return null;
+		}
+		StringBuilder text = new StringBuilder();
+		foreach (Stat s in list)
+		{
+			string causes = string.Join(", ", s.Causes.OrderByDescending((KeyValuePair<string, int> c) => c.Value).Select((KeyValuePair<string, int> c) => L.T(c.Key) + " ×" + c.Value));
+			string line = "• **" + Escape(s.Name) + "**" + (s.Main ? " ⭐" : "") + " — ✅ " + s.JoinOk + " / ❌ " + s.FailTotal + ((causes.Length > 0) ? (": " + causes) : "");
+			if (text.Length + line.Length > 1000)
+			{
+				text.Append("…");
+				break;
+			}
+			text.Append(line).Append('\n');
+		}
+		return text.ToString().TrimEnd();
 	}
 
 	private void Report(int code, string okText)

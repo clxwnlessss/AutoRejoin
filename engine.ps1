@@ -1150,6 +1150,10 @@ function New-VaultAccount($Entry) {
         Restarts   = 0                    # перезаходов с запуска движка (для приложения)
         LastReason = $null                # последняя причина перезахода и когда
         LastReasonAt = $null
+        FailTotal  = 0                    # неудачных попыток зайти с запуска движка (для анализа в Discord)
+        JoinOk     = 0                    # удачных заходов с запуска движка
+        LastError  = $null                # последняя неудачная попытка зайти: что случилось и когда
+        LastErrorAt = $null
     }
 }
 
@@ -1179,6 +1183,15 @@ function Update-AccountEntry($Account, $Entry) {
         $Account.OwnLink = $ownLink   # не повторять одно и то же сообщение каждые 2 сек
         Write-Status "своя ссылка аккаунта не подходит: $($_.Exception.Message) — захожу по прежней." Red $Account
     }
+}
+
+# Неудачная попытка зайти: растит паузу перед повтором и запоминает, что случилось, — приложение пишет это в Discord
+# и считает, на чём именно аккаунт не может перезайти.
+function Register-JoinFail($Account, [string]$Text) {
+    $Account.Fails++
+    $Account.FailTotal++
+    $Account.LastError = $Text
+    $Account.LastErrorAt = Get-Date
 }
 
 function Get-Backoff($Account) {
@@ -3062,10 +3075,13 @@ function Start-AccountLaunch($Account) {
         if ($message -match '\(401\)' -or $message -match 'moderated') {
             Remove-ActiveAccount $Account
             $Account.LaunchedAt = $null
+            $Account.FailTotal++
+            $Account.LastError = if ($message -match '\(401\)') { 'кука перестала работать (401)' } else { 'Роблокс не пускает аккаунт (модерация)' }
+            $Account.LastErrorAt = Get-Date
             Set-AuthProblem $Account $(if ($message -match '\(401\)') { 'expired' } else { 'moderated' })
             return
         }
-        $Account.Fails++
+        Register-JoinFail $Account "не получилось запустить: $message"
         $Account.NextLaunch = (Get-Date).AddSeconds((Get-Backoff $Account))
         Write-Status "не получилось запустить: $message. Повтор через $(Get-Backoff $Account) сек." Red $Account
     }
@@ -3139,7 +3155,10 @@ function Step-Account($Account) {
         $Account.Restarts++
         $Account.LastReason = $closed
         $Account.LastReasonAt = $now
-        if ($tracker.LogPath -and -not $tracker.EverJoined) { $Account.Fails++ }
+        if (-not $tracker.EverJoined) {
+            Register-JoinFail $Account "$closed до захода на сервер"
+            if (-not $tracker.LogPath) { $Account.Fails-- }   # окно без лога (убито сразу) пауза не растит — как раньше
+        }
         if ($tracker.LoginError) { Register-LoginFailure $Account }
         # Окно умерло в первые секунды, не успев завести лог, — так античит Роблокса убивает окна после того,
         # как упало окно с Потассиумом. До перезагрузки Windows так будут падать все новые окна.
@@ -3154,6 +3173,7 @@ function Step-Account($Account) {
             $Account.Fails = 0
             $Account.LoginFails = 0
             $script:InstantDeaths = 0
+            $Account.JoinOk++
             Write-Status "в игре (place $($tracker.PlaceId))." Green $Account
         }
         Update-ScriptState $Account
@@ -3169,7 +3189,7 @@ function Step-Account($Account) {
             $Account.LastReasonAt = $now
             Stop-AccountWindow $Account
             if (-not $tracker.EverJoined) {
-                $Account.Fails++
+                Register-JoinFail $Account $reason
                 if ($tracker.LoginError) {
                     Register-LoginFailure $Account
                 } elseif ($Account.Fails -ge 2) {
@@ -3204,13 +3224,13 @@ function Step-Account($Account) {
             # Напрямую окно появляется за 1–2 сек. Нет его за 20 сек — оно умерло раньше, чем скрипт успел его
             # увидеть: так античит убивает новые окна после падения окна с Потассиумом.
             $Account.LaunchedAt = $null
-            $Account.Fails++
+            Register-JoinFail $Account 'окно умерло сразу после запуска'
             $Account.NextLaunch = $now.AddSeconds((Get-Backoff $Account))
             Write-Status 'окно умерло сразу после запуска.' Red $Account
             Register-InstantDeath
         } elseif (($now - $Account.LaunchedAt).TotalSeconds -ge $LaunchTimeout) {
             $Account.LaunchedAt = $null
-            $Account.Fails++
+            Register-JoinFail $Account "окно не открылось за $LaunchTimeout сек"
             $Account.NextLaunch = $now.AddSeconds((Get-Backoff $Account))
             Write-Status "окно не открылось за $LaunchTimeout сек." Red $Account
             try { Clear-StuckLaunchers } catch {}
@@ -3814,6 +3834,8 @@ function Get-AccountView($Account, [string]$State, [string]$Text) {
         state = $State; text = $Text; pid = $windowPid; memGB = $memoryGB; wsGB = $wsGB; capMB = $capMB; startedAt = Format-Utc $started
         script = $scriptState; restarts = [int]$Account.Restarts
         lastReason = $Account.LastReason; lastReasonAt = Format-Utc $Account.LastReasonAt
+        fails = [int]$Account.Fails; failTotal = [int]$Account.FailTotal; joinOk = [int]$Account.JoinOk
+        lastError = $Account.LastError; lastErrorAt = Format-Utc $Account.LastErrorAt
         userOpen = [bool]($tracker -and $tracker.UserOpen); fps = [int](Get-AccountFps $Account)
     }
 }
