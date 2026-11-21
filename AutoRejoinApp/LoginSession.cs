@@ -85,9 +85,21 @@ internal class LoginSession
 			core.Settings.AreDevToolsEnabled = false;
 			core.Settings.IsPasswordAutosaveEnabled = false;
 			core.Settings.IsGeneralAutofillEnabled = false;
+			// Окно входа — только для roblox.com: на чужие сайты не переходим вовсе (логин и пароль туда не попадут).
+			core.NavigationStarting += delegate(object s, CoreWebView2NavigationStartingEventArgs e)
+			{
+				if (!IsRobloxUrl(e.Uri))
+				{
+					e.Cancel = true;
+				}
+			};
 			core.NewWindowRequested += delegate(object s, CoreWebView2NewWindowRequestedEventArgs e)
 			{
 				e.Handled = true;
+				if (!IsRobloxUrl(e.Uri))
+				{
+					return;
+				}
 				try
 				{
 					core.Navigate(e.Uri);
@@ -189,7 +201,7 @@ internal class LoginSession
 			bool needUser = hasUser && Store.Flag(page, "userEmpty");
 			bool needPass = hasPass && Store.Flag(page, "passEmpty");
 			bool canSubmit = submits < 2 && (now - lastSubmitAt).TotalSeconds > 6.0;
-			if ((needUser || needPass || (hasUser && hasPass && submits == 0)) && canSubmit && error.Length == 0)
+			if ((needUser || needPass || (hasUser && hasPass && submits == 0)) && canSubmit && error.Length == 0 && IsRobloxUrl(core.Source))
 			{
 				SetStatus(L.T("Ввожу логин и пароль…"), Palette.Accent, "\ue895");
 				await core.ExecuteScriptAsync(FillScript(request.Username, request.Password));
@@ -349,9 +361,22 @@ internal class LoginSession
 		}
 	}
 
+	// Только https и только roblox.com или его поддомены (www.roblox.com, auth.roblox.com…). "roblox.com.evil.ru",
+	// "evilroblox.com" и http:// не проходят.
+	internal static bool IsRobloxUrl(string url)
+	{
+		if (!Uri.TryCreate(url, UriKind.Absolute, out var uri) || uri.Scheme != Uri.UriSchemeHttps)
+		{
+			return false;
+		}
+		string host = uri.Host.ToLowerInvariant().TrimEnd('.');
+		return host == "roblox.com" || host.EndsWith(".roblox.com", StringComparison.Ordinal);
+	}
+
 	private static string FillScript(string username, string password)
 	{
-		return "(function(U,P){\r\n function vis(e){ if(!e) return false; var r=e.getBoundingClientRect(); return r.width>0 && r.height>0; }\r\n function q(s){ var l=document.querySelectorAll(s); for(var i=0;i<l.length;i++){ if(vis(l[i])) return l[i]; } return null; }\r\n var setter=Object.getOwnPropertyDescriptor(HTMLInputElement.prototype,'value').set;\r\n function put(e,v){ e.focus(); setter.call(e,v); e.dispatchEvent(new Event('input',{bubbles:true})); e.dispatchEvent(new Event('change',{bubbles:true})); }\r\n var u=q('#login-username,input[name=\"username\"],input[autocomplete=\"username\"]');\r\n var p=q('#login-password,input[type=\"password\"]');\r\n if(u && !u.value) put(u,U);\r\n if(p && !p.value) put(p,P);\r\n var b=q('#login-button,button[type=\"submit\"]');\r\n if(b) setTimeout(function(){ b.click(); }, 300);\r\n return 'ok';\r\n})(" + JsString(username) + "," + JsString(password) + ")";
+		// Повторная проверка уже в странице: если между проверкой и вводом страница сменилась — ничего не вписываем.
+		return "(function(U,P){\r\n if(location.protocol!=='https:'||!/(^|\\.)roblox\\.com$/i.test(location.hostname)) return;\r\n function vis(e){ if(!e) return false; var r=e.getBoundingClientRect(); return r.width>0 && r.height>0; }\r\n function q(s){ var l=document.querySelectorAll(s); for(var i=0;i<l.length;i++){ if(vis(l[i])) return l[i]; } return null; }\r\n var setter=Object.getOwnPropertyDescriptor(HTMLInputElement.prototype,'value').set;\r\n function put(e,v){ e.focus(); setter.call(e,v); e.dispatchEvent(new Event('input',{bubbles:true})); e.dispatchEvent(new Event('change',{bubbles:true})); }\r\n var u=q('#login-username,input[name=\"username\"],input[autocomplete=\"username\"]');\r\n var p=q('#login-password,input[type=\"password\"]');\r\n if(u && !u.value) put(u,U);\r\n if(p && !p.value) put(p,P);\r\n var b=q('#login-button,button[type=\"submit\"]');\r\n if(b) setTimeout(function(){ b.click(); }, 300);\r\n return 'ok';\r\n})(" + JsString(username) + "," + JsString(password) + ")";
 	}
 
 	private static string JsString(string value)
