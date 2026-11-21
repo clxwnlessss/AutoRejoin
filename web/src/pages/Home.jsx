@@ -58,7 +58,7 @@ export default function Home() {
           </div>
           <p className="note">{t('Один аккаунт для программы и сайта: Топ АФК, панель аккаунтов, Discord-бот.', 'One account for the app and the site: AFK top, account panel, Discord bot.')}</p>
         </div>
-        <img className="shot" src={`${B}${lang === 'ru' ? 'screenshot.png' : 'screenshot-en.png'}`} alt={t('Окно AutoRejoin со списком аккаунтов', 'AutoRejoin window with the account list')} width="1200" height="800" />
+        <img className="shot" src={`${B}${lang === 'ru' ? 'screenshot.png' : 'screenshot-en.png'}`} alt={t('Окно AutoRejoin со списком аккаунтов', 'AutoRejoin window with the account list')} width="1140" height="760" />
       </div>
 
       <div className="wrap"><Stats /></div>

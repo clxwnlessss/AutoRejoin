@@ -8,7 +8,7 @@
 html { scroll-behavior: smooth; }
 body { margin: 0; background: var(--bg); color: var(--text); font: 16px/1.6 "Segoe UI", system-ui, -apple-system, sans-serif; overflow-x: hidden; }
 a { color: inherit; }
-img { max-width: 100%; }
+img { max-width: 100%; height: auto; }
 button, input, select { font: inherit; color: inherit; }
 .wrap { max-width: 1120px; margin: 0 auto; padding: 0 20px; }
 .glow { position: fixed; inset: -20% -10% auto; height: 760px; background: radial-gradient(circle at 20% 30%, #8B5CF655, transparent 50%), radial-gradient(circle at 85% 10%, #22D3EE33, transparent 45%); pointer-events: none; z-index: -1; }
@@ -61,7 +61,7 @@ h3 { margin: 0 0 6px; font-size: 19px; }
 
 /* hero */
 .hero { display: grid; grid-template-columns: 1.05fr 1fr; gap: 48px; align-items: center; padding: 56px 0 50px; }
-.shot { border-radius: 20px; border: 1px solid var(--line); box-shadow: 0 30px 80px #000a, 0 0 0 1px #ffffff08; width: 100%; display: block; }
+.shot { border-radius: 20px; border: 1px solid var(--line); box-shadow: 0 30px 80px #000a, 0 0 0 1px #ffffff08; width: 100%; height: auto; display: block; }
 .note { margin-top: 16px; color: var(--text2); font-size: 14px; }
 
 /* stats */
