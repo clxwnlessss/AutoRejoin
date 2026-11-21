@@ -127,10 +127,25 @@ public class SettingsPage
 
 	private void BuildBot()
 	{
-		StackPanel section = Section("bot", L.T("Discord-бот"));
+		StackPanel section = Section("bot", L.T("Discord и Telegram"));
 		botBody = new StackPanel();
 		section.Children.Add(botBody);
 		RenderBot();
+		AddRow(section, L.T("Раскадровка при вылете"), L.T("Последние секунды перед вылетом — картинкой в Discord и Telegram."), Switch(Cfg.dropStoryboard, delegate(bool v)
+		{
+			Cfg.dropStoryboard = v;
+			main.ConfigChanged();
+		}));
+		AddRow(section, L.T("Считать мёд"), L.T("Мёд в час по аккаунтам на сайте и в отчётах. Кладёт маленький скрипт в автоэкзекут Потассиума (только читает мёд)."), Switch(Cfg.honeyStats, delegate(bool v)
+		{
+			Cfg.honeyStats = v;
+			main.ConfigChanged();
+		}));
+		AddRow(section, L.T("Отчёт за день"), L.T("В 23:55: время в игре, мёд и вылеты за сутки — в Discord-вебхук и Telegram."), Switch(Cfg.dailyReport, delegate(bool v)
+		{
+			Cfg.dailyReport = v;
+			main.ConfigChanged();
+		}));
 	}
 
 	private void RenderBot()
@@ -149,11 +164,51 @@ public class SettingsPage
 			}));
 			return;
 		}
-		if (main.Bot.Linked)
+		if (main.Bot.Linked && (main.Bot.TelegramLinked || botCode == null || DateTime.UtcNow >= botCodeUntil))
 		{
 			botCode = null;
+			bool discordLinked = !string.IsNullOrEmpty(main.Bot.LinkedName) || !main.Bot.TelegramLinked;
+			if (main.Bot.TelegramLinked)
+			{
+				AddRow(botBody, L.T("Telegram привязан") + (string.IsNullOrEmpty(main.Bot.TelegramName) ? "" : (" — " + main.Bot.TelegramName)), L.T("В Telegram: /status, /screen, /report. Уведомления о вылетах приходят сами."), Button(L.T("Отвязать"), async delegate(object s, RoutedEventArgs e)
+				{
+					((Button)s).IsEnabled = false;
+					try
+					{
+						await Leaderboard.TelegramUnlink(Leaderboard.BaseUrl(Cfg), main.Vault.leaderboardToken);
+						main.Bot.Reset();
+					}
+					catch (Leaderboard.ApiException ex)
+					{
+						MessageDialog.Ask(main.Window, L.T("Не получилось отвязать"), ex.Message, "OK", MessageDialog.Kind.Warning, null);
+					}
+					RenderBot();
+				}));
+			}
+			else
+			{
+				AddRow(botBody, L.T("Telegram"), L.T("Уведомления о вылетах, скриншоты и отчёты в Telegram. Возьми код и пришли его Telegram-боту."), Button(L.T("Код для Telegram"), async delegate(object s, RoutedEventArgs e)
+				{
+					((Button)s).IsEnabled = false;
+					try
+					{
+						botCode = await Leaderboard.DiscordCode(Leaderboard.BaseUrl(Cfg), main.Vault.leaderboardToken);
+						botCodeUntil = DateTime.UtcNow.AddSeconds(botCode.ExpiresIn);
+						main.Bot.ExpectLink();
+					}
+					catch (Leaderboard.ApiException ex)
+					{
+						MessageDialog.Ask(main.Window, L.T("Не получилось получить код"), ex.Message, "OK", MessageDialog.Kind.Warning, null);
+					}
+					RenderBot();
+				}));
+			}
+			if (!discordLinked)
+			{
+				return;
+			}
 			string who = string.IsNullOrEmpty(main.Bot.LinkedName) ? "" : (" — " + main.Bot.LinkedName);
-			AddRow(botBody, L.T("Бот привязан") + who, L.T("В Discord: /status — какие аккаунты стоят, кнопки «Запустить», «Остановить», «Перезайти»."), Button(L.T("Отвязать"), async delegate(object s, RoutedEventArgs e)
+			AddRow(botBody, L.T("Discord привязан") + who, L.T("В Discord: /status, /screen — аккаунты, скриншоты, кнопки «Запустить», «Остановить», «Перезайти»."), Button(L.T("Отвязать"), async delegate(object s, RoutedEventArgs e)
 			{
 				((Button)s).IsEnabled = false;
 				try
@@ -169,7 +224,7 @@ public class SettingsPage
 			}));
 			return;
 		}
-		AddRow(botBody, L.T("Привязать бота"), L.T("Смотри, какие аккаунты стоят, и управляй ими прямо из Discord."), Button(L.T("Привязать бота"), async delegate(object s, RoutedEventArgs e)
+		AddRow(botBody, L.T("Привязать бота"), L.T("Смотри, какие аккаунты стоят, и управляй ими из Discord или Telegram."), Button(L.T("Привязать бота"), async delegate(object s, RoutedEventArgs e)
 		{
 			Button b = (Button)s;
 			b.IsEnabled = false;
@@ -186,11 +241,16 @@ public class SettingsPage
 			}
 			RenderBot();
 		}));
+		RenderCode();
+	}
+
+	// Code card: the code, how to use it (Discord and Telegram), invite / Telegram / copy buttons.
+	private void RenderCode()
+	{
 		if (botCode == null || DateTime.UtcNow >= botCodeUntil)
 		{
 			return;
 		}
-		// Code card: the code, how to use it, invite + copy buttons.
 		Border card = new Border
 		{
 			Background = Palette.AccentSoft,
@@ -207,7 +267,7 @@ public class SettingsPage
 			Foreground = Palette.Accent,
 			FontFamily = new FontFamily("Consolas")
 		});
-		TextBlock steps = HintBlock(L.T("1. Добавь бота на свой сервер (кнопка ниже) или открой его в личке.\n2. Нажми у бота «Привязать аккаунт» (или напиши /panel) и введи этот код.\nКод одноразовый, действует 10 минут и привяжет только этот аккаунт: ") + main.Vault.leaderboardNick);
+		TextBlock steps = HintBlock(L.T("Discord: добавь бота на сервер, нажми у него «Привязать аккаунт» (или /panel) и введи код.\nTelegram: открой бота и пришли ему эти 6 цифр.\nКод одноразовый, действует 10 минут и привяжет только этот аккаунт: ") + main.Vault.leaderboardNick);
 		steps.TextWrapping = TextWrapping.Wrap;
 		steps.Margin = new Thickness(0.0, 6.0, 0.0, 12.0);
 		panel.Children.Add(steps);
@@ -232,6 +292,26 @@ public class SettingsPage
 					App.LogError(L.T("не открылась ссылка"), error);
 				}
 			}));
+		}
+		if (!string.IsNullOrEmpty(botCode.Telegram))
+		{
+			string tgUrl = botCode.Telegram;
+			Button tgButton = Button(L.T("Открыть Telegram-бота"), delegate
+			{
+				try
+				{
+					System.Diagnostics.Process.Start(new System.Diagnostics.ProcessStartInfo(tgUrl)
+					{
+						UseShellExecute = true
+					});
+				}
+				catch (Exception error)
+				{
+					App.LogError(L.T("не открылась ссылка"), error);
+				}
+			});
+			tgButton.Margin = new Thickness(buttons.Children.Count > 0 ? 10.0 : 0.0, 0.0, 0.0, 0.0);
+			buttons.Children.Add(tgButton);
 		}
 		string code = botCode.Code;
 		Button copy = Button(L.T("Копировать код"), delegate(object s, RoutedEventArgs e)

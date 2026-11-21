@@ -75,7 +75,12 @@ public class DiscordWebhook
 	{
 		public string Text;
 		public bool Mention;
+		public string Kind;
+		public string AccountName;
+		public Task<byte[]> Image;
 	}
+
+	private string lastReportDay;
 
 	// Перезаходы, которые запросил ты или расписание, — не вылет, о них не пишем.
 	private static readonly Regex Planned = new Regex("^(перезаход по кнопке|плановый перезаход|перезаход по Balloon|уступил очередь)", RegexOptions.IgnoreCase | RegexOptions.CultureInvariant);
@@ -213,7 +218,7 @@ public class DiscordWebhook
 	{
 		if (!string.IsNullOrWhiteSpace(text))
 		{
-			Enqueue("⚠️ " + text.Trim(), mention: true);
+			Enqueue("⚠️ " + text.Trim(), mention: true, kind: "alert");
 		}
 	}
 
@@ -239,7 +244,7 @@ public class DiscordWebhook
 			}
 		}
 		string who = string.IsNullOrEmpty(line.Account) ? "" : ("**" + Escape(line.Account) + "**: ");
-		Enqueue("❌ " + who + L.Engine(line.Message.Trim()), mention: false, force: true);
+		Enqueue("❌ " + who + L.Engine(line.Message.Trim()), mention: false, force: true, kind: "error", accountName: line.Account);
 	}
 
 	// Снимок для отчёта + поиск переходов для мгновенных сообщений. Вызывается на каждый статус движка (раз в секунду).
@@ -325,6 +330,99 @@ public class DiscordWebhook
 		}
 		snapshot = snap;
 		analysisText = Analysis();
+		CheckDailyReport();
+	}
+
+	// At 23:55 (local time) once a day: the server builds the last-24-h report, sends it to Telegram, and the app posts
+	// it to the Discord webhook.
+	private void CheckDailyReport()
+	{
+		DateTime local = DateTime.Now;
+		string day = local.ToString("yyyy-MM-dd");
+		if (!main.Config.dailyReport || local.Hour != 23 || local.Minute < 55 || lastReportDay == day || main.Bot == null || !main.Bot.Linked)
+		{
+			return;
+		}
+		lastReportDay = day;
+		BotAgent bot = main.Bot;
+		Task.Run(async delegate
+		{
+			try
+			{
+				IDictionary<string, object> r = await bot.DailyReport();
+				if (url != null && cts != null)
+				{
+					await Post(ReportEmbed(r), CancellationToken.None);
+				}
+			}
+			catch (Exception ex)
+			{
+				App.LogError(L.T("отчёт за день"), ex);
+			}
+		});
+	}
+
+	private Dictionary<string, object> ReportEmbed(IDictionary<string, object> r)
+	{
+		StringBuilder text = new StringBuilder();
+		long totalSec = 0, totalHoney = 0, totalDrops = 0;
+		foreach (IDictionary<string, object> a in Store.List(r, "accounts"))
+		{
+			long sec = (long)(Store.Num(a, "seconds") ?? 0.0), honey = (long)(Store.Num(a, "honey") ?? 0.0), drops = (long)(Store.Num(a, "drops") ?? 0.0);
+			totalSec += sec;
+			totalHoney += honey;
+			totalDrops += drops;
+			string line = "• **" + Escape(Store.Str(a, "name") ?? "?") + "** — " + Ago(DateTime.UtcNow.AddSeconds(-sec)) + (honey > 0 ? (" · 🍯 " + Short(honey) + " (" + Short((long)(honey / Math.Max(1.0, sec / 3600.0))) + L.T("/ч)")) : "") + (drops > 0 ? (L.T(" · вылетов: ") + drops) : "");
+			if (text.Length + line.Length > 3500)
+			{
+				break;
+			}
+			text.Append(line).Append('\n');
+		}
+		if (text.Length == 0)
+		{
+			text.Append(L.T("Данных за сутки пока нет."));
+		}
+		List<string> causes = Store.List(r, "causes").Select((IDictionary<string, object> c) => "• " + Store.Str(c, "text") + " ×" + (Store.Num(c, "n") ?? 0.0)).ToList();
+		List<object> fields = new List<object>();
+		if (causes.Count > 0)
+		{
+			fields.Add(new Dictionary<string, object> { ["name"] = L.T("Причины вылетов"), ["value"] = string.Join("\n", causes) });
+		}
+		return new Dictionary<string, object>
+		{
+			["username"] = "AutoRejoin",
+			["allowed_mentions"] = new Dictionary<string, object> { ["parse"] = new object[0] },
+			["embeds"] = new object[1]
+			{
+				new Dictionary<string, object>
+				{
+					["title"] = L.T("📊 Отчёт за сутки"),
+					["description"] = L.T("⏱ В игре: **") + Ago(DateTime.UtcNow.AddSeconds(-totalSec)) + "**" + (totalHoney > 0 ? (L.T(" · 🍯 **") + Short(totalHoney) + "**") : "") + L.T(" · 🔴 вылетов: **") + totalDrops + "**\n\n" + text.ToString().TrimEnd(),
+					["color"] = 0xA855F7,
+					["fields"] = fields.ToArray(),
+					["footer"] = new Dictionary<string, object> { ["text"] = Owner.Credit + " · " + Environment.MachineName },
+					["timestamp"] = DateTime.UtcNow.ToString("o")
+				}
+			}
+		};
+	}
+
+	private static string Short(long n)
+	{
+		if (n >= 1000000000)
+		{
+			return (n / 1e9).ToString("0.00", CultureInfo.InvariantCulture) + "B";
+		}
+		if (n >= 1000000)
+		{
+			return (n / 1e6).ToString("0.0", CultureInfo.InvariantCulture) + "M";
+		}
+		if (n >= 1000)
+		{
+			return (n / 1e3).ToString("0.0", CultureInfo.InvariantCulture) + "K";
+		}
+		return n.ToString(CultureInfo.InvariantCulture);
 	}
 
 	// Движок считает неудачные попытки зайти и пишет последнюю ошибку — копим, на чём именно срывался аккаунт.
@@ -467,7 +565,7 @@ public class DiscordWebhook
 		{
 			line.Append(L.T(" · сейчас: ")).Append(row.Text);
 		}
-		Enqueue(line.ToString(), mention: track.StuckLevel >= 2, force: true);
+		Enqueue(line.ToString(), mention: track.StuckLevel >= 2, force: true, kind: "stuck", accountKey: key, accountName: row.Name);
 	}
 
 	private void Watch(string key, Row row, string state, string lastReason, DateTime? lastReasonAt, DateTime now)
@@ -486,7 +584,7 @@ public class DiscordWebhook
 			};
 			if (problem)
 			{
-				Enqueue("⚠️ **" + Escape(row.Name) + "**: " + row.Text, mention: true);
+				Enqueue("⚠️ **" + Escape(row.Name) + "**: " + row.Text, mention: true, kind: "alert", accountKey: key, accountName: row.Name);
 			}
 			return;
 		}
@@ -505,7 +603,9 @@ public class DiscordWebhook
 			track.DropReported = !Planned.IsMatch(reason ?? "");
 			if (track.DropReported)
 			{
-				Enqueue("🔴 **" + Escape(row.Name) + "**" + (row.Main ? " ⭐" : "") + L.T(" вылетел: ") + L.Engine(reason), mention: false);
+				int? pid = main.Cards.FirstOrDefault((AccountCard c) => c.Key == key)?.Pid;
+				Enqueue("🔴 **" + Escape(row.Name) + "**" + (row.Main ? " ⭐" : "") + L.T(" вылетел: ") + L.Engine(reason), mention: false,
+					kind: "drop", accountKey: key, accountName: row.Name, image: main.Recorder.Storyboard(key, pid, row.Name));
 			}
 		}
 		else if (!track.InGame && row.InGame)
@@ -514,7 +614,8 @@ public class DiscordWebhook
 			{
 				int tries = stats.TryGetValue(key, out var st2) ? Math.Max(0, st2.FailTotal - track.FailsAtOut) : 0;
 				string since = track.OutSince.HasValue ? Ago(track.OutSince.Value) : Ago(track.DownSince);
-				Enqueue("🟢 **" + Escape(row.Name) + "**" + (row.Main ? " ⭐" : "") + L.T(" снова в игре (не было ") + since + ((tries > 0) ? (L.T(", неудачных попыток: ") + tries) : "") + ")", mention: false, force: track.StuckLevel > 0);
+				Enqueue("🟢 **" + Escape(row.Name) + "**" + (row.Main ? " ⭐" : "") + L.T(" снова в игре (не было ") + since + ((tries > 0) ? (L.T(", неудачных попыток: ") + tries) : "") + ")", mention: false, force: track.StuckLevel > 0,
+					kind: "back", accountKey: key, accountName: row.Name);
 			}
 			track.DropReported = false;
 			track.OutSince = null;
@@ -526,7 +627,7 @@ public class DiscordWebhook
 		{
 			if (track.Problem != row.Text)
 			{
-				Enqueue("⚠️ **" + Escape(row.Name) + "**: " + row.Text, mention: true);
+				Enqueue("⚠️ **" + Escape(row.Name) + "**: " + row.Text, mention: true, kind: "alert", accountKey: key, accountName: row.Name);
 			}
 			track.Problem = row.Text;
 		}
@@ -536,17 +637,41 @@ public class DiscordWebhook
 		}
 	}
 
-	private void Enqueue(string text, bool mention, bool force = false)
+	private void Enqueue(string text, bool mention, bool force = false, string kind = null, string accountKey = null, string accountName = null, Task<byte[]> image = null)
 	{
 		// force — ошибки и анализ перезаходов: у них свой переключатель «Ошибки и анализ перезаходов».
-		if (cts == null || (force ? !errorsOn : !eventsOn))
+		if (force ? !errorsOn : !eventsOn)
+		{
+			return;
+		}
+		// Telegram and the farm analytics get every event through the server, whether the webhook is set up or not.
+		string evKind = kind ?? (force ? "error" : "info");
+		BotAgent bot = main.Bot;
+		if (bot != null && bot.Linked)
+		{
+			if (image == null)
+			{
+				bot.SendEvent(evKind, text, accountKey, accountName, null);
+			}
+			else
+			{
+				image.ContinueWith(delegate(Task<byte[]> t)
+				{
+					bot.SendEvent(evKind, text, accountKey, accountName, t.Status == TaskStatus.RanToCompletion ? t.Result : null);
+				});
+			}
+		}
+		if (cts == null)
 		{
 			return;
 		}
 		events.Enqueue(new Event
 		{
 			Text = text,
-			Mention = mention
+			Mention = mention,
+			Kind = evKind,
+			AccountName = accountName,
+			Image = image
 		});
 	}
 
@@ -619,6 +744,68 @@ public class DiscordWebhook
 			}
 		};
 		Report(await Post(body, ct), L.T("сообщение отправлено"));
+		// Drop storyboards go as separate messages with the picture.
+		foreach (Event e in batch.Where((Event x) => x.Image != null))
+		{
+			byte[] jpeg = null;
+			try
+			{
+				jpeg = await e.Image;
+			}
+			catch
+			{
+			}
+			if (jpeg != null)
+			{
+				await PostFile(L.T("🎞 Раскадровка вылета: **") + Escape(e.AccountName ?? "") + "**", jpeg, "drop.jpg", ct);
+			}
+		}
+	}
+
+	// Message with one picture (multipart/form-data: payload_json + files[0]).
+	private async Task<int> PostFile(string content, byte[] file, string fileName, CancellationToken ct)
+	{
+		string boundary = "----AutoRejoin" + Guid.NewGuid().ToString("N");
+		string payload = Store.Json().Serialize(new Dictionary<string, object>
+		{
+			["username"] = "AutoRejoin",
+			["content"] = content,
+			["allowed_mentions"] = new Dictionary<string, object> { ["parse"] = new object[0] }
+		});
+		using MemoryStream body = new MemoryStream();
+		void W(string s)
+		{
+			byte[] b = Encoding.UTF8.GetBytes(s);
+			body.Write(b, 0, b.Length);
+		}
+		W("--" + boundary + "\r\nContent-Disposition: form-data; name=\"payload_json\"\r\nContent-Type: application/json\r\n\r\n" + payload + "\r\n");
+		W("--" + boundary + "\r\nContent-Disposition: form-data; name=\"files[0]\"; filename=\"" + fileName + "\"\r\nContent-Type: image/jpeg\r\n\r\n");
+		body.Write(file, 0, file.Length);
+		W("\r\n--" + boundary + "--\r\n");
+		try
+		{
+			HttpWebRequest req = (HttpWebRequest)WebRequest.Create(url);
+			req.Method = "POST";
+			req.Timeout = 30000;
+			req.UserAgent = "AutoRejoin/" + Updater.CurrentText;
+			req.ContentType = "multipart/form-data; boundary=" + boundary;
+			byte[] bytes = body.ToArray();
+			req.ContentLength = bytes.Length;
+			using (Stream stream = await req.GetRequestStreamAsync())
+			{
+				await stream.WriteAsync(bytes, 0, bytes.Length, ct);
+			}
+			using HttpWebResponse resp = (HttpWebResponse)(await req.GetResponseAsync());
+			return (int)resp.StatusCode;
+		}
+		catch (WebException ex) when (ex.Response is HttpWebResponse r)
+		{
+			return (int)r.StatusCode;
+		}
+		catch
+		{
+			return 0;
+		}
 	}
 
 	private async Task SendReport(CancellationToken ct)

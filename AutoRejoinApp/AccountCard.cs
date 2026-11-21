@@ -46,6 +46,9 @@ public class AccountCard : Notify
 
 	public string UserId { get; private set; }
 
+	// Process id of the account's Roblox window (null when there is no window): screenshots, drop storyboard.
+	public int? Pid { get; private set; }
+
 	public string Name
 	{
 		get
@@ -338,6 +341,7 @@ public class AccountCard : Notify
 		double? num = Store.Num(data, "memGB");
 		startedAt = Store.Time(data, "startedAt");
 		hasWindow = Store.Num(data, "pid").HasValue;
+		Pid = hasWindow ? new int?((int)Store.Num(data, "pid").Value) : null;
 		Changed("MetricsVisibility");
 		double? num2 = Store.Num(data, "wsGB");
 		double? num3 = Store.Num(data, "capMB");

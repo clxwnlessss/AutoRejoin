@@ -100,6 +100,12 @@ public class AppConfig
 
 	public bool discordErrors { get; set; }
 
+	public bool dropStoryboard { get; set; }
+
+	public bool honeyStats { get; set; }
+
+	public bool dailyReport { get; set; }
+
 	public string discordMentions { get; set; }
 
 	public AppConfig()
@@ -151,6 +157,9 @@ public class AppConfig
 		discordInterval = 15;
 		discordEvents = true;
 		discordErrors = true;
+		dropStoryboard = true;
+		honeyStats = true;
+		dailyReport = true;
 		discordMentions = "";
 	}
 

@@ -5,6 +5,7 @@
 const express = require('express');
 const crypto = require('crypto');
 const { createDiscord, DISCORD_SCHEMA } = require('./discord');
+const { createTelegram, TELEGRAM_SCHEMA } = require('./telegram');
 
 const HEARTBEAT_MAX_GAP = 150; // сек: дольше между пульсами — промежуток не засчитывается (ПК спал, интернет пропал)
 const ONLINE_WINDOW = 180;     // сек: пульс свежее — человек «сейчас стоит»
@@ -68,7 +69,7 @@ function rateLimiter(limit, windowMs) {
 }
 
 async function initDb(pool) {
-  for (const sql of SCHEMA.concat(DISCORD_SCHEMA)) await pool.query(sql);
+  for (const sql of SCHEMA.concat(DISCORD_SCHEMA, TELEGRAM_SCHEMA)) await pool.query(sql);
 }
 
 function createApp(pool, options = {}) {
@@ -80,6 +81,43 @@ function createApp(pool, options = {}) {
   app.locals.discord = discord;
   // Discord interactions need the raw body (signature check), so this route goes before the JSON parser.
   app.post('/discord/interactions', express.raw({ type: '*/*', limit: '64kb' }), discord.interactions);
+  const farm = discord.farm;
+  const telegram = createTelegram(pool, { now, farm, discord, ...(options.telegram || {}) });
+  app.locals.telegram = telegram;
+  app.locals.farm = farm;
+  const flushTimer = setInterval(() => farm.flush().catch(() => {}), 60 * 1000);
+  if (flushTimer.unref) flushTimer.unref();
+  // A link (Discord or Telegram) is what lets the app send account names and receive commands.
+  async function anyLink(userId) {
+    return (await discord.linkedForUser(userId)) || (await telegram.linkedForUser(userId));
+  }
+
+  // Bigger bodies (screenshots, drop storyboards) — these routes go before the 32 KB JSON parser.
+  const bigJson = express.json({ limit: '4mb' });
+  const image = (b64) => {
+    if (!b64) return null;
+    const buf = Buffer.from(String(b64).replace(/^data:image\/\w+;base64,/, ''), 'base64');
+    // JPEG or PNG only, and not empty
+    return buf.length > 100 && ((buf[0] === 0xFF && buf[1] === 0xD8) || (buf[0] === 0x89 && buf[1] === 0x50)) ? buf : null;
+  };
+  // The app uploads the screenshot it was asked for (or the reason it could not take it).
+  app.post('/api/agent/screen', bigJson, cachedAuth, async (req, res, next) => {
+    try {
+      const b = req.body || {};
+      const ok = farm.deliverScreen(req.user.id, String(b.id || ''), image(b.image), b.error ? String(b.error) : (b.image ? null : 'нет картинки'));
+      res.status(ok ? 200 : 404).json({ ok });
+    } catch (e) { next(e); }
+  });
+  // Instant events from the app (drop, back, error, stuck, alert) → Telegram + analytics.
+  app.post('/api/agent/event', bigJson, cachedAuth, async (req, res, next) => {
+    try {
+      if (!(await anyLink(req.user.id))) return res.json({ ok: false });
+      const b = req.body || {};
+      await farm.event(req.user.id, { ...b, image: image(b.image) });
+      res.json({ ok: true });
+    } catch (e) { next(e); }
+  });
+  app.post('/telegram/:secret', express.json({ limit: '1mb' }), telegram.webhook);
   app.use(express.json({ limit: '32kb' }));
 
   // The website (React, on GitHub Pages) calls this API from the browser. Auth is a Bearer token, no cookies,
@@ -329,7 +367,50 @@ function createApp(pool, options = {}) {
 
   // Website dashboard: accounts the app reported last (needs the Discord bot linked — see discord.webState).
   app.get('/api/agent/state', auth, async (req, res, next) => {
-    try { res.json(await discord.webState(req.user.id)); } catch (e) { next(e); }
+    try {
+      const st = await discord.webState(req.user.id);
+      const tg = await telegram.linkedForUser(req.user.id);
+      res.json({ ...st, linked: st.linked || !!tg, telegram: tg ? { name: tg.name || null } : null });
+    } catch (e) { next(e); }
+  });
+  // Website: screenshot button → request id; the page polls until the picture is there.
+  app.post('/api/agent/screen-request', auth, async (req, res, next) => {
+    try {
+      if (!(await anyLink(req.user.id))) return res.status(409).json({ error: 'Сначала привяжи Discord-бота в программе: Настройки → Привязать бота.' });
+      const r = farm.requestScreen(req.user.id, String((req.body && req.body.accountId) || ''));
+      if (!r) return res.status(404).json({ error: 'Этот аккаунт сейчас не на связи.' });
+      setTimeout(() => {
+        const info = farm.screenInfo(req.user.id, r.id);
+        if (info && !info.ready && !info.error) farm.deliverScreen(req.user.id, r.id, null, 'программа не ответила за минуту');
+      }, 60000).unref?.();
+      res.json(r);
+    } catch (e) { next(e); }
+  });
+  app.get('/api/agent/screen/:id', auth, async (req, res, next) => {
+    try {
+      const info = farm.screenInfo(req.user.id, String(req.params.id));
+      if (!info) return res.status(404).json({ error: 'Не найдено.' });
+      res.json({ ready: info.ready, error: info.error, accountName: info.accountName, pcName: info.pcName,
+        image: info.image ? 'data:image/jpeg;base64,' + info.image.toString('base64') : null });
+    } catch (e) { next(e); }
+  });
+  // Farm analytics for the website: time in game, drops and honey per account per day + recent drops.
+  app.get('/api/farm/analytics', auth, async (req, res, next) => {
+    try {
+      const days = Math.max(1, Math.min(30, parseInt(req.query.days, 10) || 7));
+      res.json(await farm.analytics(req.user.id, days));
+    } catch (e) { next(e); }
+  });
+  // End of day: the app asks for the report — it posts it to the Discord webhook, the server sends it to Telegram.
+  app.post('/api/agent/report', cachedAuth, async (req, res, next) => {
+    try {
+      const report = await farm.report(req.user.id);
+      const sent = await telegram.sendReport(req.user.id).catch(() => false);
+      res.json({ ...report, telegram: sent });
+    } catch (e) { next(e); }
+  });
+  app.delete('/api/telegram/link', auth, async (req, res, next) => {
+    try { await telegram.unlinkUser(req.user.id); res.json({ ok: true }); } catch (e) { next(e); }
   });
   // Website dashboard buttons: queued for the app like the Discord buttons, picked up on its next sync (≤10 s).
   const WEB_COMMANDS = new Set(['start', 'stop', 'rejoin-all', 'rejoin']);
@@ -337,9 +418,10 @@ function createApp(pool, options = {}) {
     try {
       const cmd = String((req.body && req.body.cmd) || '');
       const arg = String((req.body && req.body.arg) || '').slice(0, 64);
+      const pcId = req.body && req.body.pcId ? String(req.body.pcId).slice(0, 64) : null;
       if (!WEB_COMMANDS.has(cmd) || (cmd === 'rejoin' && !arg)) return res.status(400).json({ error: 'Неизвестная команда.' });
-      if (!(await discord.linkedForUser(req.user.id))) return res.status(409).json({ error: 'Сначала привяжи Discord-бота в программе: Настройки → Привязать бота.' });
-      discord.enqueue(req.user.id, cmd, arg);
+      if (!(await anyLink(req.user.id))) return res.status(409).json({ error: 'Сначала привяжи Discord-бота в программе: Настройки → Привязать бота.' });
+      farm.enqueue(req.user.id, cmd, arg, pcId);
       res.json({ ok: true });
     } catch (e) { next(e); }
   });
@@ -350,10 +432,14 @@ function createApp(pool, options = {}) {
     : null;
 
   app.post('/api/discord/code', auth, async (req, res, next) => {
-    try { res.json({ ...discord.newCode(req.user.id), invite: inviteUrl() }); } catch (e) { next(e); }
+    try { res.json({ ...discord.newCode(req.user.id), invite: inviteUrl(), telegram: telegram.username ? 'https://t.me/' + telegram.username : null }); } catch (e) { next(e); }
   });
   app.get('/api/discord/link', auth, async (req, res, next) => {
-    try { res.json({ ...(await discord.linkInfo(req.user.id)), invite: inviteUrl() }); } catch (e) { next(e); }
+    try {
+      const tg = await telegram.linkedForUser(req.user.id);
+      res.json({ ...(await discord.linkInfo(req.user.id)), invite: inviteUrl(), telegram: tg ? { linked: true, name: tg.name || null } : { linked: false },
+        telegramBot: telegram.username ? 'https://t.me/' + telegram.username : null });
+    } catch (e) { next(e); }
   });
   app.delete('/api/discord/link', auth, async (req, res, next) => {
     try { await discord.unlinkUser(req.user.id); res.json({ ok: true }); } catch (e) { next(e); }
@@ -373,7 +459,10 @@ function createApp(pool, options = {}) {
     });
   }
   app.post('/api/agent/sync', cachedAuth, async (req, res, next) => {
-    try { res.json(await discord.sync(req.user.id, req.body || {})); } catch (e) { next(e); }
+    try {
+      if (!(await anyLink(req.user.id))) return res.json({ linked: false, commands: [] });
+      res.json({ linked: true, commands: farm.sync(req.user.id, req.body || {}) });
+    } catch (e) { next(e); }
   });
 
   app.use((req, res) => res.status(404).json({ error: 'Не найдено.' }));

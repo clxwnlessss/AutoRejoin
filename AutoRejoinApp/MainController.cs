@@ -191,6 +191,9 @@ public class MainController
 
 	public BotAgent Bot => bot;
 
+	// Last frames of every visible in-game window, for the drop storyboard.
+	public readonly DropRecorder Recorder = new DropRecorder();
+
 	public IEnumerable<AccountCard> Cards => cards;
 
 	// Commands from the Discord bot. Same rules as the buttons in the window, but without dialogs.
@@ -200,26 +203,29 @@ public class MainController
 		switch (cmd)
 		{
 		case "start":
-			AppLog(null, L.T("Discord: команда «Запустить»"), "Cyan");
+			AppLog(null, L.T("Удалённая команда «Запустить»"), "Cyan");
 			StartEngine(0);
 			break;
 		case "stop":
-			AppLog(null, L.T("Discord: команда «Остановить»"), "Cyan");
+			AppLog(null, L.T("Удалённая команда «Остановить»"), "Cyan");
 			StopEngine();
 			break;
 		case "rejoin-all":
-			AppLog(null, L.T("Discord: команда «Перезайти всеми»"), "Cyan");
+			AppLog(null, L.T("Удалённая команда «Перезайти всеми»"), "Cyan");
 			if (ready)
 			{
 				engine.Send("rejoin-all");
 			}
+			break;
+		case "screen":
+			TakeScreen(arg);
 			break;
 		case "rejoin":
 		{
 			AccountCard card = cards.FirstOrDefault((AccountCard c) => c.Key == arg);
 			if (card != null)
 			{
-				AppLog(card.Name, L.T("Discord: команда «Перезайти»"), "Cyan");
+				AppLog(card.Name, L.T("Удалённая команда «Перезайти»"), "Cyan");
 				if (ready && card.Enabled)
 				{
 					engine.Send("rejoin " + card.Key);
@@ -228,6 +234,45 @@ public class MainController
 			break;
 		}
 		}
+	}
+
+	// Screenshot asked from Discord / Telegram / the website: arg = "<request id>:<account key>".
+	private void TakeScreen(string arg)
+	{
+		int colon = (arg ?? "").IndexOf(':');
+		if (colon <= 0)
+		{
+			return;
+		}
+		string id = arg.Substring(0, colon), key = arg.Substring(colon + 1);
+		AccountCard card = cards.FirstOrDefault((AccountCard c) => c.Key == key);
+		int? pid = card?.Pid;
+		AppLog(card?.Name, L.T("Скриншот по запросу из бота"), "Cyan");
+		System.Threading.Tasks.Task.Run(async delegate
+		{
+			byte[] jpeg = null;
+			string error = null;
+			if (!pid.HasValue)
+			{
+				error = (card == null) ? L.T("аккаунт не найден") : L.T("у аккаунта сейчас нет окна Роблокса");
+			}
+			else
+			{
+				try
+				{
+					using System.Drawing.Bitmap shot = WindowShot.Capture(pid.Value, 1280, restoreMinimized: true, out error);
+					if (shot != null)
+					{
+						jpeg = WindowShot.Jpeg(shot, 82);
+					}
+				}
+				catch (Exception ex)
+				{
+					error = ex.Message;
+				}
+			}
+			await bot.UploadScreen(id, jpeg, error);
+		});
 	}
 
 	public void SetLeaderboardSession(string token, string nickname)
@@ -482,6 +527,18 @@ public class MainController
 		SystemTools.RepairAutostart();
 		clock.Start();
 		discord.Apply();
+		ApplyFarmOptions();
+	}
+
+	// Drop storyboard on/off, honey stats script in/out of Potassium's autoexec.
+	private void ApplyFarmOptions()
+	{
+		Recorder.Enabled = config.dropStoryboard;
+		bool honey = config.honeyStats;
+		System.Threading.Tasks.Task.Run(delegate
+		{
+			HoneyStats.Apply(honey);
+		});
 	}
 
 	private T Find<T>(string name) where T : class
@@ -960,6 +1017,7 @@ public class MainController
 		UpdateEngineBlock();
 		UpdateCardsIdle();
 		UpdateStats();
+		Recorder.Watch(cards.Where((AccountCard c) => (c.State == "ingame" || c.State == "script") && c.Pid.HasValue).Select((AccountCard c) => new KeyValuePair<string, int>(c.Key, c.Pid.Value)));
 		discord?.Update();
 	}
 
@@ -1372,6 +1430,7 @@ public class MainController
 		UpdateStats();
 		UpdateSchedulePreview();
 		discord?.Apply();
+		ApplyFarmOptions();
 	}
 
 	// Смена языка: сохранить настройки и перезапустить программу (второй экземпляр ждёт, пока закроется этот).

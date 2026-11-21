@@ -21,8 +21,16 @@ const discord = {
 initDb(pool)
   .then(() => {
     const port = process.env.PORT || 3000;
-    const app = createApp(pool, { discord });
+    // Telegram bot (optional): TELEGRAM_BOT_TOKEN from @BotFather; the webhook goes to this server's public URL.
+    const telegram = { token: process.env.TELEGRAM_BOT_TOKEN || '' };
+    const app = createApp(pool, { discord, telegram });
     app.listen(port, () => console.log(`AutoRejoin Server слушает порт ${port}`));
+    const publicUrl = process.env.PUBLIC_URL || process.env.RENDER_EXTERNAL_URL || '';
+    if (telegram.token && publicUrl) {
+      app.locals.telegram.setup(publicUrl)
+        .then((name) => console.log(`Telegram: бот @${name} подключён, вебхук настроен`))
+        .catch((e) => console.error('Telegram: не удалось настроить бота:', e.message));
+    } else console.log('Telegram: бот не настроен (нет TELEGRAM_BOT_TOKEN)');
     app.locals.discord.warm().catch((e) => console.error('Discord: не удалось загрузить привязки:', e.message));
     // Gateway connection for member joins, automod, logs and reaction roles.
     const connect = () => app.locals.discord.guild.startGateway()

@@ -23,3 +23,6 @@ services:
         sync: false
       - key: DISCORD_TOKEN
         sync: false
+      # Telegram bot (@BotFather → /newbot). Secret — paste it only into Render.
+      - key: TELEGRAM_BOT_TOKEN
+        sync: false

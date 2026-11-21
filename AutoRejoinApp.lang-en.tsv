@@ -1,5 +1,49 @@
 ﻿# AutoRejoin — English translation (russian<TAB>english). \n = new line, \s = space. ~regex = engine text pattern.
 # ---------- code ----------
+Смотри, какие аккаунты стоят, и управляй ими из Discord или Telegram.	See which accounts are in game and control them from Discord or Telegram.
+Discord и Telegram	Discord and Telegram
+Раскадровка при вылете	Drop storyboard
+Последние секунды перед вылетом — картинкой в Discord и Telegram.	The last seconds before a drop — as a picture in Discord and Telegram.
+Считать мёд	Count honey
+Мёд в час по аккаунтам на сайте и в отчётах. Кладёт маленький скрипт в автоэкзекут Потассиума (только читает мёд).	Honey per hour per account on the site and in reports. Puts a tiny script into Potassium autoexec (it only reads honey).
+Отчёт за день	Daily report
+В 23:55: время в игре, мёд и вылеты за сутки — в Discord-вебхук и Telegram.	At 23:55: time in game, honey and drops for the day — to the Discord webhook and Telegram.
+Telegram привязан	Telegram linked
+В Telegram: /status, /screen, /report. Уведомления о вылетах приходят сами.	In Telegram: /status, /screen, /report. Drop alerts arrive on their own.
+Уведомления о вылетах, скриншоты и отчёты в Telegram. Возьми код и пришли его Telegram-боту.	Drop alerts, screenshots and reports in Telegram. Get a code and send it to the Telegram bot.
+Код для Telegram	Code for Telegram
+Discord привязан	Discord linked
+В Discord: /status, /screen — аккаунты, скриншоты, кнопки «Запустить», «Остановить», «Перезайти».	In Discord: /status, /screen — accounts, screenshots, Start / Stop / Rejoin buttons.
+Discord: добавь бота на сервер, нажми у него «Привязать аккаунт» (или /panel) и введи код.\nTelegram: открой бота и пришли ему эти 6 цифр.\nКод одноразовый, действует 10 минут и привяжет только этот аккаунт:\s	Discord: add the bot to a server, press "Link account" (or /panel) and enter the code.\nTelegram: open the bot and send it these 6 digits.\nThe code works once, for 10 minutes, and links only this account:\s
+Открыть Telegram-бота	Open the Telegram bot
+Telegram-бот привязан	Telegram bot linked
+Бот: ошибка синхронизации	Bot: sync error
+скриншот не отправился	screenshot was not sent
+Скриншот по запросу из бота	Screenshot requested from the bot
+аккаунт не найден	account not found
+у аккаунта сейчас нет окна Роблокса	the account has no Roblox window right now
+Удалённая команда «Запустить»	Remote command: Start
+Удалённая команда «Остановить»	Remote command: Stop
+Удалённая команда «Перезайти всеми»	Remote command: Rejoin all
+Удалённая команда «Перезайти»	Remote command: Rejoin
+окно не найдено	window not found
+окно свёрнуто	window is minimized
+окно слишком маленькое	window is too small
+Windows не дала снять окно	Windows did not allow capturing the window
+раскадровка	storyboard
+в момент вылета	at the drop
+Раскадровка вылета ·\s	Drop storyboard ·\s
+скрипт статистики мёда	honey stats script
+🎞 Раскадровка вылета: **	🎞 Drop storyboard: **
+отчёт за день	daily report
+/ч)	/h)
+\s· вылетов:\s	\s· drops:\s
+Данных за сутки пока нет.	No data for the day yet.
+Причины вылетов	Drop causes
+📊 Отчёт за сутки	📊 Daily report
+⏱ В игре: **	⏱ In game: **
+\s· 🍯 **	\s· 🍯 **
+\s· 🔴 вылетов: **	\s· 🔴 drops: **
 Ошибки и анализ перезаходов	Errors and rejoin analysis
 Ошибки движка — сразу. Не может перезайти 5 / 30 / 120 мин — на чём застрял и что делать.	Engine errors right away. Can't rejoin for 5 / 30 / 120 min — where it got stuck and what to do.
 Анализ перезаходов	Rejoin analysis

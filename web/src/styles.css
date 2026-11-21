@@ -177,3 +177,16 @@ details p { color: var(--text2); margin: 12px 0 0; }
   .step { padding-left: 70px; }
   section { padding: 44px 0; }
 }
+
+/* 3.1: farm, screenshots, analytics */
+.pc-block { border-top: 1px solid var(--line); padding-top: 14px; margin-top: 14px; }
+.pc-block:first-of-type { border-top: 0; margin-top: 0; padding-top: 0; }
+.pc-name { font-weight: 800; font-size: 16px; display: flex; gap: 10px; align-items: center; }
+.shot-modal { max-width: 980px; }
+.chart { width: 100%; height: auto; display: block; margin: 4px 0 6px; }
+.dot { display: inline-block; width: 10px; height: 10px; border-radius: 3px; margin-right: 8px; vertical-align: 0; }
+.tabs-sm { margin: 0; grid-template-columns: repeat(3, auto); }
+.tabs-sm a { padding: 6px 12px; font-size: 13px; }
+.events { display: grid; gap: 6px; }
+.event { display: grid; grid-template-columns: 130px 1fr; gap: 12px; font-size: 14px; padding: 8px 10px; border-radius: 10px; background: #ffffff06; }
+@media (max-width: 560px) { .event { grid-template-columns: 1fr; gap: 2px; } }

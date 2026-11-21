@@ -113,6 +113,7 @@ public static class Leaderboard
 		public string Code;
 		public int ExpiresIn;
 		public string Invite;
+		public string Telegram;
 	}
 
 	public static async Task<BotCode> DiscordCode(string baseUrl, string token)
@@ -122,8 +123,41 @@ public static class Leaderboard
 		{
 			Code = Store.Str(r, "code"),
 			ExpiresIn = (int)(Store.Num(r, "expiresIn") ?? 600.0),
-			Invite = Store.Str(r, "invite")
+			Invite = Store.Str(r, "invite"),
+			Telegram = Store.Str(r, "telegram")
 		};
+	}
+
+	// Farm events (drop, back, error, stuck, alert) → server → Telegram + analytics. image: JPEG storyboard or null.
+	public static Task<IDictionary<string, object>> AgentEvent(string baseUrl, string token, Dictionary<string, object> body)
+	{
+		return Call(baseUrl, "POST", "/api/agent/event", body, token, 30000);
+	}
+
+	// The screenshot that was asked for from Discord / Telegram / the website (or why it could not be taken).
+	public static Task<IDictionary<string, object>> AgentScreen(string baseUrl, string token, string id, byte[] jpeg, string error)
+	{
+		Dictionary<string, object> body = new Dictionary<string, object> { ["id"] = id };
+		if (jpeg != null)
+		{
+			body["image"] = Convert.ToBase64String(jpeg);
+		}
+		if (error != null)
+		{
+			body["error"] = error;
+		}
+		return Call(baseUrl, "POST", "/api/agent/screen", body, token, 60000);
+	}
+
+	// End-of-day report (last 24 h per account); the server also sends it to Telegram.
+	public static Task<IDictionary<string, object>> AgentReport(string baseUrl, string token)
+	{
+		return Call(baseUrl, "POST", "/api/agent/report", null, token, 60000);
+	}
+
+	public static Task<IDictionary<string, object>> TelegramUnlink(string baseUrl, string token)
+	{
+		return Call(baseUrl, "DELETE", "/api/telegram/link", null, token);
 	}
 
 	public static Task<IDictionary<string, object>> DiscordLink(string baseUrl, string token)
