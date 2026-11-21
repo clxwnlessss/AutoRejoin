@@ -1,5 +1,12 @@
 ﻿# AutoRejoin — English translation (russian<TAB>english). \n = new line, \s = space. ~regex = engine text pattern.
 # ---------- code ----------
+Potassium (минимал)	Potassium (minimal)
+Neon (неон)	Neon
+Оформление	Theme
+Нужен перезапуск. Окна Роблокса останутся открытыми.	Restart required. Roblox windows stay open.
+Перезапустить AutoRejoin?	Restart AutoRejoin?
+Новое оформление включится после перезапуска. Окна Роблокса останутся открытыми.	The new theme applies after a restart. Roblox windows stay open.
+Перезапустить	Restart
 Смотри, какие аккаунты стоят, и управляй ими из Discord или Telegram.	See which accounts are in game and control them from Discord or Telegram.
 Discord и Telegram	Discord and Telegram
 Раскадровка при вылете	Drop storyboard

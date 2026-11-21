@@ -276,9 +276,9 @@ public class TopPage
 		{
 			CornerRadius = new CornerRadius(16.0),
 			Padding = new Thickness(22.0, 18.0, 22.0, 18.0),
-			BorderBrush = Palette.Make("#3D2A6E"),
+			BorderBrush = Palette.Make(ThemeInfo.Neon ? "#3D2A6E" : "#1F1F1F"),
 			BorderThickness = new Thickness(1.0),
-			Background = new LinearGradientBrush((Color)ColorConverter.ConvertFromString("#26143F"), (Color)ColorConverter.ConvertFromString("#072530"), 45.0)
+			Background = ThemeInfo.Neon ? (Brush)new LinearGradientBrush((Color)ColorConverter.ConvertFromString("#26143F"), (Color)ColorConverter.ConvertFromString("#072530"), 45.0) : Palette.Make("#0A0A0A")
 		};
 		Grid grid = new Grid();
 		grid.ColumnDefinitions.Add(new ColumnDefinition
@@ -508,8 +508,8 @@ public class TopPage
 			CornerRadius = new CornerRadius(12.0),
 			Padding = new Thickness(14.0, 10.0, 14.0, 10.0),
 			Margin = new Thickness(0.0, 0.0, 0.0, 6.0),
-			Background = me ? Palette.Make("#26143D") : Palette.Make("#0C0A18"),
-			BorderBrush = me ? Palette.Make("#5B3FA6") : Palette.Make("#171329"),
+			Background = me ? Palette.Make(ThemeInfo.Neon ? "#26143D" : "#161616") : Palette.Make(ThemeInfo.Neon ? "#0C0A18" : "#0A0A0A"),
+			BorderBrush = me ? Palette.Make(ThemeInfo.Neon ? "#5B3FA6" : "#3A3A3A") : Palette.Make(ThemeInfo.Neon ? "#171329" : "#1A1A1A"),
 			BorderThickness = new Thickness(1.0)
 		};
 		Grid grid = new Grid();
@@ -592,7 +592,7 @@ public class TopPage
 			name.Children.Add(new TextBlock
 			{
 				Text = L.T("это ты"),
-				Foreground = Palette.Make("#C084FC"),
+				Foreground = Palette.Make(ThemeInfo.Neon ? "#C084FC" : "#A1A1A1"),
 				FontSize = 11.5,
 				Margin = new Thickness(10.0, 1.0, 0.0, 0.0),
 				VerticalAlignment = VerticalAlignment.Center

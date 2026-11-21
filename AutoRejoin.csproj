@@ -23,6 +23,7 @@
     <None Remove="AutoRejoinApp.LoginWindow.xaml" />
     <None Remove="AutoRejoinApp.app.ico" /><None Remove="AutoRejoinApp.lang-en.tsv" />
     <EmbeddedResource Include="AutoRejoinApp.Theme.xaml" LogicalName="AutoRejoinApp.Theme.xaml" />
+    <EmbeddedResource Include="AutoRejoinApp.Theme.Mono.xaml" LogicalName="AutoRejoinApp.Theme.Mono.xaml" />
     <EmbeddedResource Include="AutoRejoinApp.MainWindow.xaml" LogicalName="AutoRejoinApp.MainWindow.xaml" />
     <EmbeddedResource Include="AutoRejoinApp.AccountDialog.xaml" LogicalName="AutoRejoinApp.AccountDialog.xaml" />
     <EmbeddedResource Include="AutoRejoinApp.MessageDialog.xaml" LogicalName="AutoRejoinApp.MessageDialog.xaml" />

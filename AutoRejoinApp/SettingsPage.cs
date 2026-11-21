@@ -386,6 +386,32 @@ public class SettingsPage
 				main.RestartApp();
 			}
 		}, 180.0));
+		ChoiceItem[] themes = new ChoiceItem[2]
+		{
+			new ChoiceItem
+			{
+				Value = "potassium",
+				Name = L.T("Potassium (минимал)")
+			},
+			new ChoiceItem
+			{
+				Value = "neon",
+				Name = L.T("Neon (неон)")
+			}
+		};
+		AddRow(section, L.T("Оформление"), L.T("Нужен перезапуск. Окна Роблокса останутся открытыми."), Choice(themes, Cfg.theme ?? "potassium", delegate(string v)
+		{
+			if ((Cfg.theme ?? "potassium") == v)
+			{
+				return;
+			}
+			Cfg.theme = v;
+			main.ConfigChanged();
+			if (MessageDialog.Ask(main.Window, L.T("Перезапустить AutoRejoin?"), L.T("Новое оформление включится после перезапуска. Окна Роблокса останутся открытыми."), L.T("Перезапустить"), MessageDialog.Kind.Info, L.T("Позже")))
+			{
+				main.RestartApp();
+			}
+		}, 220.0));
 	}
 
 	private void BuildAccounts()
@@ -817,15 +843,15 @@ public class SettingsPage
 		stackPanel2.Margin = new Thickness(0.0, 0.0, 0.0, 6.0);
 		StackPanel stackPanel3 = stackPanel2;
 		// Section header: neon icon tile + title.
-		Ico sectionIcon = Ico.Make(glyph ?? "gear", 17.0, Palette.Make("#E9D5FF"));
-		sectionIcon.Effect = new System.Windows.Media.Effects.DropShadowEffect { Color = Palette.Accent.Color, BlurRadius = 12.0, ShadowDepth = 0.0, Opacity = 0.9 };
+		Ico sectionIcon = Ico.Make(glyph ?? "gear", 17.0, Palette.Make(ThemeInfo.Neon ? "#E9D5FF" : "#EDEDED"));
+		if (ThemeInfo.Neon) sectionIcon.Effect = new System.Windows.Media.Effects.DropShadowEffect { Color = Palette.Accent.Color, BlurRadius = 12.0, ShadowDepth = 0.0, Opacity = 0.9 };
 		stackPanel3.Children.Add(new Border
 		{
 			Width = 32.0,
 			Height = 32.0,
 			CornerRadius = new CornerRadius(9.0),
-			Background = Palette.Make("#2A1050"),
-			BorderBrush = Palette.Make("#7C3AED"),
+			Background = Palette.Make(ThemeInfo.Neon ? "#2A1050" : "#121212"),
+			BorderBrush = Palette.Make(ThemeInfo.Neon ? "#7C3AED" : "#262626"),
 			BorderThickness = new Thickness(1.0),
 			VerticalAlignment = VerticalAlignment.Center,
 			Child = sectionIcon

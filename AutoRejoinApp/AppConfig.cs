@@ -84,6 +84,9 @@ public class AppConfig
 
 	public string language { get; set; }
 
+	// Оформление: "potassium" (по умолчанию, как у Потассиума) или "neon". Меняется после перезапуска.
+	public string theme { get; set; }
+
 	public bool leaderboardGuest { get; set; }
 
 	public string leaderboardUrl { get; set; }
@@ -149,6 +152,7 @@ public class AppConfig
 		schedule = new ScheduleConfig();
 		advanced = new AdvancedConfig();
 		language = "";
+		theme = "potassium";
 		leaderboardGuest = false;
 		leaderboardUrl = "";
 		logCleanupOn = true;
@@ -168,6 +172,10 @@ public class AppConfig
 		if (discordMentions == null)
 		{
 			discordMentions = "";
+		}
+		if (theme != "neon" && theme != "potassium")
+		{
+			theme = "potassium";
 		}
 		if (language == null)
 		{

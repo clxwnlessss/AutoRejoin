@@ -9,16 +9,9 @@
     </WindowChrome.WindowChrome>
 
     <!-- AutoRejoin 3.0 «Neon» · владелец clxwnlesss -->
-    <Border x:Name="Root" BorderThickness="1" Background="{StaticResource Bg}"
+    <Border x:Name="Root" BorderThickness="1" Background="{StaticResource Bg}" BorderBrush="{StaticResource RootBorder}"
             RenderTransformOrigin="0.5,0.5" Opacity="0">
-        <Border.BorderBrush>
-            <LinearGradientBrush StartPoint="0,0" EndPoint="1,1">
-                <GradientStop Color="#7C3AED" Offset="0"/>
-                <GradientStop Color="#251D42" Offset="0.35"/>
-                <GradientStop Color="#251D42" Offset="0.65"/>
-                <GradientStop Color="#0E7490" Offset="1"/>
-            </LinearGradientBrush>
-        </Border.BorderBrush>
+        
         <Border.RenderTransform>
             <ScaleTransform x:Name="RootScale" ScaleX="0.985" ScaleY="0.985"/>
         </Border.RenderTransform>
@@ -36,7 +29,7 @@
         <Grid ClipToBounds="True">
             <!-- живой неоновый фон: клетка и три плывущих пятна света -->
             <Border Background="{StaticResource GridBrush}" IsHitTestVisible="False"/>
-            <Canvas IsHitTestVisible="False">
+            <Canvas IsHitTestVisible="False" Visibility="{StaticResource FxVisibility}">
                 <Ellipse Width="620" Height="620" Canvas.Left="-160" Canvas.Top="-240" Opacity="0.55">
                     <Ellipse.Fill>
                         <RadialGradientBrush>
@@ -93,7 +86,7 @@
 
                 <!-- ===== Боковая панель ===== -->
                 <Grid>
-                <Border Background="#D90A0814"/>
+                <Border Background="{StaticResource SidebarBg}"/>
                 <!-- неоновая кромка панели -->
                 <Border Width="1.5" HorizontalAlignment="Right" Background="{StaticResource NeonLine}" Effect="{StaticResource GlowSoft}"/>
                 <Border BorderThickness="0">
@@ -102,7 +95,7 @@
                         <Grid DockPanel.Dock="Top" Margin="20,20,16,26">
                             <StackPanel Orientation="Horizontal">
                                 <Grid Width="46" Height="46" Background="Transparent">
-                                    <Path Data="M23,2 L42,12.5 L42,33.5 L23,44 L4,33.5 L4,12.5 Z" Fill="#160B2C" StrokeThickness="2.2"
+                                    <Path Data="M23,2 L42,12.5 L42,33.5 L23,44 L4,33.5 L4,12.5 Z" Fill="{StaticResource LogoFill}" StrokeThickness="2.2"
                                           Stroke="{StaticResource BrandGradient}" Effect="{StaticResource GlowAccent}"/>
                                     <a:Ico Glyph="rejoin" Size="21" Thickness="2.4" Foreground="{StaticResource BrandText}" RenderTransformOrigin="0.5,0.5">
                                         <a:Ico.RenderTransform>
@@ -134,11 +127,11 @@
                                     <StackPanel Orientation="Horizontal">
                                         <TextBlock Text="AUTOREJOIN" FontFamily="{StaticResource Display}" FontSize="18" FontWeight="SemiBold"
                                                    Foreground="{StaticResource BrandText}" Effect="{StaticResource GlowSoft}"/>
-                                        <Border CornerRadius="5" BorderBrush="#7C3AED" BorderThickness="1" Background="#1E0F3A" Padding="5,0,5,1" Margin="7,1,0,0" VerticalAlignment="Center">
-                                            <TextBlock x:Name="VersionText" Text="3.0" Foreground="#E9D5FF" FontSize="10" FontWeight="Bold"/>
+                                        <Border CornerRadius="5" BorderBrush="{StaticResource BadgeBorder}" BorderThickness="1" Background="{StaticResource BadgeBg}" Padding="5,0,5,1" Margin="7,1,0,0" VerticalAlignment="Center">
+                                            <TextBlock x:Name="VersionText" Text="3.0" Foreground="{StaticResource AccentText}" FontSize="10" FontWeight="Bold"/>
                                         </Border>
                                     </StackPanel>
-                                    <TextBlock Text="by clxwnlesss" Foreground="#8B7FC0" FontSize="11.5" FontWeight="SemiBold" Margin="1,1,0,0"/>
+                                    <TextBlock Text="by clxwnlesss" Foreground="{StaticResource LabelBrush}" FontSize="11.5" FontWeight="SemiBold" Margin="1,1,0,0"/>
                                 </StackPanel>
                             </StackPanel>
                         </Grid>
@@ -153,25 +146,12 @@
                         </Button>
 
                         <!-- состояние движка -->
-                        <Border DockPanel.Dock="Bottom" Margin="14,0,14,12" Padding="16,14" CornerRadius="14" BorderThickness="1">
-                            <Border.BorderBrush>
-                                <LinearGradientBrush StartPoint="0,0" EndPoint="1,1">
-                                    <GradientStop Color="#7C3AED" Offset="0"/>
-                                    <GradientStop Color="#2A1D52" Offset="0.6"/>
-                                    <GradientStop Color="#0E7490" Offset="1"/>
-                                </LinearGradientBrush>
-                            </Border.BorderBrush>
-                            <Border.Background>
-                                <LinearGradientBrush StartPoint="0,0" EndPoint="1,1">
-                                    <GradientStop Color="#2A0F55" Offset="0"/>
-                                    <GradientStop Color="#0C0A18" Offset="0.7"/>
-                                    <GradientStop Color="#071A24" Offset="1"/>
-                                </LinearGradientBrush>
-                            </Border.Background>
+                        <Border DockPanel.Dock="Bottom" Margin="14,0,14,12" Padding="16,14" CornerRadius="14" BorderThickness="1" BorderBrush="{StaticResource EngineCardBorder}" Background="{StaticResource EngineCardBg}">
+                            
                             <StackPanel>
                                 <StackPanel Orientation="Horizontal">
                                     <Grid Width="12" Height="12" VerticalAlignment="Center">
-                                        <Ellipse x:Name="EngineGlow" Width="12" Height="12" Fill="#706694" Opacity="0.35" RenderTransformOrigin="0.5,0.5">
+                                        <Ellipse x:Name="EngineGlow" Width="12" Height="12" Fill="{StaticResource Text3}" Opacity="0.35" RenderTransformOrigin="0.5,0.5">
                                             <Ellipse.RenderTransform>
                                                 <ScaleTransform x:Name="GlowScale"/>
                                             </Ellipse.RenderTransform>
@@ -186,7 +166,7 @@
                                                 </EventTrigger>
                                             </Ellipse.Triggers>
                                         </Ellipse>
-                                        <Ellipse x:Name="EngineDot" Width="7" Height="7" Fill="#706694"/>
+                                        <Ellipse x:Name="EngineDot" Width="7" Height="7" Fill="{StaticResource Text3}"/>
                                     </Grid>
                                     <TextBlock x:Name="EngineTitle" Text="Остановлен" Margin="10,0,0,0" FontFamily="{StaticResource Display}" FontWeight="SemiBold" FontSize="16"/>
                                 </StackPanel>
@@ -283,17 +263,17 @@
                                             <ColumnDefinition Width="Auto"/>
                                             <ColumnDefinition Width="*"/>
                                         </Grid.ColumnDefinitions>
-                                        <Border Grid.ColumnSpan="2" Height="2" VerticalAlignment="Top" Margin="-16,-14,-16,0" CornerRadius="14,14,0,0">
+                                        <Border Grid.ColumnSpan="2" Height="2" VerticalAlignment="Top" Visibility="{StaticResource FxVisibility}" Margin="-16,-14,-16,0" CornerRadius="14,14,0,0">
                                             <Border.Background><LinearGradientBrush StartPoint="0,0" EndPoint="1,0"><GradientStop Color="#00C084FC" Offset="0"/><GradientStop Color="#C084FC" Offset="0.5"/><GradientStop Color="#00C084FC" Offset="1"/></LinearGradientBrush></Border.Background>
-                                            <Border.Effect><DropShadowEffect Color="#C084FC" BlurRadius="14" ShadowDepth="0" Opacity="0.9"/></Border.Effect>
+                                            <Border.Effect><DropShadowEffect Color="#C084FC" BlurRadius="14" ShadowDepth="0" Opacity="{StaticResource FxOpacity}"/></Border.Effect>
                                         </Border>
-                                        <Border Width="42" Height="42" CornerRadius="12" Background="#26143D" BorderBrush="#66C084FC" BorderThickness="1" VerticalAlignment="Top">
-                                            <a:Ico Glyph="&#xE7FC;" Size="20" Foreground="#C084FC" HorizontalAlignment="Center">
-                                                <a:Ico.Effect><DropShadowEffect Color="#C084FC" BlurRadius="12" ShadowDepth="0" Opacity="0.9"/></a:Ico.Effect>
+                                        <Border Width="42" Height="42" CornerRadius="12" Background="{StaticResource StatTileBg}" BorderBrush="{StaticResource StatTileBorder}" BorderThickness="1" VerticalAlignment="Top">
+                                            <a:Ico Glyph="&#xE7FC;" Size="20" Foreground="{StaticResource AccentText}" HorizontalAlignment="Center">
+                                                <a:Ico.Effect><DropShadowEffect Color="#C084FC" BlurRadius="12" ShadowDepth="0" Opacity="{StaticResource FxOpacity}"/></a:Ico.Effect>
                                             </a:Ico>
                                         </Border>
                                         <StackPanel Grid.Column="1" Margin="12,0,0,0">
-                                            <TextBlock Text="В игре" Foreground="#8B7FC0" FontFamily="{StaticResource Display}" FontSize="12.5" FontWeight="SemiBold"/>
+                                            <TextBlock Text="В игре" Foreground="{StaticResource LabelBrush}" FontFamily="{StaticResource Display}" FontSize="12.5" FontWeight="SemiBold"/>
                                             <TextBlock x:Name="StatGameValue" Text="—" FontFamily="{StaticResource Display}" FontSize="22" FontWeight="SemiBold" Margin="0,2,0,0"/>
                                             <TextBlock x:Name="StatGameSub" Text="" Foreground="{StaticResource Text3}" FontSize="11.5" Margin="0,1,0,0" TextTrimming="CharacterEllipsis"/>
                                         </StackPanel>
@@ -305,17 +285,17 @@
                                             <ColumnDefinition Width="Auto"/>
                                             <ColumnDefinition Width="*"/>
                                         </Grid.ColumnDefinitions>
-                                        <Border Grid.ColumnSpan="2" Height="2" VerticalAlignment="Top" Margin="-16,-14,-16,0" CornerRadius="14,14,0,0">
+                                        <Border Grid.ColumnSpan="2" Height="2" VerticalAlignment="Top" Visibility="{StaticResource FxVisibility}" Margin="-16,-14,-16,0" CornerRadius="14,14,0,0">
                                             <Border.Background><LinearGradientBrush StartPoint="0,0" EndPoint="1,0"><GradientStop Color="#0022D3EE" Offset="0"/><GradientStop Color="#22D3EE" Offset="0.5"/><GradientStop Color="#0022D3EE" Offset="1"/></LinearGradientBrush></Border.Background>
-                                            <Border.Effect><DropShadowEffect Color="#22D3EE" BlurRadius="14" ShadowDepth="0" Opacity="0.9"/></Border.Effect>
+                                            <Border.Effect><DropShadowEffect Color="#22D3EE" BlurRadius="14" ShadowDepth="0" Opacity="{StaticResource FxOpacity}"/></Border.Effect>
                                         </Border>
-                                        <Border Width="42" Height="42" CornerRadius="12" Background="#062A33" BorderBrush="#6622D3EE" BorderThickness="1" VerticalAlignment="Top">
+                                        <Border Width="42" Height="42" CornerRadius="12" Background="{StaticResource StatTileBg}" BorderBrush="{StaticResource StatTileBorder}" BorderThickness="1" VerticalAlignment="Top">
                                             <a:Ico Glyph="&#xE9D9;" Size="20" Foreground="#22D3EE" HorizontalAlignment="Center">
-                                                <a:Ico.Effect><DropShadowEffect Color="#22D3EE" BlurRadius="12" ShadowDepth="0" Opacity="0.9"/></a:Ico.Effect>
+                                                <a:Ico.Effect><DropShadowEffect Color="#22D3EE" BlurRadius="12" ShadowDepth="0" Opacity="{StaticResource FxOpacity}"/></a:Ico.Effect>
                                             </a:Ico>
                                         </Border>
                                         <StackPanel Grid.Column="1" Margin="12,0,0,0">
-                                            <TextBlock Text="Память" Foreground="#8B7FC0" FontFamily="{StaticResource Display}" FontSize="12.5" FontWeight="SemiBold"/>
+                                            <TextBlock Text="Память" Foreground="{StaticResource LabelBrush}" FontFamily="{StaticResource Display}" FontSize="12.5" FontWeight="SemiBold"/>
                                             <TextBlock x:Name="StatMemValue" Text="—" FontFamily="{StaticResource Display}" FontSize="22" FontWeight="SemiBold" Margin="0,2,0,0"/>
                                             <TextBlock x:Name="StatMemSub" Text="" Foreground="{StaticResource Text3}" FontSize="11.5" Margin="0,1,0,0" TextTrimming="CharacterEllipsis"/>
                                         </StackPanel>
@@ -327,17 +307,17 @@
                                             <ColumnDefinition Width="Auto"/>
                                             <ColumnDefinition Width="*"/>
                                         </Grid.ColumnDefinitions>
-                                        <Border Grid.ColumnSpan="2" Height="2" VerticalAlignment="Top" Margin="-16,-14,-16,0" CornerRadius="14,14,0,0">
+                                        <Border Grid.ColumnSpan="2" Height="2" VerticalAlignment="Top" Visibility="{StaticResource FxVisibility}" Margin="-16,-14,-16,0" CornerRadius="14,14,0,0">
                                             <Border.Background><LinearGradientBrush StartPoint="0,0" EndPoint="1,0"><GradientStop Color="#002EF2A6" Offset="0"/><GradientStop Color="#2EF2A6" Offset="0.5"/><GradientStop Color="#002EF2A6" Offset="1"/></LinearGradientBrush></Border.Background>
-                                            <Border.Effect><DropShadowEffect Color="#2EF2A6" BlurRadius="14" ShadowDepth="0" Opacity="0.9"/></Border.Effect>
+                                            <Border.Effect><DropShadowEffect Color="#2EF2A6" BlurRadius="14" ShadowDepth="0" Opacity="{StaticResource FxOpacity}"/></Border.Effect>
                                         </Border>
-                                        <Border Width="42" Height="42" CornerRadius="12" Background="#0A2A20" BorderBrush="#662EF2A6" BorderThickness="1" VerticalAlignment="Top">
+                                        <Border Width="42" Height="42" CornerRadius="12" Background="{StaticResource StatTileBg}" BorderBrush="{StaticResource StatTileBorder}" BorderThickness="1" VerticalAlignment="Top">
                                             <a:Ico Glyph="&#xE943;" Size="20" Foreground="#2EF2A6" HorizontalAlignment="Center">
-                                                <a:Ico.Effect><DropShadowEffect Color="#2EF2A6" BlurRadius="12" ShadowDepth="0" Opacity="0.9"/></a:Ico.Effect>
+                                                <a:Ico.Effect><DropShadowEffect Color="#2EF2A6" BlurRadius="12" ShadowDepth="0" Opacity="{StaticResource FxOpacity}"/></a:Ico.Effect>
                                             </a:Ico>
                                         </Border>
                                         <StackPanel Grid.Column="1" Margin="12,0,0,0">
-                                            <TextBlock Text="Потассиум" Foreground="#8B7FC0" FontFamily="{StaticResource Display}" FontSize="12.5" FontWeight="SemiBold"/>
+                                            <TextBlock Text="Потассиум" Foreground="{StaticResource LabelBrush}" FontFamily="{StaticResource Display}" FontSize="12.5" FontWeight="SemiBold"/>
                                             <TextBlock x:Name="StatPotValue" Text="—" FontFamily="{StaticResource Display}" FontSize="22" FontWeight="SemiBold" Margin="0,2,0,0" TextTrimming="CharacterEllipsis"/>
                                             <TextBlock x:Name="StatPotSub" Text="" Foreground="{StaticResource Text3}" FontSize="11.5" Margin="0,1,0,0" TextTrimming="CharacterEllipsis"/>
                                         </StackPanel>
@@ -349,17 +329,17 @@
                                             <ColumnDefinition Width="Auto"/>
                                             <ColumnDefinition Width="*"/>
                                         </Grid.ColumnDefinitions>
-                                        <Border Grid.ColumnSpan="2" Height="2" VerticalAlignment="Top" Margin="-16,-14,-16,0" CornerRadius="14,14,0,0">
+                                        <Border Grid.ColumnSpan="2" Height="2" VerticalAlignment="Top" Visibility="{StaticResource FxVisibility}" Margin="-16,-14,-16,0" CornerRadius="14,14,0,0">
                                             <Border.Background><LinearGradientBrush StartPoint="0,0" EndPoint="1,0"><GradientStop Color="#00FFD23F" Offset="0"/><GradientStop Color="#FFD23F" Offset="0.5"/><GradientStop Color="#00FFD23F" Offset="1"/></LinearGradientBrush></Border.Background>
-                                            <Border.Effect><DropShadowEffect Color="#FFD23F" BlurRadius="14" ShadowDepth="0" Opacity="0.9"/></Border.Effect>
+                                            <Border.Effect><DropShadowEffect Color="#FFD23F" BlurRadius="14" ShadowDepth="0" Opacity="{StaticResource FxOpacity}"/></Border.Effect>
                                         </Border>
-                                        <Border Width="42" Height="42" CornerRadius="12" Background="#2A2108" BorderBrush="#66FFD23F" BorderThickness="1" VerticalAlignment="Top">
+                                        <Border Width="42" Height="42" CornerRadius="12" Background="{StaticResource StatTileBg}" BorderBrush="{StaticResource StatTileBorder}" BorderThickness="1" VerticalAlignment="Top">
                                             <a:Ico Glyph="&#xE787;" Size="20" Foreground="#FFD23F" HorizontalAlignment="Center">
-                                                <a:Ico.Effect><DropShadowEffect Color="#FFD23F" BlurRadius="12" ShadowDepth="0" Opacity="0.9"/></a:Ico.Effect>
+                                                <a:Ico.Effect><DropShadowEffect Color="#FFD23F" BlurRadius="12" ShadowDepth="0" Opacity="{StaticResource FxOpacity}"/></a:Ico.Effect>
                                             </a:Ico>
                                         </Border>
                                         <StackPanel Grid.Column="1" Margin="12,0,0,0">
-                                            <TextBlock Text="Расписание" Foreground="#8B7FC0" FontFamily="{StaticResource Display}" FontSize="12.5" FontWeight="SemiBold"/>
+                                            <TextBlock Text="Расписание" Foreground="{StaticResource LabelBrush}" FontFamily="{StaticResource Display}" FontSize="12.5" FontWeight="SemiBold"/>
                                             <TextBlock x:Name="StatSchedValue" Text="—" FontFamily="{StaticResource Display}" FontSize="22" FontWeight="SemiBold" Margin="0,2,0,0" TextTrimming="CharacterEllipsis"/>
                                             <TextBlock x:Name="StatSchedSub" Text="" Foreground="{StaticResource Text3}" FontSize="11.5" Margin="0,1,0,0" TextTrimming="CharacterEllipsis"/>
                                         </StackPanel>
@@ -403,15 +383,9 @@
                                                     <Border Background="{StaticResource CardGradient}" BorderBrush="{StaticResource Line}" BorderThickness="1" CornerRadius="14"/>
                                                     <!-- неоновая полоска состояния слева -->
                                                     <Border Width="3" HorizontalAlignment="Left" Margin="0,12" CornerRadius="2" Background="{Binding StateBrush}">
-                                                        <Border.Effect><DropShadowEffect Color="{Binding StateBrush.Color}" BlurRadius="12" ShadowDepth="0" Opacity="0.9"/></Border.Effect>
+                                                        <Border.Effect><DropShadowEffect Color="{Binding StateBrush.Color}" BlurRadius="12" ShadowDepth="0" Opacity="{StaticResource FxOpacity}"/></Border.Effect>
                                                     </Border>
-                                                    <Border x:Name="HoverRing" BorderBrush="#8B5CF6" BorderThickness="1" CornerRadius="14" Opacity="0" IsHitTestVisible="False" Effect="{StaticResource GlowSoft}">
-                                                        <Border.Background>
-                                                            <LinearGradientBrush StartPoint="0,0" EndPoint="1,0">
-                                                                <GradientStop Color="#1A0F33" Offset="0"/>
-                                                                <GradientStop Color="#0E0B1A" Offset="1"/>
-                                                            </LinearGradientBrush>
-                                                        </Border.Background>
+                                                    <Border x:Name="HoverRing" BorderBrush="{StaticResource HoverRingBrush}" BorderThickness="1" CornerRadius="14" Opacity="0" IsHitTestVisible="False" Effect="{StaticResource GlowSoft}" Background="{StaticResource HoverRingBg}">
                                                     </Border>
                                                     <Grid Margin="16,12" Opacity="{Binding RowOpacity}">
                                                         <Grid.ColumnDefinitions>
@@ -432,7 +406,7 @@
                                                                 </Ellipse.Fill>
                                                             </Ellipse>
                                                             <Ellipse Stroke="{Binding StateBrush}" StrokeThickness="1.5" Opacity="0.85">
-                                                                <Ellipse.Effect><DropShadowEffect Color="{Binding StateBrush.Color}" BlurRadius="10" ShadowDepth="0" Opacity="0.8"/></Ellipse.Effect>
+                                                                <Ellipse.Effect><DropShadowEffect Color="{Binding StateBrush.Color}" BlurRadius="10" ShadowDepth="0" Opacity="{StaticResource FxOpacity}"/></Ellipse.Effect>
                                                             </Ellipse>
                                                             <Ellipse Width="13" Height="13" Fill="{Binding StateBrush}" Stroke="{StaticResource CardBg}" StrokeThickness="2.5"
                                                                      HorizontalAlignment="Right" VerticalAlignment="Bottom" Margin="0,0,-1,-1"/>
@@ -443,7 +417,7 @@
                                                                 <TextBlock Text="{Binding Name}" FontFamily="{StaticResource Display}" FontSize="16" FontWeight="SemiBold"/>
                                                                 <Border Visibility="{Binding MainVisibility}" Background="{StaticResource BrandGradient}" CornerRadius="6"
                                                                         Padding="7,1,7,2" Margin="9,0,0,0" VerticalAlignment="Center">
-                                                                    <TextBlock Text="МЕЙН" Foreground="#FFFFFF" FontFamily="{StaticResource Display}" FontSize="10.5" FontWeight="SemiBold"/>
+                                                                    <TextBlock Text="МЕЙН" Foreground="{StaticResource OnBrand}" FontFamily="{StaticResource Display}" FontSize="10.5" FontWeight="SemiBold"/>
                                                                 </Border>
                                                                 <Border Visibility="{Binding OwnLinkVisibility}" Background="#062A33" CornerRadius="6"
                                                                         Padding="7,1,7,2" Margin="6,0,0,0" VerticalAlignment="Center" ToolTip="Своя ссылка на сервер">
@@ -473,7 +447,7 @@
                                                                 VerticalAlignment="Center" MinWidth="100">
                                                             <StackPanel Orientation="Horizontal" HorizontalAlignment="Center">
                                                                 <Ellipse Width="7" Height="7" Fill="{Binding StateBrush}" VerticalAlignment="Center">
-                                                                    <Ellipse.Effect><DropShadowEffect Color="{Binding StateBrush.Color}" BlurRadius="8" ShadowDepth="0" Opacity="1"/></Ellipse.Effect>
+                                                                    <Ellipse.Effect><DropShadowEffect Color="{Binding StateBrush.Color}" BlurRadius="8" ShadowDepth="0" Opacity="{StaticResource FxOpacity}"/></Ellipse.Effect>
                                                                 </Ellipse>
                                                                 <TextBlock Text="{Binding StateText}" Foreground="{Binding StateBrush}" Margin="7,0,0,0"
                                                                            FontFamily="{StaticResource Display}" FontWeight="SemiBold" FontSize="12.5"/>
@@ -498,7 +472,7 @@
                                     <Border x:Name="AccountsEmpty" Visibility="Collapsed" Style="{StaticResource Card}" Padding="30,40">
                                         <StackPanel HorizontalAlignment="Center">
                                             <Border Width="62" Height="62" CornerRadius="18" Background="{StaticResource BrandGradient}" HorizontalAlignment="Center">
-                                                <a:Ico Glyph="&#xE716;" Size="30" Foreground="#FFFFFF" HorizontalAlignment="Center"/>
+                                                <a:Ico Glyph="&#xE716;" Size="30" Foreground="{StaticResource OnBrand}" HorizontalAlignment="Center"/>
                                             </Border>
                                             <TextBlock Text="Аккаунтов пока нет" Style="{StaticResource H2}" FontSize="17" HorizontalAlignment="Center" Margin="0,18,0,0"/>
                                             <TextBlock Text="Добавь по логину и паролю или по куке." Style="{StaticResource Sub}" TextAlignment="Center" Margin="0,6,0,20"/>
@@ -555,7 +529,7 @@
                                                             <Button x:Name="HourDown" Style="{StaticResource IconBtn}" Content="&#xE70D;" Width="64" Height="20" FontSize="9"/>
                                                         </StackPanel>
                                                         <TextBlock Text=":" FontSize="26" FontWeight="Bold" VerticalAlignment="Center" Margin="8,0,8,4"
-                                                                   Foreground="#C084FC"/>
+                                                                   Foreground="{StaticResource AccentText}"/>
                                                         <StackPanel VerticalAlignment="Center">
                                                             <Button x:Name="MinuteUp" Style="{StaticResource IconBtn}" Content="&#xE70E;" Width="64" Height="20" FontSize="9"/>
                                                             <TextBox x:Name="MinuteBox" Style="{StaticResource Field}" Width="64" FontSize="24" FontWeight="Bold"
@@ -596,7 +570,7 @@
                                                         <ColumnDefinition Width="Auto"/>
                                                     </Grid.ColumnDefinitions>
                                                     <Border Width="40" Height="40" CornerRadius="12" Background="{StaticResource BrandGradient}">
-                                                        <a:Ico Glyph="&#xE823;" Size="20" Foreground="#FFFFFF" HorizontalAlignment="Center"/>
+                                                        <a:Ico Glyph="&#xE823;" Size="20" Foreground="{StaticResource OnBrand}" HorizontalAlignment="Center"/>
                                                     </Border>
                                                     <StackPanel Grid.Column="1" Margin="14,0" VerticalAlignment="Center">
                                                         <TextBlock x:Name="ScheduleNext" FontSize="14.5" FontWeight="Bold"/>
@@ -671,7 +645,7 @@
                                                     <ColumnDefinition Width="*"/>
                                                 </Grid.ColumnDefinitions>
                                                 <TextBlock Text="{Binding Time}" Foreground="{StaticResource Text3}" FontFamily="Consolas" FontSize="12" VerticalAlignment="Top" Margin="0,1,0,0"/>
-                                                <TextBlock Grid.Column="1" Text="{Binding Account}" Foreground="#C084FC" FontWeight="SemiBold" Margin="0,0,8,0"
+                                                <TextBlock Grid.Column="1" Text="{Binding Account}" Foreground="{StaticResource AccentText}" FontWeight="SemiBold" Margin="0,0,8,0"
                                                            Visibility="{Binding AccountVisibility}"/>
                                                 <TextBlock Grid.Column="2" Text="{Binding Message}" Foreground="{Binding Brush}" TextWrapping="Wrap"/>
                                             </Grid>
@@ -688,13 +662,7 @@
                                 <TextBlock Text="Коротко о главном." Style="{StaticResource Sub}" Margin="0,4,0,0"/>
 
                                 <!-- владелец -->
-                                <Border Margin="0,22,0,0" CornerRadius="16" Padding="22,18" BorderBrush="#3D2A6E" BorderThickness="1">
-                                    <Border.Background>
-                                        <LinearGradientBrush StartPoint="0,0" EndPoint="1,1">
-                                            <GradientStop Color="#26143F" Offset="0"/>
-                                            <GradientStop Color="#072530" Offset="1"/>
-                                        </LinearGradientBrush>
-                                    </Border.Background>
+                                <Border Margin="0,22,0,0" CornerRadius="16" Padding="22,18" BorderBrush="{StaticResource OwnerCardBorder}" Background="{StaticResource OwnerCardBg}" BorderThickness="1">
                                     <Grid>
                                         <Grid.ColumnDefinitions>
                                             <ColumnDefinition Width="Auto"/>
@@ -703,7 +671,7 @@
                                         </Grid.ColumnDefinitions>
                                         <Grid Width="52" Height="52">
                                             <Ellipse Fill="{StaticResource BrandGradient}"/>
-                                            <TextBlock Text="C" FontWeight="Bold" FontSize="22" Foreground="#FFFFFF" HorizontalAlignment="Center" VerticalAlignment="Center"/>
+                                            <TextBlock Text="C" FontWeight="Bold" FontSize="22" Foreground="{StaticResource OnBrand}" HorizontalAlignment="Center" VerticalAlignment="Center"/>
                                         </Grid>
                                         <StackPanel Grid.Column="1" Margin="16,0" VerticalAlignment="Center">
                                             <TextBlock Text="ВЛАДЕЛЕЦ И РАЗРАБОТЧИК" Foreground="{StaticResource Text3}" FontSize="10" FontWeight="Bold"/>

@@ -56,7 +56,9 @@ public static class App
 		AppPaths.Init(dataOverride);
 		try
 		{
-			L.Init(Store.LoadConfig().language);
+			AppConfig startConfig = Store.LoadConfig();
+			L.Init(startConfig.language);
+			ThemeInfo.Neon = startConfig.theme == "neon";
 		}
 		catch
 		{
@@ -98,7 +100,7 @@ public static class App
 			LogError(L.T("ошибка фоновой задачи"), e.Exception);
 			e.SetObserved();
 		};
-		app.Resources.MergedDictionaries.Add(Xaml.Load<ResourceDictionary>("Theme.xaml"));
+		app.Resources.MergedDictionaries.Add(Xaml.Load<ResourceDictionary>(ThemeInfo.Neon ? "Theme.xaml" : "Theme.Mono.xaml"));
 		Window window = Xaml.Load<Window>("MainWindow.xaml");
 		MainController controller = new MainController(window, flag);
 		Thread thread = new Thread((ThreadStart)delegate
