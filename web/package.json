@@ -1,0 +1,21 @@
+{
+  "name": "autorejoin-web",
+  "private": true,
+  "version": "1.0.0",
+  "type": "module",
+  "description": "AutoRejoin website: landing, download & install guide, AFK top, accounts and dashboard (React + Vite, hosted on GitHub Pages, API on Render).",
+  "scripts": {
+    "dev": "vite",
+    "build": "vite build && node scripts/postbuild.js",
+    "preview": "vite preview"
+  },
+  "dependencies": {
+    "react": "18.3.1",
+    "react-dom": "18.3.1",
+    "react-router-dom": "6.28.0"
+  },
+  "devDependencies": {
+    "@vitejs/plugin-react": "4.3.4",
+    "vite": "5.4.11"
+  }
+}

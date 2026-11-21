@@ -84,6 +84,23 @@ const { createApp, initDb } = require('./app');
   r = await call('GET', '/api/top?month=2026-11');
   ok(r.body.top.length === 2, 'прошлый месяц доступен по ?month=');
 
+  // Сайт: CORS, общая статистика, панель аккаунтов
+  let cr = await fetch(base + '/api/top', { method: 'OPTIONS', headers: { origin: 'https://clxwnlessss.github.io', 'access-control-request-method': 'GET' } });
+  ok(cr.status === 204 && cr.headers.get('access-control-allow-origin') === 'https://clxwnlessss.github.io' && /authorization/.test(cr.headers.get('access-control-allow-headers')), 'сайт: CORS для GitHub Pages');
+  cr = await fetch(base + '/api/top', { headers: { origin: 'https://evil.example' } });
+  ok(!cr.headers.get('access-control-allow-origin'), 'сайт: чужой сайт CORS не получает');
+  r = await call('GET', '/api/stats');
+  ok(r.status === 200 && r.body.users >= 2 && typeof r.body.monthHours === 'number' && typeof r.body.onlineAccounts === 'number', 'сайт: общая статистика');
+  const site = await call('POST', '/api/login', { nickname: 'clxwnlesss', password: 'secret123' });
+  r = await call('GET', '/api/agent/state', null, site.body.token);
+  ok(r.status === 200 && r.body.linked === false, 'сайт: без привязанного бота аккаунтов нет');
+  r = await call('POST', '/api/agent/command', { cmd: 'start' }, site.body.token);
+  ok(r.status === 409, 'сайт: команда без привязки — подсказка');
+  r = await call('POST', '/api/agent/command', { cmd: 'format-c' }, site.body.token);
+  ok(r.status === 400, 'сайт: неизвестная команда отклонена');
+  r = await call('GET', '/api/agent/state');
+  ok(r.status === 401, 'сайт: панель без входа закрыта');
+
   // Выход
   r = await call('POST', '/api/logout', null, owner);
   r = await call('GET', '/api/me', null, owner);

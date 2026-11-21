@@ -134,6 +134,18 @@ function createDiscord(pool, options = {}) {
     return { linked: true, commands };
   }
 
+  // For the website dashboard: the app's last report (only when the bot is linked — the app sends account
+  // names only then) and whether the app is online.
+  async function webState(userId) {
+    const linked = await linkedForUser(userId);
+    if (!linked) return { linked: false, online: false };
+    const agent = agents.get(userId);
+    const t = now().getTime();
+    const online = !!(agent && agent.at && t - agent.at <= STATE_STALE);
+    return { linked: true, discordName: linked.name || null, online, lastSeen: agent && agent.at ? new Date(agent.at).toISOString() : null,
+      state: online ? agent.state : null };
+  }
+
   function enqueue(userId, cmd, arg) {
     const agent = agents.get(userId) || { queue: [] };
     agent.queue = agent.queue.slice(-9);
@@ -349,7 +361,7 @@ function createDiscord(pool, options = {}) {
     return true;
   }
 
-  return { interactions, handle, newCode, linkInfo, unlinkUser, sync, registerCommands, enqueue, warm, guild };
+  return { interactions, handle, newCode, linkInfo, unlinkUser, sync, registerCommands, enqueue, webState, linkedForUser, warm, guild };
 }
 
 module.exports = { createDiscord, DISCORD_SCHEMA, COMMANDS };

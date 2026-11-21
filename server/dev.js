@@ -34,6 +34,22 @@ const { createApp, initDb, monthKey } = require('./app');
     }
     if (nick === 'clxwnlesss') ownerToken = r.token;
   }
+  // --agent: pretend clxwnlesss linked the Discord bot and the app is online with three accounts (site dashboard demo).
+  if (process.argv.includes('--agent')) {
+    const { rows } = await pool.query("SELECT id FROM users WHERE nickname = 'clxwnlesss'");
+    await pool.query("INSERT INTO discord_links (discord_id, user_id, discord_name) VALUES ('100', $1, 'clxwnlesss')", [rows[0].id]);
+    let running = true;
+    const report = async () => {
+      const r = await post('/api/agent/sync', { running, phase: running ? 'running' : 'stopped', version: '2.5.2', lang: 'ru', accounts: [
+        { id: 'a1', name: 'Orelplayy', main: true, enabled: true, state: running ? 'ingame' : 'off', text: running ? 'в игре, скрипт работает' : 'AutoRejoin остановлен', uptime: running ? '3 ч 12 мин' : '' },
+        { id: 'a2', name: 'zxcghoul21x', main: false, enabled: false, state: '', text: '', uptime: '' },
+        { id: 'a3', name: 'Orelplayy_Alt3', main: false, enabled: true, state: running ? 'script' : 'off', text: running ? 'в игре, ждёт запуска скрипта' : 'AutoRejoin остановлен', uptime: running ? '50 сек' : '' }
+      ] }, ownerToken);
+      for (const c of r.commands || []) { console.log('command from site:', c.cmd, c.arg); if (c.cmd === 'stop') running = false; if (c.cmd === 'start') running = true; }
+    };
+    await report();
+    setInterval(() => report().catch(() => {}), 3000);
+  }
   console.log('TOKEN=' + ownerToken);
   console.log(`dev server on ${base}`);
 })();

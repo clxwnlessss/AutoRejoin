@@ -5,9 +5,9 @@
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <title>AutoRejoin — free auto rejoin for Bee Swarm Simulator (Roblox)</title>
 <meta name="description" content="AutoRejoin keeps your Roblox Bee Swarm Simulator accounts in game 24/7: auto-rejoin after disconnects, kicks, freezes and crashes, unlimited accounts, Discord alerts and a monthly AFK leaderboard. Free and open source for Windows.">
-<meta name="keywords" content="bee swarm simulator auto rejoin, roblox auto rejoin, bss afk, bee swarm afk, roblox reconnect, bss macro, anti afk roblox, roblox multi account rejoin">
+<meta name="keywords" content="bee swarm simulator auto rejoin, roblox auto rejoin, bss afk, bee swarm afk, roblox reconnect, anti afk roblox, roblox multi account rejoin">
 <link rel="canonical" href="https://clxwnlessss.github.io/AutoRejoin/">
-<link rel="icon" href="icon.png">
+<link rel="icon" href="/AutoRejoin/icon.png">
 <meta property="og:type" content="website">
 <meta property="og:title" content="AutoRejoin — keep your Bee Swarm accounts in game 24/7">
 <meta property="og:description" content="Free, open-source auto rejoin for Roblox Bee Swarm Simulator. Unlimited accounts, Discord alerts, monthly AFK leaderboard.">
@@ -27,130 +27,11 @@
   {"@type":"Question","name":"Does it work on Windows 10 and 11?","acceptedAnswer":{"@type":"Answer","text":"Yes, AutoRejoin runs on Windows 10 and Windows 11 and updates itself."}}]}
 ]}
 </script>
-<style>
-:root{--bg:#0B0A12;--card:#14131D;--line:#25233A;--text:#F2F1F8;--text2:#A9A7BF;--violet:#8B5CF6;--cyan:#22D3EE;--gold:#F5B700;--green:#34D399}
-*{box-sizing:border-box}html{scroll-behavior:smooth}
-body{margin:0;background:var(--bg);color:var(--text);font:16px/1.6 "Segoe UI",system-ui,-apple-system,sans-serif;overflow-x:hidden}
-a{color:inherit}
-.wrap{max-width:1080px;margin:0 auto;padding:0 20px}
-.glow{position:fixed;inset:-20% -10% auto;height:700px;background:radial-gradient(circle at 20% 30%,#8B5CF655,transparent 50%),radial-gradient(circle at 85% 10%,#22D3EE33,transparent 45%);pointer-events:none;z-index:-1}
-nav{display:flex;align-items:center;justify-content:space-between;padding:22px 0}
-.brand{display:flex;align-items:center;gap:12px;font-weight:800;font-size:20px;text-decoration:none}
-.brand img{width:38px;height:38px;border-radius:10px}
-nav .links a{color:var(--text2);text-decoration:none;margin-left:22px;font-weight:600}
-nav .links a:hover{color:var(--text)}
-.hero{display:grid;grid-template-columns:1.05fr 1fr;gap:48px;align-items:center;padding:48px 0 70px}
-h1{font-size:clamp(36px,5.2vw,60px);line-height:1.05;margin:0 0 18px;letter-spacing:-1.5px}
-.grad{background:linear-gradient(90deg,#A78BFA,#8B5CF6 45%,#22D3EE);-webkit-background-clip:text;background-clip:text;color:transparent}
-.lead{font-size:19px;color:var(--text2);margin:0 0 30px}
-.btns{display:flex;flex-wrap:wrap;gap:12px}
-.btn{display:inline-flex;align-items:center;gap:10px;padding:15px 24px;border-radius:14px;font-weight:800;text-decoration:none;transition:transform .15s,box-shadow .15s}
-.btn:hover{transform:translateY(-2px)}
-.primary{background:linear-gradient(90deg,#8B5CF6,#22D3EE);color:#fff;box-shadow:0 10px 40px #8B5CF655}
-.ghost{border:1px solid var(--line);background:#ffffff08}
-.note{margin-top:16px;color:var(--text2);font-size:14px}
-.shot{border-radius:20px;border:1px solid var(--line);box-shadow:0 30px 80px #000a,0 0 0 1px #ffffff08;width:100%;display:block}
-.chips{display:flex;flex-wrap:wrap;gap:8px;margin-bottom:22px}
-.chip{padding:6px 12px;border-radius:999px;background:#ffffff0d;border:1px solid var(--line);font-size:13px;font-weight:700;color:var(--text2)}
-section{padding:60px 0}
-h2{font-size:clamp(28px,3.4vw,40px);margin:0 0 10px;letter-spacing:-.8px}
-.sub{color:var(--text2);margin:0 0 34px;font-size:17px}
-.grid{display:grid;grid-template-columns:repeat(3,1fr);gap:16px}
-.card{background:var(--card);border:1px solid var(--line);border-radius:18px;padding:24px}
-.card .ico{font-size:30px}
-.card h3{margin:10px 0 6px;font-size:19px}
-.card p{margin:0;color:var(--text2)}
-.steps{counter-reset:s;display:grid;grid-template-columns:repeat(3,1fr);gap:16px}
-.step{background:var(--card);border:1px solid var(--line);border-radius:18px;padding:24px;position:relative}
-.step:before{counter-increment:s;content:counter(s);position:absolute;top:-16px;left:22px;width:36px;height:36px;border-radius:50%;background:linear-gradient(135deg,#FFE27A,#F5B700);color:#1A1405;font-weight:900;display:grid;place-items:center}
-.step h3{margin:12px 0 6px}
-.step p{margin:0;color:var(--text2)}
-.split{display:grid;grid-template-columns:1fr 1fr;gap:40px;align-items:center}
-details{background:var(--card);border:1px solid var(--line);border-radius:14px;padding:16px 20px;margin-bottom:10px}
-summary{font-weight:700;cursor:pointer}
-details p{color:var(--text2);margin:10px 0 0}
-.cta{text-align:center;background:linear-gradient(135deg,#1B1533,#0F1E2A);border:1px solid var(--line);border-radius:26px;padding:50px 24px}
-footer{color:var(--text2);font-size:14px;padding:40px 0 50px;text-align:center}
-@media (max-width:860px){.hero,.split{grid-template-columns:1fr}.grid,.steps{grid-template-columns:1fr}nav .links a:not(.dl){display:none}.hero{padding-top:20px}}
-</style>
+  <script type="module" crossorigin src="/AutoRejoin/assets/index-DNwmJIiW.js"></script>
+  <link rel="stylesheet" crossorigin href="/AutoRejoin/assets/index-Y0h9wUlC.css">
 </head>
 <body>
-<div class="glow"></div>
-<div class="wrap">
-  <nav>
-    <a class="brand" href="#"><img src="icon.png" alt="AutoRejoin logo">AutoRejoin</a>
-    <div class="links"><a href="#features">Features</a><a href="#how">How it works</a><a href="#faq">FAQ</a><a href="https://discord.gg/bZFB8dwBdw">Discord</a><a class="dl" href="https://github.com/clxwnlessss/AutoRejoin/releases/latest">Download</a></div>
-  </nav>
-
-  <header class="hero">
-    <div>
-      <div class="chips"><span class="chip">🐝 Bee Swarm Simulator</span><span class="chip">🆓 Free</span><span class="chip">🔓 Open source</span><span class="chip">🪟 Windows 10/11</span></div>
-      <h1>Keep your Bee Swarm accounts <span class="grad">in game 24/7</span></h1>
-      <p class="lead">Disconnected, kicked, frozen or out of memory — AutoRejoin notices and rejoins on its own. One account at a time, main first. Wake up to a farm that never stopped.</p>
-      <div class="btns">
-        <a class="btn primary" href="https://github.com/clxwnlessss/AutoRejoin/releases/latest">⬇ Download free</a>
-        <a class="btn ghost" href="https://discord.gg/bZFB8dwBdw">💬 Join Discord</a>
-      </div>
-      <p class="note">Unzip, run AutoRejoin.exe, add accounts, press Start. Updates itself.</p>
-    </div>
-    <img class="shot" src="screenshot-en.png" alt="AutoRejoin window: four Bee Swarm Simulator accounts in game" width="1200" height="760">
-  </header>
-
-  <section id="features">
-    <h2>Everything an AFK farm needs</h2>
-    <p class="sub">Built for people who run several Bee Swarm accounts overnight.</p>
-    <div class="grid">
-      <div class="card"><div class="ico">🔁</div><h3>Auto rejoin</h3><p>Disconnects, kicks, error 277, frozen windows and crashes — the account is back in game automatically.</p></div>
-      <div class="card"><div class="ico">👥</div><h3>Unlimited accounts</h3><p>Log in with a password or a cookie. Accounts launch one by one, your main always first.</p></div>
-      <div class="card"><div class="ico">🔔</div><h3>Discord alerts</h3><p>🔴 dropped / 🟢 back in game, plus a status report every N minutes to your webhook.</p></div>
-      <div class="card"><div class="ico">🤖</div><h3>Discord bot</h3><p>Link the app and control it from Discord: see who is in game, start, stop, rejoin.</p></div>
-      <div class="card"><div class="ico">🧠</div><h3>Memory control</h3><p>Restarts windows that leak memory, daily restart and automatic cleanup of old logs.</p></div>
-      <div class="card"><div class="ico">🏆</div><h3>Monthly AFK leaderboard</h3><p>The server counts your hours in game. Top 3 every month get a role in our Discord.</p></div>
-    </div>
-  </section>
-
-  <section id="how">
-    <h2>Set up in a minute</h2>
-    <p class="sub">No installers, no accounts, no ads.</p>
-    <div class="steps">
-      <div class="step"><h3>Download</h3><p>Get <b>AutoRejoin.zip</b> from GitHub Releases and extract it anywhere.</p></div>
-      <div class="step"><h3>Add accounts</h3><p>Open <b>AutoRejoin.exe</b>, press <b>Add</b>, sign in or paste a cookie. Mark your main.</p></div>
-      <div class="step"><h3>Press Start</h3><p>Go to sleep. AutoRejoin keeps every account in game and tells you on Discord if anything happens.</p></div>
-    </div>
-  </section>
-
-  <section>
-    <div class="split">
-      <img class="shot" src="top.png" alt="Monthly AFK leaderboard in AutoRejoin" loading="lazy" width="1200" height="760">
-      <div>
-        <h2>Who stood AFK the longest?</h2>
-        <p class="sub">Create a free account in the <b>Top AFK</b> tab. While your accounts are in game, the server counts the hours — no cheating, time is tracked server-side.</p>
-        <a class="btn ghost" href="https://discord.gg/bZFB8dwBdw">🏆 See the leaderboard on Discord</a>
-      </div>
-    </div>
-  </section>
-
-  <section id="faq">
-    <h2>FAQ</h2>
-    <details open><summary>Is AutoRejoin free?</summary><p>Yes — free and open source. Every line of code is on <a href="https://github.com/clxwnlessss/AutoRejoin">GitHub</a>.</p></details>
-    <details><summary>How many accounts can it handle?</summary><p>As many as your PC can run. They start one at a time, main account first, so Roblox does not choke.</p></details>
-    <details><summary>Windows says "Windows protected your PC". Is it safe?</summary><p>The app is not signed with a paid certificate, so SmartScreen warns about it. Click <b>More info → Run anyway</b>. You can read and build the source yourself.</p></details>
-    <details><summary>Where are my passwords and cookies stored?</summary><p>Only on your PC, encrypted with Windows DPAPI. They are never sent to our server. Never share your .ROBLOSECURITY cookie with anyone.</p></details>
-    <details><summary>Is it allowed by Roblox?</summary><p>Automation tools may break Roblox's rules. Use AutoRejoin at your own risk.</p></details>
-  </section>
-
-  <section>
-    <div class="cta">
-      <h2>Stop waking up to a disconnected farm</h2>
-      <p class="sub">Free forever. Takes a minute to set up.</p>
-      <div class="btns" style="justify-content:center">
-        <a class="btn primary" href="https://github.com/clxwnlessss/AutoRejoin/releases/latest">⬇ Download AutoRejoin</a>
-        <a class="btn ghost" href="https://discord.gg/bZFB8dwBdw">💬 Discord community</a>
-      </div>
-    </div>
-  </section>
-
-  <footer>AutoRejoin by clxwnlesss · <a href="https://github.com/clxwnlessss/AutoRejoin">GitHub</a> · <a href="https://discord.gg/bZFB8dwBdw">Discord</a><br>Not affiliated with Roblox Corporation or Onett.</footer>
-</div>
+<div id="root"></div>
+<noscript>AutoRejoin — free auto rejoin for Roblox Bee Swarm Simulator. Download: https://github.com/clxwnlessss/AutoRejoin/releases/latest</noscript>
 </body>
 </html>

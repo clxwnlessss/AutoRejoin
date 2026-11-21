@@ -82,6 +82,22 @@ function createApp(pool, options = {}) {
   app.post('/discord/interactions', express.raw({ type: '*/*', limit: '64kb' }), discord.interactions);
   app.use(express.json({ limit: '32kb' }));
 
+  // The website (React, on GitHub Pages) calls this API from the browser. Auth is a Bearer token, no cookies,
+  // so allowing these origins does not expose anything to other sites.
+  const allowedOrigins = new Set(['https://clxwnlessss.github.io', 'http://localhost:5173', 'http://127.0.0.1:5173', ...(options.origins || [])]);
+  app.use((req, res, next) => {
+    const origin = req.get('origin');
+    if (origin && allowedOrigins.has(origin)) {
+      res.set('Access-Control-Allow-Origin', origin);
+      res.set('Vary', 'Origin');
+      res.set('Access-Control-Allow-Headers', 'authorization, content-type');
+      res.set('Access-Control-Allow-Methods', 'GET, POST, DELETE, OPTIONS');
+      res.set('Access-Control-Max-Age', '86400');
+    }
+    if (req.method === 'OPTIONS') return res.status(204).end();
+    next();
+  });
+
   const authLimit = rateLimiter(options.authLimit || 10, 10 * 60 * 1000);
 
   async function auth(req, res, next) {
@@ -211,6 +227,40 @@ function createApp(pool, options = {}) {
           online: !!(r.last_beat && (at - new Date(r.last_beat)) / 1000 <= ONLINE_WINDOW && r.last_in_game > 0)
         }))
       });
+    } catch (e) { next(e); }
+  });
+
+  // Public numbers for the website: registered users, who is AFK right now, hours this month.
+  let statsCache = null;
+  app.get('/api/stats', async (req, res, next) => {
+    try {
+      if (statsCache && statsCache.exp > Date.now()) return res.json(statsCache.data);
+      const at = now();
+      const users = await pool.query('SELECT COUNT(*) AS c FROM users');
+      const online = await pool.query('SELECT COUNT(*) AS c, COALESCE(SUM(last_in_game), 0) AS a FROM users WHERE last_beat > $1 AND last_in_game > 0',
+        [new Date(at.getTime() - ONLINE_WINDOW * 1000)]);
+      const month = await pool.query('SELECT COALESCE(SUM(seconds), 0) AS s, COALESCE(SUM(account_seconds), 0) AS a FROM afk_monthly WHERE month = $1', [monthKey(at)]);
+      const data = { users: Number(users.rows[0].c), onlineUsers: Number(online.rows[0].c), onlineAccounts: Number(online.rows[0].a),
+        monthHours: Math.round(Number(month.rows[0].s) / 3600), monthAccountHours: Math.round(Number(month.rows[0].a) / 3600) };
+      statsCache = { data, exp: Date.now() + 60 * 1000 };
+      res.json(data);
+    } catch (e) { next(e); }
+  });
+
+  // Website dashboard: accounts the app reported last (needs the Discord bot linked — see discord.webState).
+  app.get('/api/agent/state', auth, async (req, res, next) => {
+    try { res.json(await discord.webState(req.user.id)); } catch (e) { next(e); }
+  });
+  // Website dashboard buttons: queued for the app like the Discord buttons, picked up on its next sync (≤10 s).
+  const WEB_COMMANDS = new Set(['start', 'stop', 'rejoin-all', 'rejoin']);
+  app.post('/api/agent/command', auth, async (req, res, next) => {
+    try {
+      const cmd = String((req.body && req.body.cmd) || '');
+      const arg = String((req.body && req.body.arg) || '').slice(0, 64);
+      if (!WEB_COMMANDS.has(cmd) || (cmd === 'rejoin' && !arg)) return res.status(400).json({ error: 'Неизвестная команда.' });
+      if (!(await discord.linkedForUser(req.user.id))) return res.status(409).json({ error: 'Сначала привяжи Discord-бота в программе: Настройки → Привязать бота.' });
+      discord.enqueue(req.user.id, cmd, arg);
+      res.json({ ok: true });
     } catch (e) { next(e); }
   });
 
