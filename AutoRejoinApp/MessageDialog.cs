@@ -30,23 +30,23 @@ public static class MessageDialog
 		{
 			button2.Content = cancelText;
 		}
-		TextBlock textBlock = Xaml.Find<TextBlock>(window, "IconText");
+		Ico textBlock = Xaml.Find<Ico>(window, "IconText");
 		Border border = Xaml.Find<Border>(window, "IconBox");
 		switch (kind)
 		{
 		case Kind.Warning:
-			textBlock.Text = "\ue7ba";
+			textBlock.Glyph = "\ue7ba";
 			textBlock.Foreground = Palette.Yellow;
 			border.Background = Palette.YellowSoft;
 			break;
 		case Kind.Danger:
-			textBlock.Text = "\ue7ba";
+			textBlock.Glyph = "\ue7ba";
 			textBlock.Foreground = Palette.Red;
 			border.Background = Palette.RedSoft;
 			button.Style = (Style)window.FindResource("BtnDanger");
 			break;
 		case Kind.Success:
-			textBlock.Text = "\ue73e";
+			textBlock.Glyph = "\ue73e";
 			textBlock.Foreground = Palette.Green;
 			border.Background = Palette.GreenSoft;
 			break;

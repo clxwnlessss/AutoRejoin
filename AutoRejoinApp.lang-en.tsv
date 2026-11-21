@@ -224,7 +224,7 @@ Windows перезагрузится сразу, окна Роблокса за�
 Канал → Интеграции → Вебхуки → «Копировать URL». Никому не показывай.	Channel → Integrations → Webhooks → «Copy URL». Never share it.
 Кого упоминать	Who to ping
 Компьютер перезагрузится через 	The PC will restart in\s
-Кто в игре 🟢, а кто нет 🔴 — раз в N минут.	Who's in game 🟢 and who isn't 🔴 — every N minutes.
+Кто в игре, а кто нет — раз в N минут.	Who's in game and who isn't — every N minutes.
 Кука на строку, ссылка — через пробел.	One cookie per line, link after a space.
 Кука не подходит: недействительна или устарела (Роблокс ответил 401).	Cookie rejected: invalid or expired (Roblox replied 401).
 Кука устарела — нужна новая.	Cookie expired — a new one is needed.
@@ -658,7 +658,7 @@ Discord: команда «Перезайти»	Discord: "Rejoin" command
 Открыть Топ АФК	Open Top AFK
 Привязать бота	Link bot
 Секунду…	One moment…
-Скопировано ✓	Copied ✓
+Скопировано	Copied
 Смотри, какие аккаунты стоят, и управляй ими прямо из Discord.	See which accounts are in game and control them right from Discord.
 не открылась ссылка	could not open the link
 ~^окно закрылось до захода на сервер$	window closed before joining the server

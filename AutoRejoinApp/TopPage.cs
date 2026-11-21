@@ -276,9 +276,9 @@ public class TopPage
 		{
 			CornerRadius = new CornerRadius(16.0),
 			Padding = new Thickness(22.0, 18.0, 22.0, 18.0),
-			BorderBrush = Palette.Make("#2A2346"),
+			BorderBrush = Palette.Make("#3D2A6E"),
 			BorderThickness = new Thickness(1.0),
-			Background = new LinearGradientBrush((Color)ColorConverter.ConvertFromString("#1E1738"), (Color)ColorConverter.ConvertFromString("#0E1A20"), 45.0)
+			Background = new LinearGradientBrush((Color)ColorConverter.ConvertFromString("#26143F"), (Color)ColorConverter.ConvertFromString("#072530"), 45.0)
 		};
 		Grid grid = new Grid();
 		grid.ColumnDefinitions.Add(new ColumnDefinition
@@ -508,8 +508,8 @@ public class TopPage
 			CornerRadius = new CornerRadius(12.0),
 			Padding = new Thickness(14.0, 10.0, 14.0, 10.0),
 			Margin = new Thickness(0.0, 0.0, 0.0, 6.0),
-			Background = me ? Palette.Make("#1B1533") : Palette.Make("#0E0E15"),
-			BorderBrush = me ? Palette.Make("#3A3160") : Palette.Make("#191925"),
+			Background = me ? Palette.Make("#26143D") : Palette.Make("#0C0A18"),
+			BorderBrush = me ? Palette.Make("#5B3FA6") : Palette.Make("#171329"),
 			BorderThickness = new Thickness(1.0)
 		};
 		Grid grid = new Grid();
@@ -525,7 +525,7 @@ public class TopPage
 		{
 			Width = GridLength.Auto
 		});
-		Brush medal = (entry.Rank == 1) ? Palette.Make("#FBBF24") : ((entry.Rank == 2) ? Palette.Make("#CBD5E1") : ((entry.Rank == 3) ? Palette.Make("#F59E0B") : null));
+		Brush medal = (entry.Rank == 1) ? Palette.Make("#FFD23F") : ((entry.Rank == 2) ? Palette.Make("#D7D0F5") : ((entry.Rank == 3) ? Palette.Make("#FFB020") : null));
 		FrameworkElement rank;
 		if (medal != null)
 		{
@@ -592,7 +592,7 @@ public class TopPage
 			name.Children.Add(new TextBlock
 			{
 				Text = L.T("это ты"),
-				Foreground = Palette.Make("#A78BFA"),
+				Foreground = Palette.Make("#C084FC"),
 				FontSize = 11.5,
 				Margin = new Thickness(10.0, 1.0, 0.0, 0.0),
 				VerticalAlignment = VerticalAlignment.Center

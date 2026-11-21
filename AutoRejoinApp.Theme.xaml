@@ -1,56 +1,99 @@
 <ResourceDictionary xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
-                    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml">
+                    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+                    xmlns:a="clr-namespace:AutoRejoinApp;assembly=AutoRejoin">
 
-    <!-- AutoRejoin 2.0 by clxwnlesss. Палитра «Midnight Violet»: почти чёрный фон, фиолетово-бирюзовый акцент.
-         Те же цвета для кода — в Palette.cs. -->
-    <SolidColorBrush x:Key="Bg" Color="#08080D"/>
-    <SolidColorBrush x:Key="Sidebar" Color="#0B0B12"/>
-    <SolidColorBrush x:Key="CardBg" Color="#111119"/>
-    <SolidColorBrush x:Key="Card2" Color="#191923"/>
-    <SolidColorBrush x:Key="FieldBg" Color="#0C0C13"/>
-    <SolidColorBrush x:Key="Line" Color="#1D1D2A"/>
-    <SolidColorBrush x:Key="LineStrong" Color="#2C2B3F"/>
-    <SolidColorBrush x:Key="Text" Color="#F2F1F8"/>
-    <SolidColorBrush x:Key="Text2" Color="#A3A2B8"/>
-    <SolidColorBrush x:Key="Text3" Color="#67667D"/>
-    <SolidColorBrush x:Key="Accent" Color="#8B5CF6"/>
-    <SolidColorBrush x:Key="AccentSoft" Color="#1B1533"/>
+    <!-- AutoRejoin 3.0 by clxwnlesss. Палитра «Neon»: глубокий чёрный, неоновый фиолетовый → бирюзовый, свечение.
+         Те же цвета для кода — в Palette.cs. Значки — векторные (Ico.cs), не символы шрифта. -->
+    <SolidColorBrush x:Key="Bg" Color="#06050B"/>
+    <SolidColorBrush x:Key="Sidebar" Color="#0A0814"/>
+    <SolidColorBrush x:Key="CardBg" Color="#0E0B1A"/>
+    <SolidColorBrush x:Key="Card2" Color="#171329"/>
+    <SolidColorBrush x:Key="FieldBg" Color="#0A0815"/>
+    <SolidColorBrush x:Key="Line" Color="#251D42"/>
+    <SolidColorBrush x:Key="LineStrong" Color="#3B2E6B"/>
+    <SolidColorBrush x:Key="Text" Color="#F5F3FF"/>
+    <SolidColorBrush x:Key="Text2" Color="#B6ABD9"/>
+    <SolidColorBrush x:Key="Text3" Color="#706694"/>
+    <SolidColorBrush x:Key="Accent" Color="#A855F7"/>
+    <SolidColorBrush x:Key="AccentSoft" Color="#26143D"/>
     <SolidColorBrush x:Key="OnAccent" Color="#FFFFFF"/>
-    <SolidColorBrush x:Key="Green" Color="#34D399"/>
-    <SolidColorBrush x:Key="Red" Color="#F87171"/>
-    <SolidColorBrush x:Key="RedSoft" Color="#241318"/>
-    <SolidColorBrush x:Key="Yellow" Color="#FBBF24"/>
+    <SolidColorBrush x:Key="Green" Color="#2EF2A6"/>
+    <SolidColorBrush x:Key="Red" Color="#FF5C7A"/>
+    <SolidColorBrush x:Key="RedSoft" Color="#2E0F1A"/>
+    <SolidColorBrush x:Key="Yellow" Color="#FFD23F"/>
     <SolidColorBrush x:Key="Blue" Color="#22D3EE"/>
+    <SolidColorBrush x:Key="Pink" Color="#F472B6"/>
     <SolidColorBrush x:Key="Discord" Color="#5865F2"/>
     <LinearGradientBrush x:Key="AccentGradient" StartPoint="0,0" EndPoint="1,1">
-        <GradientStop Color="#9D7BFA" Offset="0"/>
-        <GradientStop Color="#6D4AE8" Offset="1"/>
+        <GradientStop Color="#C026D3" Offset="0"/>
+        <GradientStop Color="#9333EA" Offset="0.5"/>
+        <GradientStop Color="#6366F1" Offset="1"/>
     </LinearGradientBrush>
     <LinearGradientBrush x:Key="BrandGradient" StartPoint="0,0" EndPoint="1,1">
-        <GradientStop Color="#A78BFA" Offset="0"/>
-        <GradientStop Color="#8B5CF6" Offset="0.45"/>
+        <GradientStop Color="#E879F9" Offset="0"/>
+        <GradientStop Color="#A855F7" Offset="0.45"/>
         <GradientStop Color="#22D3EE" Offset="1"/>
     </LinearGradientBrush>
     <LinearGradientBrush x:Key="BrandText" StartPoint="0,0" EndPoint="1,0">
-        <GradientStop Color="#C4B5FD" Offset="0"/>
+        <GradientStop Color="#F0ABFC" Offset="0"/>
+        <GradientStop Color="#C084FC" Offset="0.5"/>
         <GradientStop Color="#67E8F9" Offset="1"/>
     </LinearGradientBrush>
+    <LinearGradientBrush x:Key="NeonLine" StartPoint="0,0" EndPoint="0,1">
+        <GradientStop Color="#00A855F7" Offset="0"/>
+        <GradientStop Color="#A855F7" Offset="0.3"/>
+        <GradientStop Color="#22D3EE" Offset="0.7"/>
+        <GradientStop Color="#0022D3EE" Offset="1"/>
+    </LinearGradientBrush>
+    <LinearGradientBrush x:Key="NeonLineH" StartPoint="0,0" EndPoint="1,0">
+        <GradientStop Color="#00A855F7" Offset="0"/>
+        <GradientStop Color="#A855F7" Offset="0.25"/>
+        <GradientStop Color="#22D3EE" Offset="0.75"/>
+        <GradientStop Color="#0022D3EE" Offset="1"/>
+    </LinearGradientBrush>
+    <LinearGradientBrush x:Key="CardGradient" StartPoint="0,0" EndPoint="0,1">
+        <GradientStop Color="#120E22" Offset="0"/>
+        <GradientStop Color="#0C0917" Offset="1"/>
+    </LinearGradientBrush>
     <RadialGradientBrush x:Key="Glow" Center="0.15,0" GradientOrigin="0.15,0" RadiusX="0.9" RadiusY="0.7">
-        <GradientStop Color="#228B5CF6" Offset="0"/>
-        <GradientStop Color="#008B5CF6" Offset="1"/>
+        <GradientStop Color="#33A855F7" Offset="0"/>
+        <GradientStop Color="#00A855F7" Offset="1"/>
     </RadialGradientBrush>
+    <!-- клетка «киберпространства» на фоне -->
+    <DrawingBrush x:Key="GridBrush" TileMode="Tile" Viewport="0,0,44,44" ViewportUnits="Absolute" Opacity="0.06">
+        <DrawingBrush.Drawing>
+            <GeometryDrawing Geometry="M0,0 L44,0 M0,0 L0,44">
+                <GeometryDrawing.Pen>
+                    <Pen Brush="#B794F6" Thickness="1"/>
+                </GeometryDrawing.Pen>
+            </GeometryDrawing>
+        </DrawingBrush.Drawing>
+    </DrawingBrush>
+    <DropShadowEffect x:Key="GlowAccent" Color="#A855F7" BlurRadius="22" ShadowDepth="0" Opacity="0.75"/>
+    <DropShadowEffect x:Key="GlowSoft" Color="#A855F7" BlurRadius="16" ShadowDepth="0" Opacity="0.45"/>
+    <DropShadowEffect x:Key="GlowCyan" Color="#22D3EE" BlurRadius="18" ShadowDepth="0" Opacity="0.6"/>
+    <DropShadowEffect x:Key="GlowPink" Color="#E879F9" BlurRadius="18" ShadowDepth="0" Opacity="0.6"/>
+    <DropShadowEffect x:Key="GlowRed" Color="#FF3D68" BlurRadius="18" ShadowDepth="0" Opacity="0.6"/>
     <FontFamily x:Key="Icons">Segoe MDL2 Assets</FontFamily>
+    <FontFamily x:Key="Display">Bahnschrift SemiBold, Bahnschrift, Segoe UI</FontFamily>
 
     <CubicEase x:Key="EaseOut" EasingMode="EaseOut"/>
 
     <!-- Текст -->
     <Style x:Key="H1" TargetType="TextBlock">
-        <Setter Property="FontSize" Value="26"/>
-        <Setter Property="FontWeight" Value="Bold"/>
+        <Setter Property="FontFamily" Value="{StaticResource Display}"/>
+        <Setter Property="FontSize" Value="30"/>
+        <Setter Property="FontWeight" Value="SemiBold"/>
         <Setter Property="Foreground" Value="{StaticResource Text}"/>
+        <Setter Property="Effect">
+            <Setter.Value>
+                <DropShadowEffect Color="#A855F7" BlurRadius="24" ShadowDepth="0" Opacity="0.55"/>
+            </Setter.Value>
+        </Setter>
     </Style>
     <Style x:Key="H2" TargetType="TextBlock">
-        <Setter Property="FontSize" Value="15"/>
+        <Setter Property="FontFamily" Value="{StaticResource Display}"/>
+        <Setter Property="FontSize" Value="16"/>
         <Setter Property="FontWeight" Value="SemiBold"/>
         <Setter Property="Foreground" Value="{StaticResource Text}"/>
     </Style>
@@ -66,9 +109,10 @@
         <Setter Property="LineHeight" Value="18"/>
     </Style>
     <Style x:Key="Label" TargetType="TextBlock">
-        <Setter Property="FontSize" Value="11"/>
-        <Setter Property="FontWeight" Value="Bold"/>
-        <Setter Property="Foreground" Value="{StaticResource Text3}"/>
+        <Setter Property="FontFamily" Value="{StaticResource Display}"/>
+        <Setter Property="FontSize" Value="11.5"/>
+        <Setter Property="FontWeight" Value="SemiBold"/>
+        <Setter Property="Foreground" Value="#8B7FC0"/>
         <Setter Property="Margin" Value="0,0,0,8"/>
     </Style>
     <Style x:Key="Glyph" TargetType="TextBlock">
@@ -76,16 +120,16 @@
         <Setter Property="VerticalAlignment" Value="Center"/>
     </Style>
 
-    <!-- Карточка -->
+    <!-- Карточка: тёмное «стекло» с неоновой кромкой. -->
     <Style x:Key="Card" TargetType="Border">
-        <Setter Property="Background" Value="{StaticResource CardBg}"/>
+        <Setter Property="Background" Value="{StaticResource CardGradient}"/>
         <Setter Property="BorderBrush" Value="{StaticResource Line}"/>
         <Setter Property="BorderThickness" Value="1"/>
-        <Setter Property="CornerRadius" Value="16"/>
+        <Setter Property="CornerRadius" Value="14"/>
         <Setter Property="Padding" Value="22,18"/>
     </Style>
 
-    <!-- Кнопки: подсветка при наведении плавно проявляется, при нажатии кнопка чуть сжимается. -->
+    <!-- Кнопки: при наведении — неоновая подсветка и пробегающий блик, при нажатии кнопка сжимается. -->
     <ControlTemplate x:Key="ButtonTemplate" TargetType="Button">
         <Grid x:Name="Root" RenderTransformOrigin="0.5,0.5">
             <Grid.RenderTransform>
@@ -94,6 +138,18 @@
             <Border x:Name="Bd" Background="{TemplateBinding Background}" BorderBrush="{TemplateBinding BorderBrush}"
                     BorderThickness="{TemplateBinding BorderThickness}" CornerRadius="10" SnapsToDevicePixels="True"/>
             <Border x:Name="Hover" Background="#FFFFFF" Opacity="0" CornerRadius="10" IsHitTestVisible="False"/>
+            <Border x:Name="Shine" CornerRadius="10" IsHitTestVisible="False" Opacity="0" ClipToBounds="True">
+                <Border.Background>
+                    <LinearGradientBrush StartPoint="0,0" EndPoint="1,0.3">
+                        <LinearGradientBrush.RelativeTransform>
+                            <TranslateTransform X="-1"/>
+                        </LinearGradientBrush.RelativeTransform>
+                        <GradientStop Color="#00FFFFFF" Offset="0.3"/>
+                        <GradientStop Color="#40FFFFFF" Offset="0.5"/>
+                        <GradientStop Color="#00FFFFFF" Offset="0.7"/>
+                    </LinearGradientBrush>
+                </Border.Background>
+            </Border>
             <ContentPresenter Margin="{TemplateBinding Padding}" HorizontalAlignment="{TemplateBinding HorizontalContentAlignment}"
                               VerticalAlignment="Center" RecognizesAccessKey="False"/>
         </Grid>
@@ -102,7 +158,10 @@
                 <Trigger.EnterActions>
                     <BeginStoryboard>
                         <Storyboard>
-                            <DoubleAnimation Storyboard.TargetName="Hover" Storyboard.TargetProperty="Opacity" To="0.08" Duration="0:0:0.15"/>
+                            <DoubleAnimation Storyboard.TargetName="Hover" Storyboard.TargetProperty="Opacity" To="0.07" Duration="0:0:0.15"/>
+                            <DoubleAnimation Storyboard.TargetName="Shine" Storyboard.TargetProperty="Opacity" To="1" Duration="0:0:0.05"/>
+                            <DoubleAnimation Storyboard.TargetName="Shine" Storyboard.TargetProperty="(Border.Background).(Brush.RelativeTransform).(TranslateTransform.X)"
+                                             From="-1" To="1" Duration="0:0:0.65" EasingFunction="{StaticResource EaseOut}"/>
                         </Storyboard>
                     </BeginStoryboard>
                 </Trigger.EnterActions>
@@ -110,6 +169,7 @@
                     <BeginStoryboard>
                         <Storyboard>
                             <DoubleAnimation Storyboard.TargetName="Hover" Storyboard.TargetProperty="Opacity" To="0" Duration="0:0:0.25"/>
+                            <DoubleAnimation Storyboard.TargetName="Shine" Storyboard.TargetProperty="Opacity" To="0" Duration="0:0:0.2"/>
                         </Storyboard>
                     </BeginStoryboard>
                 </Trigger.ExitActions>
@@ -118,22 +178,22 @@
                 <Trigger.EnterActions>
                     <BeginStoryboard>
                         <Storyboard>
-                            <DoubleAnimation Storyboard.TargetName="Scale" Storyboard.TargetProperty="ScaleX" To="0.96" Duration="0:0:0.08"/>
-                            <DoubleAnimation Storyboard.TargetName="Scale" Storyboard.TargetProperty="ScaleY" To="0.96" Duration="0:0:0.08"/>
+                            <DoubleAnimation Storyboard.TargetName="Scale" Storyboard.TargetProperty="ScaleX" To="0.95" Duration="0:0:0.08"/>
+                            <DoubleAnimation Storyboard.TargetName="Scale" Storyboard.TargetProperty="ScaleY" To="0.95" Duration="0:0:0.08"/>
                         </Storyboard>
                     </BeginStoryboard>
                 </Trigger.EnterActions>
                 <Trigger.ExitActions>
                     <BeginStoryboard>
                         <Storyboard>
-                            <DoubleAnimation Storyboard.TargetName="Scale" Storyboard.TargetProperty="ScaleX" To="1" Duration="0:0:0.22">
+                            <DoubleAnimation Storyboard.TargetName="Scale" Storyboard.TargetProperty="ScaleX" To="1" Duration="0:0:0.3">
                                 <DoubleAnimation.EasingFunction>
-                                    <BackEase EasingMode="EaseOut" Amplitude="0.6"/>
+                                    <ElasticEase EasingMode="EaseOut" Oscillations="1" Springiness="5"/>
                                 </DoubleAnimation.EasingFunction>
                             </DoubleAnimation>
-                            <DoubleAnimation Storyboard.TargetName="Scale" Storyboard.TargetProperty="ScaleY" To="1" Duration="0:0:0.22">
+                            <DoubleAnimation Storyboard.TargetName="Scale" Storyboard.TargetProperty="ScaleY" To="1" Duration="0:0:0.3">
                                 <DoubleAnimation.EasingFunction>
-                                    <BackEase EasingMode="EaseOut" Amplitude="0.6"/>
+                                    <ElasticEase EasingMode="EaseOut" Oscillations="1" Springiness="5"/>
                                 </DoubleAnimation.EasingFunction>
                             </DoubleAnimation>
                         </Storyboard>
@@ -148,7 +208,7 @@
 
     <Style x:Key="Btn" TargetType="Button">
         <Setter Property="Foreground" Value="{StaticResource Text}"/>
-        <Setter Property="Background" Value="{StaticResource Card2}"/>
+        <Setter Property="Background" Value="#140F26"/>
         <Setter Property="BorderBrush" Value="{StaticResource LineStrong}"/>
         <Setter Property="BorderThickness" Value="1"/>
         <Setter Property="Padding" Value="16,9"/>
@@ -158,21 +218,44 @@
         <Setter Property="HorizontalContentAlignment" Value="Center"/>
         <Setter Property="FocusVisualStyle" Value="{x:Null}"/>
         <Setter Property="Template" Value="{StaticResource ButtonTemplate}"/>
+        <Style.Triggers>
+            <Trigger Property="IsMouseOver" Value="True">
+                <Setter Property="BorderBrush" Value="#7C5BD6"/>
+            </Trigger>
+        </Style.Triggers>
     </Style>
     <Style x:Key="BtnPrimary" TargetType="Button" BasedOn="{StaticResource Btn}">
         <Setter Property="Foreground" Value="{StaticResource OnAccent}"/>
         <Setter Property="Background" Value="{StaticResource AccentGradient}"/>
-        <Setter Property="BorderBrush" Value="#8B5CF6"/>
+        <Setter Property="BorderBrush" Value="#D8B4FE"/>
+        <Setter Property="BorderThickness" Value="0"/>
+        <Setter Property="Effect" Value="{StaticResource GlowSoft}"/>
+        <Style.Triggers>
+            <Trigger Property="IsMouseOver" Value="True">
+                <Setter Property="Effect" Value="{StaticResource GlowAccent}"/>
+            </Trigger>
+        </Style.Triggers>
     </Style>
     <Style x:Key="BtnDanger" TargetType="Button" BasedOn="{StaticResource Btn}">
         <Setter Property="Foreground" Value="#FFFFFF"/>
-        <Setter Property="Background" Value="#DC4A55"/>
-        <Setter Property="BorderBrush" Value="#DC4A55"/>
+        <Setter Property="Background" Value="#E11D48"/>
+        <Setter Property="BorderBrush" Value="#FF5C7A"/>
+        <Setter Property="Effect" Value="{StaticResource GlowRed}"/>
     </Style>
     <Style x:Key="BtnDiscord" TargetType="Button" BasedOn="{StaticResource Btn}">
         <Setter Property="Foreground" Value="#FFFFFF"/>
         <Setter Property="Background" Value="{StaticResource Discord}"/>
-        <Setter Property="BorderBrush" Value="#6B76F5"/>
+        <Setter Property="BorderBrush" Value="#8B93FF"/>
+        <Setter Property="BorderThickness" Value="0"/>
+        <Style.Triggers>
+            <Trigger Property="IsMouseOver" Value="True">
+                <Setter Property="Effect">
+                    <Setter.Value>
+                        <DropShadowEffect Color="#5865F2" BlurRadius="20" ShadowDepth="0" Opacity="0.8"/>
+                    </Setter.Value>
+                </Setter>
+            </Trigger>
+        </Style.Triggers>
     </Style>
     <Style x:Key="BtnGhost" TargetType="Button" BasedOn="{StaticResource Btn}">
         <Setter Property="Background" Value="Transparent"/>
@@ -186,7 +269,7 @@
         <Setter Property="Padding" Value="10,8"/>
     </Style>
     <Style x:Key="LinkBtn" TargetType="Button">
-        <Setter Property="Foreground" Value="#A78BFA"/>
+        <Setter Property="Foreground" Value="#C084FC"/>
         <Setter Property="Cursor" Value="Hand"/>
         <Setter Property="FontSize" Value="12.5"/>
         <Setter Property="FocusVisualStyle" Value="{x:Null}"/>
@@ -197,28 +280,82 @@
                     <ControlTemplate.Triggers>
                         <Trigger Property="IsMouseOver" Value="True">
                             <Setter TargetName="T" Property="TextDecorations" Value="Underline"/>
+                            <Setter TargetName="T" Property="Foreground" Value="#67E8F9"/>
                         </Trigger>
                     </ControlTemplate.Triggers>
                 </ControlTemplate>
             </Setter.Value>
         </Setter>
     </Style>
-    <Style x:Key="IconBtn" TargetType="Button" BasedOn="{StaticResource Btn}">
-        <Setter Property="Background" Value="Transparent"/>
-        <Setter Property="BorderBrush" Value="Transparent"/>
+    <!-- Кнопка-значок: Content — имя значка или старый код глифа. -->
+    <Style x:Key="IconBtn" TargetType="Button">
         <Setter Property="Foreground" Value="{StaticResource Text2}"/>
-        <Setter Property="FontFamily" Value="{StaticResource Icons}"/>
-        <Setter Property="FontWeight" Value="Normal"/>
+        <Setter Property="Background" Value="Transparent"/>
         <Setter Property="FontSize" Value="14"/>
         <Setter Property="Width" Value="34"/>
         <Setter Property="Height" Value="34"/>
-        <Setter Property="Padding" Value="0"/>
+        <Setter Property="Cursor" Value="Hand"/>
+        <Setter Property="FocusVisualStyle" Value="{x:Null}"/>
+        <Setter Property="Template">
+            <Setter.Value>
+                <ControlTemplate TargetType="Button">
+                    <Grid Background="Transparent" RenderTransformOrigin="0.5,0.5">
+                        <Grid.RenderTransform>
+                            <ScaleTransform x:Name="Scale"/>
+                        </Grid.RenderTransform>
+                        <Border x:Name="Hover" CornerRadius="9" Background="#1E1638" BorderBrush="#4C3A8C" BorderThickness="1" Opacity="0"/>
+                        <a:Ico x:Name="I" Glyph="{Binding Content, RelativeSource={RelativeSource TemplatedParent}}"
+                               Size="{Binding FontSize, RelativeSource={RelativeSource TemplatedParent}}"/>
+                    </Grid>
+                    <ControlTemplate.Triggers>
+                        <Trigger Property="IsMouseOver" Value="True">
+                            <Trigger.EnterActions>
+                                <BeginStoryboard>
+                                    <Storyboard>
+                                        <DoubleAnimation Storyboard.TargetName="Hover" Storyboard.TargetProperty="Opacity" To="1" Duration="0:0:0.15"/>
+                                    </Storyboard>
+                                </BeginStoryboard>
+                            </Trigger.EnterActions>
+                            <Trigger.ExitActions>
+                                <BeginStoryboard>
+                                    <Storyboard>
+                                        <DoubleAnimation Storyboard.TargetName="Hover" Storyboard.TargetProperty="Opacity" To="0" Duration="0:0:0.25"/>
+                                    </Storyboard>
+                                </BeginStoryboard>
+                            </Trigger.ExitActions>
+                            <Setter Property="Foreground" Value="#E9D5FF"/>
+                            <Setter TargetName="I" Property="UIElement.Effect" Value="{StaticResource GlowAccent}"/>
+                        </Trigger>
+                        <Trigger Property="IsPressed" Value="True">
+                            <Trigger.EnterActions>
+                                <BeginStoryboard>
+                                    <Storyboard>
+                                        <DoubleAnimation Storyboard.TargetName="Scale" Storyboard.TargetProperty="ScaleX" To="0.88" Duration="0:0:0.07"/>
+                                        <DoubleAnimation Storyboard.TargetName="Scale" Storyboard.TargetProperty="ScaleY" To="0.88" Duration="0:0:0.07"/>
+                                    </Storyboard>
+                                </BeginStoryboard>
+                            </Trigger.EnterActions>
+                            <Trigger.ExitActions>
+                                <BeginStoryboard>
+                                    <Storyboard>
+                                        <DoubleAnimation Storyboard.TargetName="Scale" Storyboard.TargetProperty="ScaleX" To="1" Duration="0:0:0.25" EasingFunction="{StaticResource EaseOut}"/>
+                                        <DoubleAnimation Storyboard.TargetName="Scale" Storyboard.TargetProperty="ScaleY" To="1" Duration="0:0:0.25" EasingFunction="{StaticResource EaseOut}"/>
+                                    </Storyboard>
+                                </BeginStoryboard>
+                            </Trigger.ExitActions>
+                        </Trigger>
+                        <Trigger Property="IsEnabled" Value="False">
+                            <Setter Property="Opacity" Value="0.4"/>
+                        </Trigger>
+                    </ControlTemplate.Triggers>
+                </ControlTemplate>
+            </Setter.Value>
+        </Setter>
     </Style>
     <Style x:Key="ChromeBtn" TargetType="Button">
         <Setter Property="Foreground" Value="{StaticResource Text2}"/>
         <Setter Property="Background" Value="Transparent"/>
-        <Setter Property="FontFamily" Value="{StaticResource Icons}"/>
-        <Setter Property="FontSize" Value="10"/>
+        <Setter Property="FontSize" Value="12"/>
         <Setter Property="Width" Value="46"/>
         <Setter Property="Height" Value="36"/>
         <Setter Property="FocusVisualStyle" Value="{x:Null}"/>
@@ -226,8 +363,8 @@
             <Setter.Value>
                 <ControlTemplate TargetType="Button">
                     <Grid Background="Transparent">
-                        <Border x:Name="Hover" Background="#1A1A26" Opacity="0"/>
-                        <ContentPresenter HorizontalAlignment="Center" VerticalAlignment="Center"/>
+                        <Border x:Name="Hover" Background="#1C1534" Opacity="0"/>
+                        <a:Ico Glyph="{Binding Content, RelativeSource={RelativeSource TemplatedParent}}" Size="12" Thickness="2.2"/>
                     </Grid>
                     <ControlTemplate.Triggers>
                         <Trigger Property="IsMouseOver" Value="True">
@@ -257,8 +394,8 @@
             <Setter.Value>
                 <ControlTemplate TargetType="Button">
                     <Grid Background="Transparent">
-                        <Border x:Name="Hover" Background="#E5484D" Opacity="0"/>
-                        <ContentPresenter HorizontalAlignment="Center" VerticalAlignment="Center"/>
+                        <Border x:Name="Hover" Background="#FF2E63" Opacity="0"/>
+                        <a:Ico Glyph="{Binding Content, RelativeSource={RelativeSource TemplatedParent}}" Size="12" Thickness="2.2"/>
                     </Grid>
                     <ControlTemplate.Triggers>
                         <Trigger Property="IsMouseOver" Value="True">
@@ -284,10 +421,11 @@
         </Setter>
     </Style>
 
-    <!-- Пункт бокового меню: значок в Tag. Подсветка и полоска выбора появляются плавно. -->
+    <!-- Пункт бокового меню: значок в Tag. Выбранный — неоновая подложка, светящаяся полоска и значок; при наведении пункт чуть съезжает вправо. -->
     <Style x:Key="Nav" TargetType="RadioButton">
         <Setter Property="Foreground" Value="{StaticResource Text2}"/>
-        <Setter Property="FontSize" Value="13.5"/>
+        <Setter Property="FontFamily" Value="{StaticResource Display}"/>
+        <Setter Property="FontSize" Value="14.5"/>
         <Setter Property="FontWeight" Value="SemiBold"/>
         <Setter Property="Cursor" Value="Hand"/>
         <Setter Property="Margin" Value="0,2"/>
@@ -296,25 +434,34 @@
             <Setter.Value>
                 <ControlTemplate TargetType="RadioButton">
                     <Grid Background="Transparent">
-                        <Border x:Name="HoverBg" Background="#14141E" CornerRadius="12" Opacity="0"/>
-                        <Border x:Name="SelBg" CornerRadius="12" Opacity="0" BorderBrush="#2A2346" BorderThickness="1">
+                        <Border x:Name="HoverBg" Background="#120D24" CornerRadius="10" Opacity="0"/>
+                        <Border x:Name="SelBg" CornerRadius="10" Opacity="0" BorderThickness="1">
+                            <Border.BorderBrush>
+                                <LinearGradientBrush StartPoint="0,0" EndPoint="1,0">
+                                    <GradientStop Color="#9D5CF0" Offset="0"/>
+                                    <GradientStop Color="#2A1D52" Offset="1"/>
+                                </LinearGradientBrush>
+                            </Border.BorderBrush>
                             <Border.Background>
                                 <LinearGradientBrush StartPoint="0,0" EndPoint="1,0">
-                                    <GradientStop Color="#2A1F4D" Offset="0"/>
-                                    <GradientStop Color="#15141F" Offset="1"/>
+                                    <GradientStop Color="#4A1D85" Offset="0"/>
+                                    <GradientStop Color="#1A1036" Offset="0.6"/>
+                                    <GradientStop Color="#0E0A1C" Offset="1"/>
                                 </LinearGradientBrush>
                             </Border.Background>
                         </Border>
-                        <Border x:Name="Bar" Width="3" Height="20" CornerRadius="2" Background="{StaticResource BrandGradient}"
-                                HorizontalAlignment="Left" Margin="0,0,0,0" RenderTransformOrigin="0.5,0.5">
+                        <Border x:Name="Bar" Width="4" Height="22" CornerRadius="2" Background="{StaticResource BrandGradient}"
+                                HorizontalAlignment="Left" Margin="-1,0,0,0" RenderTransformOrigin="0.5,0.5" Effect="{StaticResource GlowAccent}">
                             <Border.RenderTransform>
                                 <ScaleTransform x:Name="BarScale" ScaleY="0"/>
                             </Border.RenderTransform>
                         </Border>
-                        <StackPanel Orientation="Horizontal" Margin="16,11">
-                            <TextBlock x:Name="Icon" Text="{TemplateBinding Tag}" FontFamily="{StaticResource Icons}" FontSize="15"
-                                       Width="22" VerticalAlignment="Center" FontWeight="Normal"/>
-                            <ContentPresenter Margin="10,0,0,0" VerticalAlignment="Center"/>
+                        <StackPanel x:Name="Row" Orientation="Horizontal" Margin="16,11">
+                            <StackPanel.RenderTransform>
+                                <TranslateTransform x:Name="RowMove" X="0"/>
+                            </StackPanel.RenderTransform>
+                            <a:Ico x:Name="Icon" Glyph="{TemplateBinding Tag}" Size="17" Width="22"/>
+                            <ContentPresenter Margin="11,0,0,0" VerticalAlignment="Center"/>
                         </StackPanel>
                     </Grid>
                     <ControlTemplate.Triggers>
@@ -323,6 +470,7 @@
                                 <BeginStoryboard>
                                     <Storyboard>
                                         <DoubleAnimation Storyboard.TargetName="HoverBg" Storyboard.TargetProperty="Opacity" To="1" Duration="0:0:0.15"/>
+                                        <DoubleAnimation Storyboard.TargetName="RowMove" Storyboard.TargetProperty="X" To="4" Duration="0:0:0.2" EasingFunction="{StaticResource EaseOut}"/>
                                     </Storyboard>
                                 </BeginStoryboard>
                             </Trigger.EnterActions>
@@ -330,6 +478,7 @@
                                 <BeginStoryboard>
                                     <Storyboard>
                                         <DoubleAnimation Storyboard.TargetName="HoverBg" Storyboard.TargetProperty="Opacity" To="0" Duration="0:0:0.25"/>
+                                        <DoubleAnimation Storyboard.TargetName="RowMove" Storyboard.TargetProperty="X" To="0" Duration="0:0:0.25" EasingFunction="{StaticResource EaseOut}"/>
                                     </Storyboard>
                                 </BeginStoryboard>
                             </Trigger.ExitActions>
@@ -340,9 +489,9 @@
                                 <BeginStoryboard>
                                     <Storyboard>
                                         <DoubleAnimation Storyboard.TargetName="SelBg" Storyboard.TargetProperty="Opacity" To="1" Duration="0:0:0.22"/>
-                                        <DoubleAnimation Storyboard.TargetName="BarScale" Storyboard.TargetProperty="ScaleY" To="1" Duration="0:0:0.3">
+                                        <DoubleAnimation Storyboard.TargetName="BarScale" Storyboard.TargetProperty="ScaleY" To="1" Duration="0:0:0.35">
                                             <DoubleAnimation.EasingFunction>
-                                                <BackEase EasingMode="EaseOut" Amplitude="0.5"/>
+                                                <ElasticEase EasingMode="EaseOut" Oscillations="1" Springiness="4"/>
                                             </DoubleAnimation.EasingFunction>
                                         </DoubleAnimation>
                                     </Storyboard>
@@ -357,7 +506,8 @@
                                 </BeginStoryboard>
                             </Trigger.ExitActions>
                             <Setter Property="Foreground" Value="{StaticResource Text}"/>
-                            <Setter TargetName="Icon" Property="Foreground" Value="#A78BFA"/>
+                            <Setter TargetName="Icon" Property="TextElement.Foreground" Value="#E9D5FF"/>
+                            <Setter TargetName="Icon" Property="UIElement.Effect" Value="{StaticResource GlowAccent}"/>
                         </Trigger>
                     </ControlTemplate.Triggers>
                 </ControlTemplate>
@@ -365,7 +515,7 @@
         </Setter>
     </Style>
 
-    <!-- Тумблер (CheckBox): цвет дорожки проявляется плавно, ручка едет с лёгкой пружиной. -->
+    <!-- Тумблер (CheckBox): включённый — неоновая дорожка со свечением, ручка едет с пружиной. -->
     <Style x:Key="Switch" TargetType="CheckBox">
         <Setter Property="Cursor" Value="Hand"/>
         <Setter Property="Focusable" Value="False"/>
@@ -373,10 +523,10 @@
         <Setter Property="Template">
             <Setter.Value>
                 <ControlTemplate TargetType="CheckBox">
-                    <Grid Width="46" Height="26" Background="Transparent">
-                        <Border x:Name="Track" CornerRadius="13" Background="#1A1A26" BorderBrush="#2E2D42" BorderThickness="1" SnapsToDevicePixels="True"/>
+                    <Grid Width="48" Height="26" Background="Transparent">
+                        <Border x:Name="Track" CornerRadius="13" Background="#120E22" BorderBrush="#3A2D66" BorderThickness="1" SnapsToDevicePixels="True"/>
                         <Border x:Name="OnTrack" CornerRadius="13" Background="{StaticResource BrandGradient}" Opacity="0"/>
-                        <Border x:Name="Knob" Width="18" Height="18" CornerRadius="9" Background="#B9B8CC"
+                        <Border x:Name="Knob" Width="18" Height="18" CornerRadius="9" Background="#8E83B8"
                                 HorizontalAlignment="Left" Margin="4,0,0,0">
                             <Border.RenderTransform>
                                 <TranslateTransform x:Name="KnobMove" X="0"/>
@@ -385,15 +535,15 @@
                     </Grid>
                     <ControlTemplate.Triggers>
                         <Trigger Property="IsMouseOver" Value="True">
-                            <Setter TargetName="Track" Property="BorderBrush" Value="#4A4766"/>
+                            <Setter TargetName="Track" Property="BorderBrush" Value="#7C5BD6"/>
                         </Trigger>
                         <Trigger Property="IsChecked" Value="True">
                             <Trigger.EnterActions>
                                 <BeginStoryboard>
                                     <Storyboard>
-                                        <DoubleAnimation Storyboard.TargetName="KnobMove" Storyboard.TargetProperty="X" To="20" Duration="0:0:0.28">
+                                        <DoubleAnimation Storyboard.TargetName="KnobMove" Storyboard.TargetProperty="X" To="22" Duration="0:0:0.35">
                                             <DoubleAnimation.EasingFunction>
-                                                <BackEase EasingMode="EaseOut" Amplitude="0.45"/>
+                                                <ElasticEase EasingMode="EaseOut" Oscillations="1" Springiness="6"/>
                                             </DoubleAnimation.EasingFunction>
                                         </DoubleAnimation>
                                         <DoubleAnimation Storyboard.TargetName="OnTrack" Storyboard.TargetProperty="Opacity" To="1" Duration="0:0:0.2"/>
@@ -403,16 +553,13 @@
                             <Trigger.ExitActions>
                                 <BeginStoryboard>
                                     <Storyboard>
-                                        <DoubleAnimation Storyboard.TargetName="KnobMove" Storyboard.TargetProperty="X" To="0" Duration="0:0:0.28">
-                                            <DoubleAnimation.EasingFunction>
-                                                <BackEase EasingMode="EaseOut" Amplitude="0.45"/>
-                                            </DoubleAnimation.EasingFunction>
-                                        </DoubleAnimation>
+                                        <DoubleAnimation Storyboard.TargetName="KnobMove" Storyboard.TargetProperty="X" To="0" Duration="0:0:0.3" EasingFunction="{StaticResource EaseOut}"/>
                                         <DoubleAnimation Storyboard.TargetName="OnTrack" Storyboard.TargetProperty="Opacity" To="0" Duration="0:0:0.2"/>
                                     </Storyboard>
                                 </BeginStoryboard>
                             </Trigger.ExitActions>
                             <Setter TargetName="Knob" Property="Background" Value="#FFFFFF"/>
+                            <Setter TargetName="OnTrack" Property="Effect" Value="{StaticResource GlowSoft}"/>
                         </Trigger>
                         <Trigger Property="IsEnabled" Value="False">
                             <Setter Property="Opacity" Value="0.4"/>
@@ -423,7 +570,7 @@
         </Setter>
     </Style>
 
-    <!-- Поля ввода; подсказка-плейсхолдер — в Tag. Рамка в фокусе — фиолетовая. -->
+    <!-- Поля ввода; подсказка-плейсхолдер — в Tag. В фокусе — неоновая рамка со свечением. -->
     <Style x:Key="Field" TargetType="TextBox">
         <Setter Property="Background" Value="{StaticResource FieldBg}"/>
         <Setter Property="Foreground" Value="{StaticResource Text}"/>
@@ -431,7 +578,7 @@
         <Setter Property="BorderThickness" Value="1"/>
         <Setter Property="Padding" Value="12,9"/>
         <Setter Property="FontSize" Value="13"/>
-        <Setter Property="CaretBrush" Value="{StaticResource Text}"/>
+        <Setter Property="CaretBrush" Value="#E9D5FF"/>
         <Setter Property="SelectionBrush" Value="{StaticResource Accent}"/>
         <Setter Property="VerticalContentAlignment" Value="Center"/>
         <Setter Property="Template">
@@ -440,7 +587,8 @@
                     <Grid>
                         <Border x:Name="Bd" Background="{TemplateBinding Background}" BorderBrush="{TemplateBinding BorderBrush}"
                                 BorderThickness="{TemplateBinding BorderThickness}" CornerRadius="10" SnapsToDevicePixels="True"/>
-                        <Border x:Name="Focus" BorderBrush="{StaticResource Accent}" BorderThickness="1.5" CornerRadius="10" Opacity="0" IsHitTestVisible="False"/>
+                        <Border x:Name="Focus" BorderBrush="{StaticResource Accent}" BorderThickness="1.5" CornerRadius="10" Opacity="0"
+                                IsHitTestVisible="False" Effect="{StaticResource GlowSoft}"/>
                         <ScrollViewer x:Name="PART_ContentHost" Margin="{TemplateBinding Padding}"
                                       VerticalAlignment="{TemplateBinding VerticalContentAlignment}" Focusable="False"/>
                         <TextBlock x:Name="Hint" Text="{TemplateBinding Tag}" Foreground="{StaticResource Text3}"
@@ -486,7 +634,7 @@
         <Setter Property="BorderThickness" Value="1"/>
         <Setter Property="Padding" Value="12,9"/>
         <Setter Property="FontSize" Value="13"/>
-        <Setter Property="CaretBrush" Value="{StaticResource Text}"/>
+        <Setter Property="CaretBrush" Value="#E9D5FF"/>
         <Setter Property="SelectionBrush" Value="{StaticResource Accent}"/>
         <Setter Property="Template">
             <Setter.Value>
@@ -494,7 +642,8 @@
                     <Grid>
                         <Border x:Name="Bd" Background="{TemplateBinding Background}" BorderBrush="{TemplateBinding BorderBrush}"
                                 BorderThickness="{TemplateBinding BorderThickness}" CornerRadius="10" SnapsToDevicePixels="True"/>
-                        <Border x:Name="Focus" BorderBrush="{StaticResource Accent}" BorderThickness="1.5" CornerRadius="10" Opacity="0" IsHitTestVisible="False"/>
+                        <Border x:Name="Focus" BorderBrush="{StaticResource Accent}" BorderThickness="1.5" CornerRadius="10" Opacity="0"
+                                IsHitTestVisible="False" Effect="{StaticResource GlowSoft}"/>
                         <ScrollViewer x:Name="PART_ContentHost" Margin="{TemplateBinding Padding}" VerticalAlignment="Center" Focusable="False"/>
                     </Grid>
                     <ControlTemplate.Triggers>
@@ -539,10 +688,10 @@
                     </Border>
                     <ControlTemplate.Triggers>
                         <Trigger Property="IsHighlighted" Value="True">
-                            <Setter TargetName="Bd" Property="Background" Value="#1D1B2E"/>
+                            <Setter TargetName="Bd" Property="Background" Value="#251A44"/>
                         </Trigger>
                         <Trigger Property="IsSelected" Value="True">
-                            <Setter Property="Foreground" Value="#A78BFA"/>
+                            <Setter Property="Foreground" Value="#E9D5FF"/>
                         </Trigger>
                     </ControlTemplate.Triggers>
                 </ControlTemplate>
@@ -566,13 +715,12 @@
                                 <ControlTemplate TargetType="ToggleButton">
                                     <Border x:Name="Bd" Background="{StaticResource FieldBg}" BorderBrush="{StaticResource Line}"
                                             BorderThickness="1" CornerRadius="10">
-                                        <TextBlock x:Name="Arrow" Text="&#xE70D;" FontFamily="{StaticResource Icons}" FontSize="10"
-                                                   Foreground="{StaticResource Text2}" HorizontalAlignment="Right"
-                                                   VerticalAlignment="Center" Margin="0,0,13,0" RenderTransformOrigin="0.5,0.5">
-                                            <TextBlock.RenderTransform>
+                                        <a:Ico x:Name="Arrow" Glyph="down" Size="13" Foreground="{StaticResource Text2}" HorizontalAlignment="Right"
+                                               VerticalAlignment="Center" Margin="0,0,13,0" RenderTransformOrigin="0.5,0.5">
+                                            <a:Ico.RenderTransform>
                                                 <RotateTransform x:Name="ArrowTurn" Angle="0"/>
-                                            </TextBlock.RenderTransform>
-                                        </TextBlock>
+                                            </a:Ico.RenderTransform>
+                                        </a:Ico>
                                     </Border>
                                     <ControlTemplate.Triggers>
                                         <Trigger Property="IsMouseOver" Value="True">
@@ -582,18 +730,19 @@
                                             <Trigger.EnterActions>
                                                 <BeginStoryboard>
                                                     <Storyboard>
-                                                        <DoubleAnimation Storyboard.TargetName="ArrowTurn" Storyboard.TargetProperty="Angle" To="180" Duration="0:0:0.2"/>
+                                                        <DoubleAnimation Storyboard.TargetName="ArrowTurn" Storyboard.TargetProperty="Angle" To="180" Duration="0:0:0.25" EasingFunction="{StaticResource EaseOut}"/>
                                                     </Storyboard>
                                                 </BeginStoryboard>
                                             </Trigger.EnterActions>
                                             <Trigger.ExitActions>
                                                 <BeginStoryboard>
                                                     <Storyboard>
-                                                        <DoubleAnimation Storyboard.TargetName="ArrowTurn" Storyboard.TargetProperty="Angle" To="0" Duration="0:0:0.2"/>
+                                                        <DoubleAnimation Storyboard.TargetName="ArrowTurn" Storyboard.TargetProperty="Angle" To="0" Duration="0:0:0.25" EasingFunction="{StaticResource EaseOut}"/>
                                                     </Storyboard>
                                                 </BeginStoryboard>
                                             </Trigger.ExitActions>
                                             <Setter TargetName="Bd" Property="BorderBrush" Value="{StaticResource Accent}"/>
+                                            <Setter TargetName="Arrow" Property="TextElement.Foreground" Value="#E9D5FF"/>
                                         </Trigger>
                                     </ControlTemplate.Triggers>
                                 </ControlTemplate>
@@ -603,8 +752,8 @@
                                           ContentTemplate="{TemplateBinding SelectionBoxItemTemplate}"
                                           Margin="12,8,36,8" VerticalAlignment="Center" HorizontalAlignment="Left"/>
                         <Popup x:Name="PART_Popup" Placement="Bottom" IsOpen="{TemplateBinding IsDropDownOpen}"
-                               AllowsTransparency="True" Focusable="False" PopupAnimation="Slide">
-                            <Border Background="#13131C" BorderBrush="{StaticResource LineStrong}" BorderThickness="1" CornerRadius="12"
+                               AllowsTransparency="True" Focusable="False" PopupAnimation="Fade">
+                            <Border Background="#110C21" BorderBrush="#5B3FA6" BorderThickness="1" CornerRadius="12"
                                     Margin="0,4,0,0" Padding="0,4"
                                     MinWidth="{Binding ActualWidth, RelativeSource={RelativeSource TemplatedParent}}"
                                     MaxHeight="{TemplateBinding MaxDropDownHeight}">
@@ -634,11 +783,11 @@
                 <ControlTemplate TargetType="RadioButton">
                     <Grid>
                         <Border x:Name="Bd" Background="{StaticResource FieldBg}" BorderBrush="{StaticResource Line}" BorderThickness="1.5" CornerRadius="14"/>
-                        <Border x:Name="SelBg" CornerRadius="14" BorderBrush="#8B5CF6" BorderThickness="1.5" Opacity="0">
+                        <Border x:Name="SelBg" CornerRadius="14" BorderBrush="#A855F7" BorderThickness="1.5" Opacity="0" Effect="{StaticResource GlowSoft}">
                             <Border.Background>
                                 <LinearGradientBrush StartPoint="0,0" EndPoint="1,1">
-                                    <GradientStop Color="#1E1738" Offset="0"/>
-                                    <GradientStop Color="#0F1420" Offset="1"/>
+                                    <GradientStop Color="#2A1050" Offset="0"/>
+                                    <GradientStop Color="#0B1630" Offset="1"/>
                                 </LinearGradientBrush>
                             </Border.Background>
                         </Border>
@@ -648,20 +797,19 @@
                                 <ColumnDefinition Width="*"/>
                                 <ColumnDefinition Width="Auto"/>
                             </Grid.ColumnDefinitions>
-                            <Border x:Name="IconBox" Width="40" Height="40" CornerRadius="12" Background="#181824" VerticalAlignment="Top">
-                                <TextBlock x:Name="Icon" Text="{TemplateBinding Tag}" FontFamily="{StaticResource Icons}" FontSize="17"
-                                           HorizontalAlignment="Center" VerticalAlignment="Center" Foreground="{StaticResource Text2}"/>
+                            <Border x:Name="IconBox" Width="40" Height="40" CornerRadius="11" Background="#171230" VerticalAlignment="Top">
+                                <a:Ico x:Name="Icon" Glyph="{TemplateBinding Tag}" Size="19" Foreground="{StaticResource Text2}"/>
                             </Border>
                             <ContentPresenter Grid.Column="1" Margin="14,0,10,0"/>
                             <Border x:Name="Dot" Grid.Column="2" Width="18" Height="18" CornerRadius="9"
                                     BorderBrush="{StaticResource LineStrong}" BorderThickness="1.5" VerticalAlignment="Top">
-                                <Ellipse x:Name="DotFill" Width="8" Height="8" Fill="{StaticResource Accent}" Opacity="0"/>
+                                <Ellipse x:Name="DotFill" Width="8" Height="8" Fill="{StaticResource BrandGradient}" Opacity="0"/>
                             </Border>
                         </Grid>
                     </Grid>
                     <ControlTemplate.Triggers>
                         <Trigger Property="IsMouseOver" Value="True">
-                            <Setter TargetName="Bd" Property="BorderBrush" Value="{StaticResource LineStrong}"/>
+                            <Setter TargetName="Bd" Property="BorderBrush" Value="#5B47A0"/>
                         </Trigger>
                         <Trigger Property="IsChecked" Value="True">
                             <Trigger.EnterActions>
@@ -680,9 +828,9 @@
                                     </Storyboard>
                                 </BeginStoryboard>
                             </Trigger.ExitActions>
-                            <Setter TargetName="IconBox" Property="Background" Value="#251C45"/>
-                            <Setter TargetName="Icon" Property="Foreground" Value="#A78BFA"/>
-                            <Setter TargetName="Dot" Property="BorderBrush" Value="#8B5CF6"/>
+                            <Setter TargetName="IconBox" Property="Background" Value="#3B1A6B"/>
+                            <Setter TargetName="Icon" Property="TextElement.Foreground" Value="#F0ABFC"/>
+                            <Setter TargetName="Dot" Property="BorderBrush" Value="#A855F7"/>
                         </Trigger>
                         <Trigger Property="IsEnabled" Value="False">
                             <Setter Property="Opacity" Value="0.45"/>
@@ -706,7 +854,7 @@
                     <Grid Background="Transparent">
                         <Border x:Name="SelBg" Background="{StaticResource AccentGradient}" CornerRadius="9" Opacity="0"/>
                         <StackPanel Orientation="Horizontal" HorizontalAlignment="Center" Margin="12,8">
-                            <TextBlock Text="{TemplateBinding Tag}" FontFamily="{StaticResource Icons}" FontSize="13" VerticalAlignment="Center"/>
+                            <a:Ico Glyph="{TemplateBinding Tag}" Size="15"/>
                             <ContentPresenter Margin="9,0,0,0" VerticalAlignment="Center"/>
                         </StackPanel>
                     </Grid>
@@ -730,6 +878,7 @@
                                 </BeginStoryboard>
                             </Trigger.ExitActions>
                             <Setter Property="Foreground" Value="{StaticResource OnAccent}"/>
+                            <Setter TargetName="SelBg" Property="Effect" Value="{StaticResource GlowSoft}"/>
                         </Trigger>
                         <Trigger Property="IsEnabled" Value="False">
                             <Setter Property="Opacity" Value="0.45"/>
@@ -760,7 +909,7 @@
                                 </Border>
                                 <ControlTemplate.Triggers>
                                     <Trigger Property="IsMouseOver" Value="True">
-                                        <Setter TargetName="Bd" Property="Background" Value="#13131C"/>
+                                        <Setter TargetName="Bd" Property="Background" Value="#140E28"/>
                                     </Trigger>
                                 </ControlTemplate.Triggers>
                             </ControlTemplate>
@@ -771,15 +920,15 @@
         </Setter>
     </Style>
 
-    <!-- Тонкие полосы прокрутки. -->
+    <!-- Тонкие полосы прокрутки с неоновым ползунком. -->
     <ControlTemplate x:Key="ThumbTemplate" TargetType="Thumb">
-        <Border x:Name="T" Background="#262536" CornerRadius="4" Margin="2"/>
+        <Border x:Name="T" Background="#2A2150" CornerRadius="4" Margin="2"/>
         <ControlTemplate.Triggers>
             <Trigger Property="IsMouseOver" Value="True">
-                <Setter TargetName="T" Property="Background" Value="#3B3954"/>
+                <Setter TargetName="T" Property="Background" Value="#5B3FA6"/>
             </Trigger>
             <Trigger Property="IsDragging" Value="True">
-                <Setter TargetName="T" Property="Background" Value="#5B4BA0"/>
+                <Setter TargetName="T" Property="Background" Value="{StaticResource BrandGradient}"/>
             </Trigger>
         </ControlTemplate.Triggers>
     </ControlTemplate>
@@ -820,9 +969,9 @@
     </Style>
 
     <Style TargetType="ToolTip">
-        <Setter Property="Background" Value="#171722"/>
+        <Setter Property="Background" Value="#140F26"/>
         <Setter Property="Foreground" Value="{StaticResource Text}"/>
-        <Setter Property="BorderBrush" Value="{StaticResource LineStrong}"/>
+        <Setter Property="BorderBrush" Value="#5B3FA6"/>
         <Setter Property="FontSize" Value="12"/>
         <Setter Property="Template">
             <Setter.Value>

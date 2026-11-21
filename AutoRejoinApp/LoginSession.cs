@@ -31,7 +31,7 @@ internal class LoginSession
 
 	private TextBlock statusText;
 
-	private TextBlock statusIcon;
+	private Ico statusIcon;
 
 	private Border statusBar;
 
@@ -394,7 +394,7 @@ internal class LoginSession
 			window.Icon = bitmapFrame;
 		}
 		statusText = Xaml.Find<TextBlock>(window, "StatusText");
-		statusIcon = Xaml.Find<TextBlock>(window, "StatusIcon");
+		statusIcon = Xaml.Find<Ico>(window, "StatusIcon");
 		statusBar = Xaml.Find<Border>(window, "StatusBar");
 		Xaml.Find<TextBlock>(window, "TitleText").Text = L.T("Вход в Roblox — ") + (string.IsNullOrEmpty(request.Name) ? request.Username : request.Name);
 		Xaml.Find<TextBlock>(window, "SubtitleText").Text = L.T("Логин и пароль AutoRejoin вводит сам. Куку заберёт сам, как только вход пройдёт.");
@@ -487,7 +487,7 @@ internal class LoginSession
 		if (statusText != null)
 		{
 			statusText.Text = text;
-			statusIcon.Text = glyph;
+			statusIcon.Glyph = glyph;
 			statusIcon.Foreground = color;
 			statusBar.Background = ((color == Palette.Yellow) ? Palette.YellowSoft : ((color == Palette.Green) ? Palette.GreenSoft : Palette.AccentSoft));
 		}

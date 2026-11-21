@@ -86,7 +86,7 @@ public class MainController
 
 	private readonly TextBlock engineSub;
 
-	private readonly TextBlock engineButtonIcon;
+	private readonly Ico engineButtonIcon;
 
 	private readonly TextBlock engineButtonText;
 
@@ -94,7 +94,7 @@ public class MainController
 
 	private readonly TextBlock bannerText;
 
-	private readonly TextBlock bannerIcon;
+	private readonly Ico bannerIcon;
 
 	private readonly TextBlock statGameValue;
 
@@ -297,7 +297,7 @@ public class MainController
 		root = Find<Border>("Root");
 		banner = Find<Border>("Banner");
 		bannerText = Find<TextBlock>("BannerText");
-		bannerIcon = Find<TextBlock>("BannerIcon");
+		bannerIcon = Find<Ico>("BannerIcon");
 		bannerActionButton = Find<Button>("BannerAction");
 		accountsEmpty = Find<Border>("AccountsEmpty");
 		accountsList = Find<ItemsControl>("AccountsList");
@@ -318,7 +318,7 @@ public class MainController
 		engineDot = Find<Ellipse>("EngineDot");
 		engineGlow = Find<Ellipse>("EngineGlow");
 		engineButton = Find<Button>("EngineButton");
-		engineButtonIcon = Find<TextBlock>("EngineButtonIcon");
+		engineButtonIcon = Find<Ico>("EngineButtonIcon");
 		engineButtonText = Find<TextBlock>("EngineButtonText");
 		statGameValue = Find<TextBlock>("StatGameValue");
 		statGameSub = Find<TextBlock>("StatGameSub");
@@ -777,7 +777,7 @@ public class MainController
 			page.Value.Visibility = (show ? Visibility.Visible : Visibility.Collapsed);
 			if (show && wasHidden)
 			{
-				Anim.SlideIn(page.Value);
+				Anim.PageIn(page.Value);
 			}
 		}
 		if (navs[name].IsChecked != true)
@@ -805,7 +805,7 @@ public class MainController
 		bannerAction = action;
 		bannerActionButton.Visibility = ((actionText == null) ? Visibility.Collapsed : Visibility.Visible);
 		bannerActionButton.Content = actionText;
-		bannerIcon.Text = (warning ? "\ue7ba" : "\ue946");
+		bannerIcon.Glyph = (warning ? "\ue7ba" : "\ue946");
 		bannerIcon.Foreground = (warning ? Palette.Yellow : Palette.Blue);
 		banner.Background = (warning ? Palette.YellowSoft : Palette.BlueSoft);
 		banner.BorderBrush = (warning ? Palette.YellowLine : Palette.BlueLine);
@@ -1229,7 +1229,7 @@ public class MainController
 		engineTitle.Text = text;
 		engineSub.Text = text2;
 		engineButton.Style = (Style)window.FindResource(running ? "Btn" : "BtnPrimary");
-		engineButtonIcon.Text = (running ? "\ue71a" : "\ue768");
+		engineButtonIcon.Glyph = (running ? "\ue71a" : "\ue768");
 		engineButtonText.Text = (running ? L.T("Остановить") : L.T("Запустить"));
 		engineButton.IsEnabled = phase != "stopping";
 		tray.SetRunning(running);

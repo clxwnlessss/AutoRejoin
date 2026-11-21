@@ -6,41 +6,41 @@ namespace AutoRejoinApp;
 
 public static class Palette
 {
-	public static readonly SolidColorBrush Text = Make("#F2F1F8");
+	public static readonly SolidColorBrush Text = Make("#F5F3FF");
 
-	public static readonly SolidColorBrush Text2 = Make("#A3A2B8");
+	public static readonly SolidColorBrush Text2 = Make("#B6ABD9");
 
-	public static readonly SolidColorBrush Text3 = Make("#67667D");
+	public static readonly SolidColorBrush Text3 = Make("#706694");
 
-	public static readonly SolidColorBrush Line = Make("#1D1D2A");
+	public static readonly SolidColorBrush Line = Make("#251D42");
 
-	public static readonly SolidColorBrush Accent = Make("#8B5CF6");
+	public static readonly SolidColorBrush Accent = Make("#A855F7");
 
-	public static readonly SolidColorBrush AccentSoft = Make("#1B1533");
+	public static readonly SolidColorBrush AccentSoft = Make("#26143D");
 
-	public static readonly SolidColorBrush Green = Make("#34D399");
+	public static readonly SolidColorBrush Green = Make("#2EF2A6");
 
-	public static readonly SolidColorBrush GreenSoft = Make("#0D1F1A");
+	public static readonly SolidColorBrush GreenSoft = Make("#0A2A20");
 
 	public static readonly SolidColorBrush Blue = Make("#22D3EE");
 
-	public static readonly SolidColorBrush BlueSoft = Make("#0B1B22");
+	public static readonly SolidColorBrush BlueSoft = Make("#062A33");
 
-	public static readonly SolidColorBrush Yellow = Make("#FBBF24");
+	public static readonly SolidColorBrush Yellow = Make("#FFD23F");
 
-	public static readonly SolidColorBrush YellowSoft = Make("#211B0E");
+	public static readonly SolidColorBrush YellowSoft = Make("#2A2108");
 
-	public static readonly SolidColorBrush Red = Make("#F87171");
+	public static readonly SolidColorBrush Red = Make("#FF5C7A");
 
-	public static readonly SolidColorBrush RedSoft = Make("#231216");
+	public static readonly SolidColorBrush RedSoft = Make("#2E0F1A");
 
-	public static readonly SolidColorBrush BlueLine = Make("#1A3B47");
+	public static readonly SolidColorBrush BlueLine = Make("#0E4552");
 
-	public static readonly SolidColorBrush YellowLine = Make("#4A3812");
+	public static readonly SolidColorBrush YellowLine = Make("#5C4710");
 
-	public static readonly SolidColorBrush Gray = Make("#8E8DA4");
+	public static readonly SolidColorBrush Gray = Make("#9A8FC2");
 
-	public static readonly SolidColorBrush GraySoft = Make("#17171F");
+	public static readonly SolidColorBrush GraySoft = Make("#15122A");
 
 	public static readonly Color BgColor = Color.FromRgb(8, 8, 13);
 
@@ -48,19 +48,19 @@ public static class Palette
 	{
 		{
 			"Green",
-			Make("#4ADE80")
+			Make("#4BFFB4")
 		},
 		{
 			"Red",
-			Make("#F87171")
+			Make("#FF5C7A")
 		},
 		{
 			"Yellow",
-			Make("#FACC15")
+			Make("#FFE14D")
 		},
 		{
 			"DarkYellow",
-			Make("#E5A84B")
+			Make("#F5B94F")
 		},
 		{
 			"Cyan",
@@ -68,25 +68,25 @@ public static class Palette
 		},
 		{
 			"DarkGray",
-			Make("#6B7387")
+			Make("#7A70A3")
 		},
 		{
 			"Gray",
-			Make("#C5CAD6")
+			Make("#CEC6EE")
 		},
 		{
 			"White",
-			Make("#F2F1F8")
+			Make("#F5F3FF")
 		}
 	};
 
 	private static readonly SolidColorBrush[] AvatarColors = new SolidColorBrush[7]
 	{
-		Make("#A78BFA"),
-		Make("#34D399"),
+		Make("#C084FC"),
+		Make("#2EF2A6"),
 		Make("#22D3EE"),
 		Make("#F472B6"),
-		Make("#A78BFA"),
+		Make("#C084FC"),
 		Make("#FB923C"),
 		Make("#22D3EE")
 	};

@@ -51,8 +51,8 @@ public class SettingsPage
 
 	private void BuildDiscord()
 	{
-		StackPanel section = Section("", "Discord");
-		AddRow(section, L.T("Отчёт в Discord"), L.T("Кто в игре 🟢, а кто нет 🔴 — раз в N минут."), Switch(Cfg.discordOn, delegate(bool v)
+		StackPanel section = Section("chat", "Discord");
+		AddRow(section, L.T("Отчёт в Discord"), L.T("Кто в игре, а кто нет — раз в N минут."), Switch(Cfg.discordOn, delegate(bool v)
 		{
 			Cfg.discordOn = v;
 			main.ConfigChanged();
@@ -127,7 +127,7 @@ public class SettingsPage
 
 	private void BuildBot()
 	{
-		StackPanel section = Section("", L.T("Discord-бот"));
+		StackPanel section = Section("bot", L.T("Discord-бот"));
 		botBody = new StackPanel();
 		section.Children.Add(botBody);
 		RenderBot();
@@ -239,7 +239,7 @@ public class SettingsPage
 			try
 			{
 				Clipboard.SetText(code);
-				((Button)s).Content = L.T("Скопировано ✓");
+				((Button)s).Content = L.T("Скопировано");
 			}
 			catch
 			{
@@ -274,7 +274,7 @@ public class SettingsPage
 
 	private void BuildLanguage()
 	{
-		StackPanel section = Section("", "Language / Язык");
+		StackPanel section = Section("lang", "Language / Язык");
 		ChoiceItem[] items = new ChoiceItem[3]
 		{
 			new ChoiceItem
@@ -736,19 +736,27 @@ public class SettingsPage
 		stackPanel2.Orientation = Orientation.Horizontal;
 		stackPanel2.Margin = new Thickness(0.0, 0.0, 0.0, 6.0);
 		StackPanel stackPanel3 = stackPanel2;
-		stackPanel3.Children.Add(new TextBlock
+		// Section header: neon icon tile + title.
+		Ico sectionIcon = Ico.Make(glyph ?? "gear", 17.0, Palette.Make("#E9D5FF"));
+		sectionIcon.Effect = new System.Windows.Media.Effects.DropShadowEffect { Color = Palette.Accent.Color, BlurRadius = 12.0, ShadowDepth = 0.0, Opacity = 0.9 };
+		stackPanel3.Children.Add(new Border
 		{
-			Text = glyph,
-			FontFamily = new FontFamily("Segoe MDL2 Assets"),
-			FontSize = 15.0,
-			Foreground = Palette.Accent,
-			VerticalAlignment = VerticalAlignment.Center
+			Width = 32.0,
+			Height = 32.0,
+			CornerRadius = new CornerRadius(9.0),
+			Background = Palette.Make("#2A1050"),
+			BorderBrush = Palette.Make("#7C3AED"),
+			BorderThickness = new Thickness(1.0),
+			VerticalAlignment = VerticalAlignment.Center,
+			Child = sectionIcon
 		});
 		stackPanel3.Children.Add(new TextBlock
 		{
 			Text = title,
 			Style = (Style)host.FindResource("H2"),
-			Margin = new Thickness(11.0, 0.0, 0.0, 0.0)
+			FontSize = 17.0,
+			VerticalAlignment = VerticalAlignment.Center,
+			Margin = new Thickness(12.0, 0.0, 0.0, 0.0)
 		});
 		stackPanel.Children.Add(stackPanel3);
 		border2.Child = stackPanel;

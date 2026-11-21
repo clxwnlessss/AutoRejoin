@@ -41,7 +41,7 @@ public class AccountDialog
 
 	private readonly TextBlock resultText;
 
-	private readonly TextBlock resultIcon;
+	private readonly Ico resultIcon;
 
 	private readonly TextBlock saveText;
 
@@ -105,7 +105,7 @@ public class AccountDialog
 		mainSwitch = Xaml.Find<CheckBox>(window, "MainSwitch");
 		resultPanel = Xaml.Find<Border>(window, "ResultPanel");
 		resultText = Xaml.Find<TextBlock>(window, "ResultText");
-		resultIcon = Xaml.Find<TextBlock>(window, "ResultIcon");
+		resultIcon = Xaml.Find<Ico>(window, "ResultIcon");
 		saveButton = Xaml.Find<Button>(window, "SaveButton");
 		saveText = Xaml.Find<TextBlock>(window, "SaveText");
 		cancelButton = Xaml.Find<Button>(window, "CancelButton");
@@ -116,7 +116,7 @@ public class AccountDialog
 		{
 			Xaml.Find<TextBlock>(window, "TitleText").Text = existing.name;
 			Xaml.Find<TextBlock>(window, "SubtitleText").Text = "ID " + existing.userId + (existing.UsesPassword ? L.T(" · вход по логину и паролю, хранится зашифрованным") : L.T(" · кука хранится зашифрованной"));
-			Xaml.Find<TextBlock>(window, "HeaderIcon").Text = "\ue70f";
+			Xaml.Find<Ico>(window, "HeaderIcon").Glyph = "\ue70f";
 			Xaml.Find<TextBlock>(window, "CookieLabel").Text = L.T("НОВАЯ КУКА — ТОЛЬКО ЕСЛИ СТАРАЯ УСТАРЕЛА");
 			cookieBox.Tag = L.T("Пусто — оставить текущую куку");
 			cookieBox.Height = 64.0;
@@ -247,7 +247,7 @@ public class AccountDialog
 		resultPanel.Visibility = Visibility.Visible;
 		resultText.Text = text;
 		resultPanel.Background = (error ? Palette.RedSoft : Palette.GreenSoft);
-		resultIcon.Text = (error ? "\ue7ba" : "\ue73e");
+		resultIcon.Glyph = (error ? "\ue7ba" : "\ue73e");
 		resultIcon.Foreground = (error ? Palette.Red : Palette.Green);
 	}
 

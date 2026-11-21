@@ -41,6 +41,32 @@ public static class Anim
 		move.BeginAnimation(TranslateTransform.YProperty, slide);
 	}
 
+	// Смена страницы (3.0): страница въезжает справа с лёгким приближением и проявлением.
+	public static void PageIn(FrameworkElement element)
+	{
+		if (element == null)
+		{
+			return;
+		}
+		TranslateTransform move = new TranslateTransform(36.0, 0.0);
+		ScaleTransform scale = new ScaleTransform(0.985, 0.985);
+		TransformGroup group = new TransformGroup();
+		group.Children.Add(scale);
+		group.Children.Add(move);
+		element.RenderTransformOrigin = new Point(0.5, 0.5);
+		element.RenderTransform = group;
+		IEasingFunction spring = new BackEase
+		{
+			EasingMode = EasingMode.EaseOut,
+			Amplitude = 0.35
+		};
+		element.Opacity = 0.0;
+		element.BeginAnimation(UIElement.OpacityProperty, new DoubleAnimation(0.0, 1.0, TimeSpan.FromSeconds(0.28)));
+		move.BeginAnimation(TranslateTransform.XProperty, new DoubleAnimation(36.0, 0.0, TimeSpan.FromSeconds(0.45)) { EasingFunction = spring });
+		scale.BeginAnimation(ScaleTransform.ScaleXProperty, new DoubleAnimation(0.985, 1.0, TimeSpan.FromSeconds(0.45)) { EasingFunction = Ease });
+		scale.BeginAnimation(ScaleTransform.ScaleYProperty, new DoubleAnimation(0.985, 1.0, TimeSpan.FromSeconds(0.45)) { EasingFunction = Ease });
+	}
+
 	// Короткая «вспышка» текста при смене значения (статистика сверху).
 	public static void Pulse(UIElement element)
 	{
