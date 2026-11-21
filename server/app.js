@@ -84,7 +84,7 @@ function createApp(pool, options = {}) {
 
   // The website (React, on GitHub Pages) calls this API from the browser. Auth is a Bearer token, no cookies,
   // so allowing these origins does not expose anything to other sites.
-  const allowedOrigins = new Set(['https://clxwnlessss.github.io', 'http://localhost:5173', 'http://127.0.0.1:5173', ...(options.origins || [])]);
+  const allowedOrigins = new Set(['https://clxwnlessss.github.io', 'https://autorejoin.is-a.dev', 'http://localhost:5173', 'http://127.0.0.1:5173', ...(options.origins || [])]);
   app.use((req, res, next) => {
     const origin = req.get('origin');
     if (origin && allowedOrigins.has(origin)) {
