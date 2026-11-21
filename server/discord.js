@@ -246,7 +246,7 @@ function createDiscord(pool, options = {}) {
     // Server-management commands (roles, automod, moderation, logs, welcome, tags…)
     if (i.type === 4 && guild.isCommand(i.data.name)) return guild.handleAutocomplete(i);
     if (i.type === 2 && guild.isCommand(i.data.name)) return guild.handleCommand(i, ru);
-    if (i.type === 3 && String(i.data.custom_id).startsWith('rr:')) return guild.handleComponent(i, ru);
+    if (i.type === 3 && /^(rr|bump):/.test(String(i.data.custom_id))) return guild.handleComponent(i, ru);
 
     // Autocomplete for /rejoin account
     if (i.type === 4) {
