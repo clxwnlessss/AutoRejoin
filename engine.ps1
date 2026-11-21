@@ -1381,7 +1381,7 @@ function Update-Trackers {
                 LogPath = $null; Pos = 0; UserId = $null; PlaceId = $null
                 InGame = $false; EverJoined = $false; StateSince = (Get-Date); LastReason = $null
                 HangSince = $null; Announced = $false; ForceReason = $null
-                Attached = $false; AttachedAt = $null; ScriptSeen = $false; ScriptSeenAt = $null
+                Attached = $false; AttachedAt = $null; ScriptSeen = $false; ScriptSeenAt = $null; ScriptVia = $null
                 Compacted = $false; Recompacted = 0; JoinedAt = $null
                 FullscreenTries = 0; FullscreenAt = $null
                 KickCode = $null; KickAt = $null; PrioritySet = $false
@@ -1518,17 +1518,37 @@ function Get-AccountsMainFirst {
 #   javad1khive_alive_<UserId>.txt   — пульс, раз в 10 сек;
 #   javad1khive_error_<UserId>.txt   — Роблокс показал ошибку (кик, дисконнект и т.п.), внутри её текст.
 # Список файлов читаем не чаще раза в 2 сек. Возвращает время записи файла или $null.
-function Get-ScriptFileTime([string]$Kind, $Account) {
+# Atlas, запущенный напрямую (без нашего загрузчика), этих файлов не пишет, но сам пишет в workspace
+# atlas-<ник>.json (пресет при загрузке) и atlascache-<ник>.json (таймеры мобов, диспенсеров, материалов) —
+# их тоже собираем: по ним видно, что скрипт в окне есть (см. Get-AtlasFileTime).
+function Update-WorkspaceFiles {
     $now = Get-Date
-    if (($now - $script:WorkspaceScanAt).TotalSeconds -ge 2) {
-        $script:WorkspaceScanAt = $now
-        $files = @{}
-        foreach ($file in @(Get-ChildItem -LiteralPath $Workspace -Filter 'javad1khive_*.txt' -File -ErrorAction SilentlyContinue)) {
+    if (($now - $script:WorkspaceScanAt).TotalSeconds -lt 2) { return }
+    $script:WorkspaceScanAt = $now
+    $files = @{}
+    foreach ($filter in @('javad1khive_*.txt', 'atlas*.json')) {
+        foreach ($file in @(Get-ChildItem -LiteralPath $Workspace -Filter $filter -File -ErrorAction SilentlyContinue)) {
             $files[$file.Name] = $file.LastWriteTime
         }
-        $script:WorkspaceFiles = $files
     }
+    $script:WorkspaceFiles = $files
+}
+
+function Get-ScriptFileTime([string]$Kind, $Account) {
+    Update-WorkspaceFiles
     return $script:WorkspaceFiles["javad1khive_${Kind}_$($Account.UserId).txt"]
+}
+
+# Последняя запись Atlas в workspace для этого аккаунта (по нику Роблокса) или $null.
+function Get-AtlasFileTime($Account) {
+    if (-not $Account.Name) { return $null }
+    Update-WorkspaceFiles
+    $latest = $null
+    foreach ($name in @("atlas-$($Account.Name).json", "atlascache-$($Account.Name).json")) {
+        $time = $script:WorkspaceFiles[$name]
+        if ($time -and (-not $latest -or $time -gt $latest)) { $latest = $time }
+    }
+    return $latest
 }
 
 function Read-ScriptFile([string]$Kind, $Account) {
@@ -1549,7 +1569,18 @@ function Update-ScriptState($Account) {
 
     if (-not $tracker.ScriptSeen) {
         $started = Get-ScriptFileTime 'started' $Account
-        if ($started -and $started -ge $since) {
+        # Atlas, запущенный без нашего загрузчика: файла started нет, но Atlas пишет свои файлы после старта окна.
+        $atlas = Get-AtlasFileTime $Account
+        if (-not ($started -and $started -ge $since) -and $atlas -and $atlas -ge $tracker.Start.AddSeconds(5)) {
+            $tracker.ScriptSeen = $true
+            $tracker.ScriptSeenAt = Get-Date
+            $tracker.ScriptVia = 'atlas'
+            Set-TrackerAttached $tracker
+            $script:LastReadyAt = Get-Date
+            $Account.NoScript = 0
+            Write-Status 'скрипт работает (Atlas пишет свои файлы в workspace Потассиума).' Green $Account
+        }
+        elseif ($started -and $started -ge $since) {
             $tracker.ScriptSeen = $true
             $tracker.ScriptSeenAt = Get-Date
             Set-TrackerAttached $tracker
@@ -1697,6 +1728,8 @@ function Test-ScriptWaited($Account, $Tracker) {
 function Test-ScriptMissing($Account) {
     $tracker = $Account.Tracker
     if ($ScriptTimeout -le 0 -or $NoPotassium -or -not $tracker -or -not $tracker.ScriptSeen) { return $false }
+    # Atlas без нашего загрузчика пульса не пишет — по тишине такое окно не перезапускаем.
+    if ($tracker.ScriptVia -eq 'atlas' -and -not (Get-ScriptFileTime 'alive' $Account)) { return $false }
     $limit = $ScriptTimeout * [Math]::Pow(2, [Math]::Min($Account.NoScript, 3))
     $last = $tracker.ScriptSeenAt
     $pulse = Get-ScriptFileTime 'alive' $Account
