@@ -93,7 +93,7 @@ export default function Home() {
               <a href={DISCORD} target="_blank" rel="noreferrer" className="btn btn-ghost">Discord</a>
             </div>
           </div>
-          <img className="shot" src={`${B}top.png`} alt={t('Топ АФК в программе', 'AFK top in the app')} loading="lazy" />
+          <img className="shot" src={`${B}${lang === 'ru' ? 'top.png' : 'top-en.png'}`} alt={t('Топ АФК в программе', 'AFK top in the app')} loading="lazy" width="1140" height="760" />
         </div>
       </section>
     </>
