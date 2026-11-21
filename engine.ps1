@@ -1531,6 +1531,10 @@ function Update-WorkspaceFiles {
             $files[$file.Name] = $file.LastWriteTime
         }
     }
+    # Пресеты Atlas (atlas\<пресет>.json) — Atlas сохраняет пресет аккаунта, как только загрузился в окне.
+    foreach ($file in @(Get-ChildItem -LiteralPath (Join-Path $Workspace 'atlas') -Filter '*.json' -File -ErrorAction SilentlyContinue)) {
+        $files["atlas\$($file.Name)"] = $file.LastWriteTime
+    }
     $script:WorkspaceFiles = $files
 }
 
@@ -1544,7 +1548,17 @@ function Get-AtlasFileTime($Account) {
     if (-not $Account.Name) { return $null }
     Update-WorkspaceFiles
     $latest = $null
-    foreach ($name in @("atlas-$($Account.Name).json", "atlascache-$($Account.Name).json")) {
+    $names = @("atlas-$($Account.Name).json", "atlascache-$($Account.Name).json")
+    # В atlas-<ник>.json Atlas пишет имя пресета этого аккаунта ("Preset 3.json"): пресет он сохраняет сразу при
+    # загрузке, а atlascache — только когда сработает таймер, иногда через много минут.
+    if ($script:WorkspaceFiles["atlas-$($Account.Name).json"]) {
+        $preset = try { ([IO.File]::ReadAllText((Join-Path $Workspace "atlas-$($Account.Name).json"))).Trim() } catch { '' }
+        if ($preset -and $preset -notmatch '[\\/:]') {
+            if ($preset -notmatch '\.json$') { $preset += '.json' }
+            $names += "atlas\$preset"
+        }
+    }
+    foreach ($name in $names) {
         $time = $script:WorkspaceFiles[$name]
         if ($time -and (-not $latest -or $time -gt $latest)) { $latest = $time }
     }
