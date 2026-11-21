@@ -3,7 +3,7 @@
 const assert = require('assert');
 const { newDb } = require('pg-mem');
 const { initDb } = require('./app');
-const { createGuildBot, parseDuration, fillTemplate, detectViolation, defaultConfig, parseDisboard, dueBumps } = require('./guild');
+const { createGuildBot, parseDuration, fillTemplate, detectViolation, defaultConfig, parseDisboard, parseDiscadia, dueBumps } = require('./guild');
 
 (async () => {
   let passed = 0;
@@ -149,38 +149,43 @@ const { createGuildBot, parseDuration, fillTemplate, detectViolation, defaultCon
   ok(parseDisboard('Bump done! :thumbsup:\nCheck it out on DISBOARD.').ok && parseDisboard('Сервер поднят! 👍').ok, 'DISBOARD: успешный бамп (en/ru)');
   ok(parseDisboard('<@1>, Please wait another 87 minutes until the server can be bumped').waitMinutes === 87 && parseDisboard('Подождите ещё 15 минут').waitMinutes === 15, 'DISBOARD: «подожди N минут»');
   ok(parseDisboard('Welcome to DISBOARD') === null, 'DISBOARD: посторонний ответ не считается');
+  const d1 = parseDiscadia('Auto Rejoin bumped. +1 Boost earned. 1 Boost this month · Next bump <t:1795300000:R>');
+  const d2 = parseDiscadia('Already bumped. You can bump again <t:1795310000:R>.');
+  ok(d1.ok && d1.nextAt === 1795300000000 && !d2.ok && d2.nextAt === 1795310000000 && parseDiscadia('Invite changed') === null, 'Discadia: бамп и «уже бампнут» со временем следующего');
   let clock = new Date('2026-11-21T10:00:00Z').getTime();
   const bb = createGuildBot(pool, { api: fake, now: () => new Date(clock) });
   const bcmd = (s, options = []) => bb.handleCommand({ type: 2, guild_id: 'G1', channel_id: 'C1', member: mod, data: { name: 'bumps', options: [{ type: 1, name: s, options }] } }, true);
-  r = await bcmd('setup', [opt('channel', 'BUMP'), opt('role', 'BUMPER'), opt('discadia', 'https://evil.example/x')]);
-  ok(/discadia\.com/.test(r.data.content), 'бамп: чужая ссылка вместо Discadia отклонена');
-  r = await bcmd('setup', [opt('channel', 'BUMP'), opt('role', 'BUMPER'), opt('discadia', 'https://discadia.com/bump/autorejoin/')]);
+  r = await bcmd('setup', [opt('channel', 'BUMP'), opt('role', 'BUMPER')]);
   ok(/<#BUMP>/.test(r.data.content) && dueBumps(await bb.getConfig('G1'), clock).join() === 'disboard,discadia', 'бамп: настроен, первые напоминания сразу');
   calls.length = 0;
   await bb._bumpTick();
   const rem1 = calls.filter((c) => c.method === 'POST' && c.path === '/channels/BUMP/messages');
-  ok(rem1.length === 2 && /<@&BUMPER>/.test(rem1[0].body.content) && /\/bump/.test(rem1[0].body.content) && rem1[0].body.allowed_mentions.roles[0] === 'BUMPER', 'бамп: напоминание DISBOARD с пингом роли');
-  ok(rem1[1].body.components[0].components[0].url === 'https://discadia.com/bump/autorejoin/' && rem1[1].body.components[0].components[1].custom_id === 'bump:discadia', 'бамп: напоминание Discadia со ссылкой и кнопкой');
+  ok(rem1.length === 2 && /<@&BUMPER>/.test(rem1[0].body.content) && /\/bump/.test(rem1[0].body.content) && /DISBOARD/.test(rem1[0].body.content) && /Discadia/.test(rem1[1].body.content) && rem1[0].body.allowed_mentions.roles[0] === 'BUMPER', 'бамп: напоминания DISBOARD и Discadia с пингом роли');
   calls.length = 0;
   await bb._bumpTick();
   ok(calls.length === 0, 'бамп: повторно не напоминает');
   const sentMsgs = [];
-  const disboardMsg = (text, user) => ({ guild: { id: 'G1' }, author: { id: '302050872383242240', bot: true }, content: '', embeds: [{ description: text }],
+  const botMsg = (botId, text, user) => ({ guild: { id: 'G1' }, author: { id: botId, bot: true }, content: '', embeds: [{ description: text }],
     interactionMetadata: user ? { user: { id: user } } : null, channel: { send: async (m) => { sentMsgs.push(m); } } });
-  await bb._onDisboard(disboardMsg('Bump done! :thumbsup:', 'U7'));
+  const DB = '302050872383242240', DC = '1222548162741538938';
+  await bb._onBumpBot(botMsg(DB, 'Bump done! :thumbsup:', 'U7'));
   let bc = await bb.getConfig('G1');
-  ok(bc.bump.counts.U7 === 1 && Date.parse(bc.bump.disboardNext) === clock + 2 * 3600000 && /<@U7>.*Бампов: \*\*1\*\*/.test(sentMsgs[0].content), 'бамп: успешный /bump — спасибо, счёт, следующий через 2 ч');
+  ok(bc.bump.counts.U7 === 1 && Date.parse(bc.bump.disboardNext) === clock + 2 * 3600000 && /<@U7>.*DISBOARD.*Бампов: \*\*1\*\*/.test(sentMsgs[0].content), 'бамп: успешный /bump DISBOARD — спасибо, счёт, следующий через 2 ч');
   ok(calls.some((c) => c.method === 'DELETE' && c.path === '/channels/BUMP/messages/MSG'), 'бамп: старое напоминание удалено');
-  await bb._onDisboard(disboardMsg('Please wait another 30 minutes until the server can be bumped', 'U8'));
+  await bb._onBumpBot(botMsg(DB, 'Please wait another 30 minutes until the server can be bumped', 'U8'));
   bc = await bb.getConfig('G1');
   ok(Date.parse(bc.bump.disboardNext) === clock + 30 * 60000 && !bc.bump.counts.U8, 'бамп: «подожди 30 минут» — напоминание переносится, не засчитывается');
   clock += 31 * 60000;
   calls.length = 0;
   await bb._bumpTick();
   ok(calls.filter((c) => c.path === '/channels/BUMP/messages').length === 1, 'бамп: через 30 мин снова напоминает о DISBOARD');
-  r = await bb.handleComponent({ type: 3, guild_id: 'G1', member: { user: { id: 'U9' }, roles: [] }, data: { custom_id: 'bump:discadia' } }, true);
+  const nextTs = Math.floor(clock / 1000) + 86400;
+  await bb._onBumpBot(botMsg(DC, `Auto Rejoin bumped. +1 Boost earned. · Next bump <t:${nextTs}:R>`, 'U9'));
   bc = await bb.getConfig('G1');
-  ok(r.type === 7 && r.data.components.length === 0 && bc.bump.counts.U9 === 1 && Date.parse(bc.bump.discadiaNext) === clock + 24 * 3600000, 'бамп: «Я бампнул» на Discadia — счёт и следующий через 24 ч');
+  ok(bc.bump.counts.U9 === 1 && Date.parse(bc.bump.discadiaNext) === nextTs * 1000 && /Discadia/.test(sentMsgs[1].content), 'бамп: Discadia — спасибо, счёт, следующий по времени из ответа');
+  await bb._onBumpBot(botMsg(DC, `Already bumped. You can bump again <t:${nextTs - 3600}:R>.`, 'U9'));
+  bc = await bb.getConfig('G1');
+  ok(bc.bump.counts.U9 === 1 && Date.parse(bc.bump.discadiaNext) === (nextTs - 3600) * 1000, 'бамп: Discadia «уже бампнут» — время уточнено, не засчитывается');
   r = await bcmd('status');
   ok(/1\. <@U7> — 1/.test(r.data.content) && /Discadia: следующий/.test(r.data.content), 'бамп: статус с топом бамперов');
   await bcmd('off');

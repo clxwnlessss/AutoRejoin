@@ -3,7 +3,8 @@
 // roles (autorole, button panels, reaction roles), automod, moderation with cases, logs, welcome/leave,
 // tags, embeds, suggestions, reminders and bump reminders (DISBOARD every 2 h, Discadia every 24 h).
 // Bots can't run another bot's /bump (and DISBOARD bans automated bumping), so the bot does everything around it:
-// sees a successful /bump, thanks and counts the bumper, and pings the bump role the moment the next bump is possible.
+// sees every /bump reply of DISBOARD and Discadia, thanks and counts the bumper, and pings the bump role the moment
+// the next bump is possible.
 // Slash commands and buttons arrive over HTTP interactions (discord.js handles the rest: member joins,
 // messages, reactions — these need a gateway connection). Guild settings are cached in memory so events
 // never wait for the (sleepy, free) database.
@@ -34,12 +35,13 @@ function defaultConfig() {
     welcome: { channel: null, message: null, leaveChannel: null, leaveMessage: null, dm: null },
     tags: {},
     suggestChannel: null,
-    bump: { channel: null, role: null, discadiaUrl: null, disboardNext: null, disboardReminded: false, disboardMsg: null,
+    bump: { channel: null, role: null, disboardNext: null, disboardReminded: false, disboardMsg: null,
       discadiaNext: null, discadiaReminded: false, discadiaMsg: null, counts: {} }
   };
 }
 
 const DISBOARD_ID = '302050872383242240';
+const DISCADIA_ID = '1222548162741538938';
 const DISBOARD_COOLDOWN = 2 * 3600 * 1000;
 const DISCADIA_COOLDOWN = 24 * 3600 * 1000;
 
@@ -52,13 +54,24 @@ function parseDisboard(text) {
   return null;
 }
 
+// What a Discadia /bump reply says: "Auto Rejoin bumped. … Next bump <t:…:R>" → { ok, nextAt },
+// "Already bumped. You can bump again <t:…:R>." → { nextAt }. nextAt is ms or null.
+function parseDiscadia(text) {
+  const t = String(text || '');
+  const ts = t.match(/<t:(\d+)(?::\w)?>/);
+  const nextAt = ts ? Number(ts[1]) * 1000 : null;
+  if (/already bumped|уже/i.test(t)) return { nextAt };
+  if (/bumped|бампнут|поднят/i.test(t)) return { ok: true, nextAt };
+  return null;
+}
+
 // Which bump reminders are due now: ['disboard', 'discadia'].
 function dueBumps(cfg, t) {
   const b = cfg && cfg.bump;
   if (!b || !b.channel) return [];
   const due = [];
   if (b.disboardNext && !b.disboardReminded && t >= Date.parse(b.disboardNext)) due.push('disboard');
-  if (b.discadiaUrl && b.discadiaNext && !b.discadiaReminded && t >= Date.parse(b.discadiaNext)) due.push('discadia');
+  if (b.discadiaNext && !b.discadiaReminded && t >= Date.parse(b.discadiaNext)) due.push('discadia');
   return due;
 }
 
@@ -234,7 +247,7 @@ const GUILD_COMMANDS = [
   { name: 'bumps', description: 'Bump reminders: DISBOARD every 2 h, Discadia every 24 h', description_localizations: ru('Напоминания о бампе: DISBOARD раз в 2 ч, Discadia раз в 24 ч'),
     default_member_permissions: String(PERM.MANAGE_GUILD), ...G, options: [
       o(SUB, 'setup', 'Where to remind and whom to ping', { options: [o(CHANNEL, 'channel', 'Channel for reminders', { required: true, ...textChannel }),
-        o(ROLE, 'role', 'Role to ping (e.g. Bumper)'), o(STR, 'discadia', 'Discadia bump page link (optional)', { max_length: 200 })] }),
+        o(ROLE, 'role', 'Role to ping (e.g. Bumper)')] }),
       o(SUB, 'status', 'When the next bumps are and who bumps the most'),
       o(SUB, 'off', 'Turn bump reminders off')] },
   { name: 'remind', description: 'Remind me later', description_localizations: ru('Напомнить позже'), integration_types: [0, 1], contexts: [0, 1, 2], options: [
@@ -561,18 +574,15 @@ function createGuildBot(pool, options = {}) {
         case 'bumps': {
           const ts = (iso) => (iso ? `<t:${Math.floor(Date.parse(iso) / 1000)}:R>` : '—');
           if (sub === 'setup') {
-            const url = m.discadia ? String(m.discadia).trim() : null;
-            if (url && !/^https:\/\/(www\.)?(discadia\.com|dcd\.gg)\//i.test(url)) return reply(T(isRu, '❌ Нужна ссылка на discadia.com.', '❌ Needs a discadia.com link.'));
-            const cfg = await updateConfig(gid, (c) => {
+            await updateConfig(gid, (c) => {
               c.bump.channel = m.channel; c.bump.role = m.role || null;
-              if (url) c.bump.discadiaUrl = url;
               const iso = now().toISOString();
               if (!c.bump.disboardNext) { c.bump.disboardNext = iso; c.bump.disboardReminded = false; }
-              if (c.bump.discadiaUrl && !c.bump.discadiaNext) { c.bump.discadiaNext = iso; c.bump.discadiaReminded = false; }
+              if (!c.bump.discadiaNext) { c.bump.discadiaNext = iso; c.bump.discadiaReminded = false; }
             });
             return reply(T(isRu,
-              `✅ Напоминания о бампе в <#${m.channel}>${m.role ? `, пингую <@&${m.role}>` : ''}.\n• DISBOARD: вижу каждый успешный \`/bump\` и напоминаю через 2 ч.${cfg.bump.discadiaUrl ? '\n• Discadia: напоминаю раз в 24 ч, кнопка «Я бампнул» запускает отсчёт заново.' : '\n• Discadia: добавь ссылку опцией `discadia`, чтобы напоминать и о ней.'}`,
-              `✅ Bump reminders in <#${m.channel}>${m.role ? `, pinging <@&${m.role}>` : ''}.\n• DISBOARD: I see every successful \`/bump\` and remind 2 h later.${cfg.bump.discadiaUrl ? '\n• Discadia: reminder every 24 h, the "I bumped" button restarts the timer.' : '\n• Discadia: add the link with the `discadia` option to get reminders for it too.'}`));
+              `✅ Напоминания о бампе в <#${m.channel}>${m.role ? `, пингую <@&${m.role}>` : ''}.\nВижу каждый \`/bump\` у **DISBOARD** (раз в 2 ч) и **Discadia** (раз в 24 ч): благодарю бампера, считаю бампы и напоминаю, как только можно бампнуть снова.`,
+              `✅ Bump reminders in <#${m.channel}>${m.role ? `, pinging <@&${m.role}>` : ''}.\nI see every \`/bump\` for **DISBOARD** (every 2 h) and **Discadia** (every 24 h): I thank the bumper, count bumps and remind as soon as the next bump is possible.`));
           }
           const cfg = await getConfig(gid);
           if (sub === 'off') {
@@ -582,8 +592,8 @@ function createGuildBot(pool, options = {}) {
           const b = cfg.bump;
           const top = Object.entries(b.counts).sort((x, y) => y[1] - x[1]).slice(0, 10).map(([u, n], k) => `${k + 1}. <@${u}> — ${n}`).join('\n');
           return reply(T(isRu,
-            `**Бамп** ${b.channel ? `в <#${b.channel}>` : '— выключен'}\nDISBOARD: следующий ${ts(b.disboardNext)}\nDiscadia: ${b.discadiaUrl ? `следующий ${ts(b.discadiaNext)}` : 'не настроен'}\n\n**Топ бамперов**\n${top || '—'}`,
-            `**Bump** ${b.channel ? `in <#${b.channel}>` : '— off'}\nDISBOARD: next ${ts(b.disboardNext)}\nDiscadia: ${b.discadiaUrl ? `next ${ts(b.discadiaNext)}` : 'not set up'}\n\n**Top bumpers**\n${top || '—'}`));
+            `**Бамп** ${b.channel ? `в <#${b.channel}>` : '— выключен'}\nDISBOARD: следующий ${ts(b.disboardNext)}\nDiscadia: следующий ${ts(b.discadiaNext)}\n\n**Топ бамперов**\n${top || '—'}`,
+            `**Bump** ${b.channel ? `in <#${b.channel}>` : '— off'}\nDISBOARD: next ${ts(b.disboardNext)}\nDiscadia: next ${ts(b.discadiaNext)}\n\n**Top bumpers**\n${top || '—'}`));
         }
         case 'remind': {
           const ms = parseDuration(m.in);
@@ -627,22 +637,8 @@ function createGuildBot(pool, options = {}) {
     return { type: 8, data: { choices: Object.keys(cfg.tags).filter((n) => n.includes(q)).sort().slice(0, 25).map((n) => ({ name: n, value: n })) } };
   }
 
-  // "I bumped" under the Discadia reminder: count the bumper, restart the 24 h timer, close the reminder.
-  async function bumpedDiscadia(i, isRu) {
-    const gid = i.guild_id, uid = i.member.user.id;
-    const cfg = await updateConfig(gid, (c) => {
-      c.bump.discadiaNext = new Date(now().getTime() + DISCADIA_COOLDOWN).toISOString();
-      c.bump.discadiaReminded = false; c.bump.discadiaMsg = null;
-      c.bump.counts[uid] = (c.bump.counts[uid] || 0) + 1;
-    });
-    const next = Math.floor(Date.parse(cfg.bump.discadiaNext) / 1000);
-    return { type: 7, data: { content: T(isRu, `✅ <@${uid}> бампнул сервер на Discadia — спасибо! Бампов: **${cfg.bump.counts[uid]}**. Следующий <t:${next}:R>.`,
-      `✅ <@${uid}> bumped the server on Discadia — thanks! Bumps: **${cfg.bump.counts[uid]}**. Next one <t:${next}:R>.`), components: [], allowed_mentions: { parse: [] } } };
-  }
-
-  // Role panel button: rr:<t|u>:<roleId>; bump:discadia
+  // Role panel button: rr:<t|u>:<roleId>
   async function handleComponent(i, isRu) {
-    if (String(i.data.custom_id) === 'bump:discadia') return bumpedDiscadia(i, isRu);
     const [, mode, roleId] = String(i.data.custom_id).split(':');
     const gid = i.guild_id, uid = i.member.user.id;
     const has = (i.member.roles || []).includes(roleId);
@@ -686,11 +682,8 @@ function createGuildBot(pool, options = {}) {
     const cfg = configs.get(gid);
     const b = cfg.bump;
     const ping = b.role ? `<@&${b.role}> ` : '';
-    const msg = kind === 'disboard'
-      ? { content: `${ping}⏰ **Пора бампнуть сервер!** Напиши \`/bump\` (команда DISBOARD) — сервер поднимется в поиске.\n-# Time to bump! Type \`/bump\` (DISBOARD command).` }
-      : { content: `${ping}⏰ **Пора бампнуть сервер на Discadia!** Открой страницу, нажми Bump, потом кнопку ниже.\n-# Time to bump on Discadia: open the page, press Bump, then the button below.`,
-          components: [{ type: 1, components: [{ type: 2, style: 5, label: 'Discadia', emoji: { name: '🚀' }, url: b.discadiaUrl },
-            { type: 2, style: 3, label: 'Я бампнул / I bumped', emoji: { name: '✅' }, custom_id: 'bump:discadia' }] }] };
+    const who = kind === 'disboard' ? 'DISBOARD' : 'Discadia';
+    const msg = { content: `${ping}⏰ **Пора бампнуть сервер на ${who}!** Напиши \`/bump\` и выбери **${who}** — сервер поднимется в поиске.\n-# Time to bump on ${who}! Type \`/bump\` and pick ${who}.` };
     let sent = null;
     try { sent = await api('POST', `/channels/${b.channel}/messages`, { ...msg, allowed_mentions: { roles: b.role ? [b.role] : [] } }); }
     catch (e) { console.error('bump reminder failed:', e.message); }
@@ -705,33 +698,46 @@ function createGuildBot(pool, options = {}) {
       for (const kind of dueBumps(cfg, t)) await remindBump(gid, kind).catch((e) => console.error('bump tick:', e.message));
     }
   }
-  // A DISBOARD reply in any channel: successful bump → thank and count the bumper, next reminder in 2 h;
-  // "wait N minutes" → move the reminder to when it's actually possible.
-  async function onDisboard(msg) {
+  // A DISBOARD / Discadia reply in any channel. Successful bump → thank and count the bumper, remind when the
+  // next one is possible; "too early" → move the reminder to the time the bot names.
+  async function onBumpBot(msg) {
     const cfg = configs.get(msg.guild.id);
     if (!cfg || !cfg.bump.channel) return;
-    const text = [msg.content, ...(msg.embeds || []).map((e) => `${e.title || ''}\n${e.description || ''}`)].join('\n');
-    const r = parseDisboard(text);
-    if (!r) return;
+    const kind = msg.author.id === DISBOARD_ID ? 'disboard' : 'discadia';
+    const text = [msg.content, ...(msg.embeds || []).map((e) => `${e.title || ''}\n${e.description || ''}\n${(e.footer && e.footer.text) || ''}`)].join('\n');
     const t = now().getTime();
-    if (r.waitMinutes) {
-      const next = new Date(t + r.waitMinutes * 60000).toISOString();
-      await updateConfig(msg.guild.id, (c) => { c.bump.disboardNext = next; c.bump.disboardReminded = false; });
+    let ok = false, nextAt = null;
+    if (kind === 'disboard') {
+      const r = parseDisboard(text);
+      if (!r) return;
+      ok = !!r.ok;
+      nextAt = r.ok ? t + DISBOARD_COOLDOWN : t + r.waitMinutes * 60000;
+    } else {
+      const r = parseDiscadia(text);
+      if (!r) return;
+      ok = !!r.ok;
+      nextAt = r.nextAt || (r.ok ? t + DISCADIA_COOLDOWN : null);
+      if (!nextAt) return;
+    }
+    const next = new Date(nextAt).toISOString();
+    const nextKey = kind + 'Next', remKey = kind + 'Reminded', msgKey = kind + 'Msg';
+    if (!ok) {
+      await updateConfig(msg.guild.id, (c) => { c.bump[nextKey] = next; c.bump[remKey] = false; });
       return;
     }
     const meta = msg.interactionMetadata || msg.interaction;
     const uid = meta && meta.user && meta.user.id;
-    const old = cfg.bump.disboardMsg;
-    const next = new Date(t + DISBOARD_COOLDOWN).toISOString();
+    const old = cfg.bump[msgKey];
     const c2 = await updateConfig(msg.guild.id, (c) => {
-      c.bump.disboardNext = next; c.bump.disboardReminded = false; c.bump.disboardMsg = null;
+      c.bump[nextKey] = next; c.bump[remKey] = false; c.bump[msgKey] = null;
       if (uid) c.bump.counts[uid] = (c.bump.counts[uid] || 0) + 1;
     });
     if (old) api('DELETE', `/channels/${cfg.bump.channel}/messages/${old}`).catch(() => {});
-    const when = `<t:${Math.floor(Date.parse(next) / 1000)}:R>`;
+    const who = kind === 'disboard' ? 'DISBOARD' : 'Discadia';
+    const when = `<t:${Math.floor(nextAt / 1000)}:R>`;
     const content = uid
-      ? `🙏 <@${uid}>, спасибо за бамп! Бампов: **${c2.bump.counts[uid]}**. Следующий — ${when}, я напомню.\n-# Thanks for bumping! Next one ${when}.`
-      : `🙏 Спасибо за бамп! Следующий — ${when}, я напомню.\n-# Thanks for bumping! Next one ${when}.`;
+      ? `🙏 <@${uid}>, спасибо за бамп на ${who}! Бампов: **${c2.bump.counts[uid]}**. Следующий — ${when}, я напомню.\n-# Thanks for bumping on ${who}! Next one ${when}.`
+      : `🙏 Спасибо за бамп на ${who}! Следующий — ${when}, я напомню.\n-# Thanks for bumping on ${who}! Next one ${when}.`;
     await msg.channel.send({ content, allowedMentions: { parse: [] } }).catch(() => {});
   }
 
@@ -776,7 +782,7 @@ function createGuildBot(pool, options = {}) {
   }
 
   async function onMessage(msg) {
-    if (msg.guild && msg.author.id === DISBOARD_ID) return onDisboard(msg);
+    if (msg.guild && (msg.author.id === DISBOARD_ID || msg.author.id === DISCADIA_ID)) return onBumpBot(msg);
     if (!msg.guild || msg.author.bot || msg.webhookId) return;
     const cfg = configs.get(msg.guild.id);
     if (!cfg || !cfg.automod.enabled) return;
@@ -873,7 +879,7 @@ function createGuildBot(pool, options = {}) {
   }
 
   return { handleCommand, handleComponent, handleAutocomplete, startGateway, warm, getConfig, isCommand: (n) => GUILD_COMMAND_NAMES.has(n), _detect: detectViolation,
-    _onDisboard: onDisboard, _bumpTick: bumpTick };
+    _onBumpBot: onBumpBot, _bumpTick: bumpTick };
 }
 
-module.exports = { createGuildBot, GUILD_SCHEMA, GUILD_COMMANDS, parseDuration, fillTemplate, detectViolation, defaultConfig, parseDisboard, dueBumps, PERM };
+module.exports = { createGuildBot, GUILD_SCHEMA, GUILD_COMMANDS, parseDuration, fillTemplate, detectViolation, defaultConfig, parseDisboard, parseDiscadia, dueBumps, PERM };
