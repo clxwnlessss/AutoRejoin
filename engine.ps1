@@ -85,7 +85,8 @@ $MainMaxBackoff  = 2     # мейн при неудачном заходе пр�
 $MainFirstMax    = 90    # пока мейн не в игре со скриптом, остальные окна не запускаются — но не дольше стольких сек подряд
                          # (мейн не заходит из-за бана или куки — хелперы не должны стоять)
 
-$NoPotassium     = $false # не запускать Потассиум самому и не следить за ним
+$NoPotassium     = $false # не запускать экзекьютор самому и не следить за ним
+$Executor        = 'potassium' # чем подключать скрипт к окнам: 'potassium' или 'real' (Real Executor, projectreal.gg)
 $AutoReboot      = $false # новые окна умирают сразу после старта (лечится только перезагрузкой) — перезагрузить ПК сразу,
                           # не чаще раза в 30 минут; после перезагрузки всё запустится само (нужен автозапуск приложения)
 $ViaBootstrapper = $false # запускать Роблокс через Froststrap/Bloxstrap (медленнее)
@@ -112,7 +113,8 @@ $LogDir = Join-Path $env:LOCALAPPDATA 'Roblox\logs'
 $OwnLog = Join-Path $DataDir 'rejoin.log'
 $ConfigFile = Join-Path $DataDir 'config.json'
 $VaultFile = Join-Path $DataDir 'vault.dat'
-$Workspace = Join-Path $env:LOCALAPPDATA 'Potassium\workspace'
+$Workspace = Join-Path $env:LOCALAPPDATA 'Potassium\workspace'   # у REAL — Real\workspace (Set-EngineConfig)
+$RealDir = Join-Path $env:LOCALAPPDATA 'Real'                       # REAL ставится сюда (Update.exe, autoexec, workspace)
 $PotassiumPathFile = Join-Path $DataDir 'potassium.path'   # где Потассиум был в прошлый раз
 $LinkCacheFile = Join-Path $DataDir 'links.cache.json'     # share-ссылка -> placeId + linkCode (Роблокс часто отвечает 500)
 $BtidFile = Join-Path $DataDir 'btid.txt'                  # browserTrackerId этого компьютера (один на все окна)
@@ -1592,7 +1594,7 @@ function Update-ScriptState($Account) {
             Set-TrackerAttached $tracker
             $script:LastReadyAt = Get-Date
             $Account.NoScript = 0
-            Write-Status 'скрипт работает (Atlas пишет свои файлы в workspace Потассиума).' Green $Account
+            Write-Status "скрипт работает (Atlas пишет свои файлы в workspace $(if ($Executor -eq 'real') { 'REAL' } else { 'Потассиума' }))." Green $Account
         }
         elseif ($started -and $started -ge $since) {
             $tracker.ScriptSeen = $true
@@ -1874,6 +1876,7 @@ function Start-Potassium([string]$Path) {
 # его загрузки здесь (ждёт Wait-PotassiumWarmup перед первым окном) — при старте он грузится, пока ждём интернет.
 function Initialize-Potassium([switch]$NoWait) {
     if ($NoPotassium) { return }
+    if ($Executor -eq 'real') { Initialize-Real -NoWait:$NoWait; return }
     $path = Get-PotassiumExe
     if (Get-Process -Name Potassium -ErrorAction SilentlyContinue) { Write-Status 'Потассиум уже открыт.' Green; return }
     if (-not $path) {
@@ -1905,6 +1908,7 @@ function Wait-PotassiumWarmup {
 # после нехватки памяти ночью 03.10): перезапускаем его не чаще раза в 20 мин, а окна без скрипта перезапустит Step-Account.
 function Restart-PotassiumIfDead {
     if ($NoPotassium) { return }
+    if ($Executor -eq 'real') { Restart-RealIfDead; return }
     $now = Get-Date
     $running = @(Get-Process -Name Potassium -ErrorAction SilentlyContinue)
     if (-not $running) {
@@ -1936,6 +1940,154 @@ function Restart-PotassiumIfDead {
         $null = Confirm-PotassiumAutoAttachOn -Now
     }
 }
+
+#region REAL (Real Executor, projectreal.gg)
+# REAL открывается с правами администратора (своё задание планировщика Real\Launch), поэтому его окно и кнопки обычной
+# программе недоступны: Windows не даёт читать и нажимать элементы окна с правами выше. Поэтому:
+#   - в окна подключается сам REAL — его Auto Inject (Settings -> Client), скрипты из Real\autoexec запускает Auto Execute;
+#   - что REAL подключился к окну, видно по отметке: наш autorejoin_inject.lua в autoexec при инжекте пишет в workspace
+#     autorejoin_inject_<UserId>.txt;
+#   - что скрипт фермы запустился — по тем же файлам javad1khive_*, что и с Потассиумом, только в Real\workspace.
+$RealMarkerName = 'autorejoin_inject.lua'
+$script:LastRealStart = [datetime]::MinValue
+$script:RealSettingsCheckAt = [datetime]::MinValue
+$script:RealAutoExecWarned = $false
+$script:RealNoInjectWarnedAt = [datetime]::MinValue
+$script:RealMissingWarned = $false
+
+function Test-RealInstalled { return (Test-Path -LiteralPath (Join-Path $RealDir 'Update.exe')) }
+function Test-RealRunning { return [bool](Get-Process -Name Real -ErrorAction SilentlyContinue) }
+
+# Как его открывает ярлык: задание Real\Launch (с правами администратора, без окна UAC). Задания нет — Update.exe
+# (тогда Windows может спросить разрешение).
+function Start-Real {
+    $null = & schtasks.exe /run /tn 'Real\Launch' 2>&1
+    if ($LASTEXITCODE -eq 0) { return $true }
+    try {
+        Start-Process -FilePath (Join-Path $RealDir 'Update.exe') -WorkingDirectory $RealDir | Out-Null
+        return $true
+    } catch {
+        Write-Status "не получилось открыть REAL: $($_.Exception.Message)" Red
+        return $false
+    }
+}
+
+# Наш маленький скрипт в autoexec REAL: при инжекте пишет отметку для AutoRejoin. Только свой файл, остальное не трогаем.
+function Install-RealInjectMarker {
+    $dir = Join-Path $RealDir 'autoexec'
+    if (-not (Test-Path -LiteralPath $dir)) { return }
+    $path = Join-Path $dir $RealMarkerName
+    $text = @'
+-- AutoRejoin: inject marker. When Real injects, this writes autorejoin_inject_<UserId>.txt to the workspace,
+-- so AutoRejoin knows the window got the executor. Installed and updated by AutoRejoin; it changes nothing in the game.
+task.spawn(function()
+	pcall(function()
+		local Players = game:GetService("Players")
+		local player = Players.LocalPlayer
+		while not player do task.wait(0.5); player = Players.LocalPlayer end
+		writefile("autorejoin_inject_" .. tostring(player.UserId) .. ".txt", tostring(os.time()) .. " " .. tostring(game.PlaceId))
+	end)
+end)
+'@
+    try {
+        if (-not (Test-Path -LiteralPath $path) -or [IO.File]::ReadAllText($path) -ne $text) {
+            [IO.File]::WriteAllText($path, $text, (New-Object Text.UTF8Encoding $false))
+        }
+    } catch { Write-Status "не получилось положить отметку инжекта в autoexec REAL: $($_.Exception.Message)" DarkYellow }
+}
+
+function Initialize-Real([switch]$NoWait) {
+    if (-not (Test-RealInstalled)) {
+        if (-not $script:RealMissingWarned) {
+            $script:RealMissingWarned = $true
+            Write-Status 'REAL не установлен (нет папки %LOCALAPPDATA%\Real) — установи его с projectreal.gg или выбери Потассиум в настройках.' Red
+        }
+        return
+    }
+    Install-RealInjectMarker
+    if (Test-RealRunning) { Write-Status 'REAL уже открыт.' Green; return }
+    Write-Status 'открываю REAL...' Cyan
+    $script:LastRealStart = Get-Date
+    if (-not (Start-Real)) { return }
+    if ($NoWait) { return }
+    for ($i = 0; $i -lt 30 -and -not (Test-RealRunning); $i++) { Start-Sleep -Milliseconds 500 }
+    if (Test-RealRunning) { Write-Status 'REAL открыт.' Green } else { Write-Status 'REAL не открылся за 15 сек — открой его сам.' DarkYellow }
+}
+
+# REAL закрылся — открываем снова, не чаще раза в минуту: без него новые окна останутся без скрипта.
+function Restart-RealIfDead {
+    if (Test-RealRunning) { return }
+    $now = Get-Date
+    if (($now - $script:LastRealStart).TotalSeconds -lt 60 -or -not (Test-RealInstalled)) { return }
+    $script:LastRealStart = $now
+    Install-RealInjectMarker
+    Write-Status 'REAL закрыт — открываю: без него новые окна останутся без скрипта.' Yellow
+    $null = Start-Real
+}
+
+# Настройки REAL (data\config\settings.json): Auto Execute должен быть включён — иначе скрипты из autoexec не запустятся.
+# Auto Inject в файле появляется, только когда его переключили; есть и выключен — сразу предупреждаем, нет записи —
+# судим по отметкам инжекта (Update-RealState).
+function Get-RealSetting([string]$Name) {
+    try { $json = [IO.File]::ReadAllText((Join-Path $RealDir 'data\config\settings.json')) } catch { return $null }
+    $found = [regex]::Matches($json, '"' + $Name + '"\s*:\s*(true|false)')
+    if ($found.Count) { return $found[$found.Count - 1].Groups[1].Value -eq 'true' }
+    return $null
+}
+
+function Confirm-RealSettings([switch]$Now) {
+    $time = Get-Date
+    if (-not $Now -and ($time - $script:RealSettingsCheckAt).TotalSeconds -lt 60) { return $true }
+    $script:RealSettingsCheckAt = $time
+    Install-RealInjectMarker
+    $ok = $true
+    if ((Get-RealSetting 'autoExec') -eq $false) {
+        $ok = $false
+        if (-not $script:RealAutoExecWarned) {
+            $script:RealAutoExecWarned = $true
+            Write-Status 'В REAL выключен Auto Execute — скрипты из autoexec не запустятся. Включи: Settings -> Client -> Auto Execute.' Red
+        }
+    } else { $script:RealAutoExecWarned = $false }
+    $inject = Get-RealSetting 'auto_?[Ii]nject(ion)?'
+    if ($inject -eq $false) {
+        $ok = $false
+        if (-not $script:AutoAttachWarned) {
+            $script:AutoAttachWarned = $true
+            Write-Status 'В REAL выключен Auto Inject — он не подключится к окнам сам. Включи: Settings -> Client -> Auto Inject.' Red
+        }
+    } elseif ($inject -eq $true) { $script:AutoAttachWarned = $false }
+    return $ok
+}
+
+# Каждый круг: отметки инжекта из workspace REAL. Окна, к которым REAL подключился после их запуска, — Attached.
+# Если REAL не подключился ни к одному окну, хотя они в игре дольше 90 сек, — подсказка (не чаще раза в 10 минут).
+function Update-RealState {
+    $now = Get-Date
+    $waiting = @()
+    foreach ($account in $script:Accounts) {
+        $tracker = $account.Tracker
+        if (-not $tracker -or -not $account.UserId) { continue }
+        if (-not $tracker.Attached) {
+            $file = Join-Path $Workspace "autorejoin_inject_$($account.UserId).txt"
+            $time = try { (Get-Item -LiteralPath $file -ErrorAction Stop).LastWriteTime } catch { $null }
+            if ($time -and $time -ge $tracker.Start.AddSeconds(-2)) {
+                Set-TrackerAttached $tracker
+                $after = if ($tracker.JoinedAt) { ' ({0:N0} сек после захода)' -f [Math]::Max(0, ($time - $tracker.JoinedAt).TotalSeconds) } else { '' }
+                Write-Status "REAL заинжектился в окно$after." DarkGray $account
+            }
+        }
+        if (-not $tracker.Attached -and -not $tracker.ScriptSeen -and $tracker.InGame -and $tracker.JoinedAt -and ($now - $tracker.JoinedAt).TotalSeconds -ge 90) {
+            $waiting += $account
+        }
+    }
+    $anyInjected = @($script:Accounts | Where-Object { $_.Tracker -and ($_.Tracker.Attached -or $_.Tracker.ScriptSeen) }).Count
+    if ($waiting.Count -and -not $anyInjected -and ($now - $script:RealNoInjectWarnedAt).TotalMinutes -ge 10) {
+        $script:RealNoInjectWarnedAt = $now
+        $what = if (Test-RealRunning) { 'проверь, что в REAL включён Auto Inject (Settings -> Client) и есть ключ' } else { 'REAL закрыт — открываю его' }
+        Write-Status "REAL не заинжектился ни в одно окно — $what." Red
+    }
+}
+#endregion
 
 # Окно Потассиума через UI Automation: текст статуса справа внизу ("No client" или число клиентов), строки консоли
 # (из них — "Client <PID> attached") и окно "Channel build mismatch". Потассиум — WebView2, его элементы видны как обычные.
@@ -2152,7 +2304,9 @@ function Set-PotassiumAutoAttach([bool]$On) {
 # записи ещё нет (его не трогали), с -Now смотрим сам переключатель в окне настроек; без -Now окно настроек
 # каждую минуту не открываем. Возвращает $true, если автоаттач включён.
 function Confirm-PotassiumAutoAttachOn([switch]$Now) {
-    if ($NoPotassium -or -not $KeepAutoAttach) { return $true }
+    if ($NoPotassium) { return $true }
+    if ($Executor -eq 'real') { return (Confirm-RealSettings -Now:$Now) }
+    if (-not $KeepAutoAttach) { return $true }
     $time = Get-Date
     if (-not $Now -and ($time - $script:AutoAttachCheckAt).TotalSeconds -lt 60) { return $true }
     $script:AutoAttachCheckAt = $time
@@ -2301,6 +2455,7 @@ function Register-FixFailure([string]$Result) {
 #   пустое окно (интерфейс упал, процесс жив — 08.10 так окна часами стояли без скрипта) — перезапускаем Потассиум.
 function Update-PotassiumState {
     if ($NoPotassium) { return }
+    if ($Executor -eq 'real') { Update-RealState; return }
     $now = Get-Date
     $waiting = $script:Accounts | Where-Object { $_.Tracker -and -not $_.Tracker.ScriptSeen }
     $interval = if ($waiting) { 3 } else { 15 }
@@ -2430,6 +2585,7 @@ function Set-TrackerAttached($Tracker) {
 #   - остальные окна подключены этим же запуском Потассиума: Attach подключает все окна разом, уже подключённые им самим
 #     пропускает, а подключённые прошлым его запуском — нет (07.10 в 20:16 так упали 3 окна из 4).
 function Invoke-ManualAttach {
+    if ($Executor -eq 'real') { return }   # окно REAL открыто с правами администратора — его кнопки нам недоступны
     $found = Get-ManualAttachTarget
     if (-not $found) { return }
     $account = $found.Account
@@ -2571,7 +2727,7 @@ function Test-ScriptNotStarted($Account, $Tracker) {
     if ($Account.NoScript -ge 3) {
         $Account.ScriptCheckPausedUntil = (Get-Date).AddMinutes(30)
         $Account.NoScript = 0
-        Write-Status 'скрипт не запускается в этом окне 3 раза подряд — оставляю окно как есть на 30 минут (проверь автоаттач и автоэкзекут Потассиума).' Red $Account
+        Write-Status "скрипт не запускается в этом окне 3 раза подряд — оставляю окно как есть на 30 минут (проверь $(if ($Executor -eq 'real') { 'Auto Inject и Auto Execute в REAL' } else { 'автоаттач и автоэкзекут Потассиума' }))." Red $Account
         return $false
     }
     return $true
@@ -2774,7 +2930,11 @@ function Get-RestartReason($Tracker, $Account) {
     # Окно, открытое до запуска AutoRejoin, за отсутствие скрипта не перезапускаем: может, ты так его и запустил.
     if ($Account -and -not $Tracker.Adopted -and -not $Tracker.UserOpen -and (Test-ScriptNotStarted $Account $Tracker)) {
         $Account.NoScript++
-        $why = if ($Tracker.Attached) { 'Потассиум подключился, но автоэкзекут не сработал' }
+        $why = if ($Executor -eq 'real') {
+                if ($Tracker.Attached) { 'REAL заинжектился, но скрипт фермы не запустился — проверь скрипт в autoexec REAL' }
+                else { 'REAL не заинжектился в окно — проверь Auto Inject в REAL: Settings -> Client' }
+            }
+            elseif ($Tracker.Attached) { 'Потассиум подключился, но автоэкзекут не сработал' }
             elseif ($Tracker.ManualAttach -eq 'pressed') { 'автоаттач Потассиума не подключился, и наш Attach не помог' }
             else { 'автоаттач Потассиума к окну не подключился' }
         return "скрипт в окне не запустился за $ScriptStartTimeout сек ($why)"
@@ -3652,6 +3812,8 @@ function Set-EngineConfig($Config) {
     $script:ViaBootstrapper = Get-ConfigFlag $Config 'useBootstrapper' $false
     $script:AutoReboot = Get-ConfigFlag $Config 'autoReboot' $false
     $script:NoPotassium = -not (Get-ConfigFlag $Config 'potassium' $true)
+    $script:Executor = if ([string](Get-ConfigValue $Config 'executor' 'potassium') -eq 'real') { 'real' } else { 'potassium' }
+    $script:Workspace = if ($script:Executor -eq 'real') { Join-Path $RealDir 'workspace' } else { Join-Path $env:LOCALAPPDATA 'Potassium\workspace' }
     $script:PotassiumPath = [string](Get-ConfigValue $Config 'potassiumPath' '')
     $script:KeepAutoAttach = Get-ConfigFlag $Config 'keepAutoAttach' $true
     $script:PotassiumAutoLogin = Get-ConfigFlag $Config 'potassiumAutoLogin' $false
@@ -3922,7 +4084,8 @@ function Send-AppStatus([datetime]$now) {
         freeGB = if ($null -ne $free) { [Math]::Round($free, 1) } else { $null }
         ramGB = [Math]::Round($script:TotalMemoryGB, 1)
         potassium = [ordered]@{
-            enabled = -not $NoPotassium; running = [bool](Get-Process -Name Potassium -ErrorAction SilentlyContinue)
+            executor = $Executor
+            enabled = -not $NoPotassium; running = if ($Executor -eq 'real') { Test-RealRunning } else { [bool](Get-Process -Name Potassium -ErrorAction SilentlyContinue) }
             signedOut = [bool]$script:PotassiumSignedOutSince; clients = $script:PotassiumClients; autoAttachProblem = [bool]$script:AutoAttachWarned
         }
         launchBlocked = [bool]$script:LaunchBlocked
@@ -4041,7 +4204,7 @@ function Start-Watchdog {
     elseif (-not $NoPotassium -and -not (Get-Process -Name Potassium -ErrorAction SilentlyContinue)) { Initialize-Potassium }
     # Скрипт в окна подключает автоаттач Потассиума — до запуска первого окна проверяем, что он включён
     # (первые попытки могут не пройти, пока Потассиум рисует своё окно).
-    if (-not $NoPotassium -and (Get-Process -Name Potassium -ErrorAction SilentlyContinue)) {
+    if (-not $NoPotassium -and ($Executor -eq 'real' -or (Get-Process -Name Potassium -ErrorAction SilentlyContinue))) {
         for ($try = 0; $try -lt 5 -and -not (Confirm-PotassiumAutoAttachOn -Now); $try++) { if (Wait-Interruptible 2) { return } }
     }
     $script:AutoAttachCheckAt = Get-Date

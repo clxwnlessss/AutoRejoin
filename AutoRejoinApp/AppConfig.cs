@@ -48,6 +48,9 @@ public class AppConfig
 
 	public string potassiumPath { get; set; }
 
+	// Экзекьютор: "potassium" или "real" (Real Executor). Скрипт фермы пишет файлы в workspace выбранного.
+	public string executor { get; set; }
+
 	public bool keepAutoAttach { get; set; }
 
 	public bool potassiumAutoLogin { get; set; }
@@ -135,6 +138,7 @@ public class AppConfig
 		autoReboot = false;
 		potassium = true;
 		potassiumPath = "";
+		executor = "potassium";
 		keepAutoAttach = true;
 		potassiumAutoLogin = false;
 		scriptCheck = false;
@@ -172,6 +176,10 @@ public class AppConfig
 		if (discordMentions == null)
 		{
 			discordMentions = "";
+		}
+		if (executor != "real")
+		{
+			executor = "potassium";
 		}
 		if (theme != "neon" && theme != "potassium")
 		{

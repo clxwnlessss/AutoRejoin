@@ -748,3 +748,11 @@ Discord: команда «Перезайти»	Discord: "Rejoin" command
 Отправляю код…	Sending the code…
 Код — 6 цифр из письма.	The code is the 6 digits from the email.
 Пока аккаунты в игре, сервер копит твоё АФК-время. Один аккаунт для программы и сайта.	While accounts are in game, the server counts your AFK time. One account for the app and the website.
+Экзекьютор	Executor
+Чем подключать скрипт	Executor for the script
+Потассиум или REAL. Скрипт фермы — в autoexec выбранного.	Potassium or REAL. Put the farm script into its autoexec.
+В REAL включи Settings → Client → Auto Inject и Auto Execute. AutoRejoin сам откроет REAL, положит в его autoexec отметку инжекта и будет проверять инжект и запуск скрипта.	In REAL turn on Settings → Client → Auto Inject and Auto Execute. AutoRejoin opens REAL itself, puts an inject marker into its autoexec and checks the inject and the script start.
+Работать с экзекьютором	Use the executor
+Открывать и перезапускать его, проверять инжект.	Open and restart it, check the inject.
+Auto Inject выключен!	Auto Inject is off!
+инжектит сам (Auto Inject)	injects by itself (Auto Inject)

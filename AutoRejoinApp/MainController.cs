@@ -108,6 +108,8 @@ public class MainController
 
 	private readonly TextBlock statPotSub;
 
+	private readonly TextBlock statPotLabel;
+
 	private readonly TextBlock statSchedValue;
 
 	private readonly TextBlock statSchedSub;
@@ -371,6 +373,7 @@ public class MainController
 		statMemSub = Find<TextBlock>("StatMemSub");
 		statPotValue = Find<TextBlock>("StatPotValue");
 		statPotSub = Find<TextBlock>("StatPotSub");
+		statPotLabel = Find<TextBlock>("StatPotLabel");
 		statSchedValue = Find<TextBlock>("StatSchedValue");
 		statSchedSub = Find<TextBlock>("StatSchedSub");
 		maxButton = Find<Button>("MaxButton");
@@ -534,6 +537,7 @@ public class MainController
 	private void ApplyFarmOptions()
 	{
 		Recorder.Enabled = config.dropStoryboard;
+		HoneyStats.Executor = config.executor ?? "potassium";
 		bool honey = config.honeyStats;
 		System.Threading.Tasks.Task.Run(delegate
 		{
@@ -1319,6 +1323,11 @@ public class MainController
 			statMemValue.Foreground = ((memoryInfo.FreeCommitGB < 2.0) ? Palette.Red : ((memoryInfo.FreeCommitGB < 4.0) ? Palette.Yellow : Palette.Text));
 		}
 		IDictionary<string, object> dictionary = Store.Obj(lastStatus, "potassium");
+		bool real = config.executor == "real";
+		if (statPotLabel != null)
+		{
+			statPotLabel.Text = real ? "REAL" : L.T("Потассиум");
+		}
 		if (!config.potassium)
 		{
 			statPotValue.Text = L.T("Выключен");
@@ -1344,7 +1353,7 @@ public class MainController
 				statPotValue.Text = L.T("Работает");
 				statPotValue.Foreground = Palette.Text;
 				double? num4 = Store.Num(dictionary, "clients");
-				statPotSub.Text = (Store.Flag(dictionary, "autoAttachProblem") ? L.T("автоаттач выключен!") : (num4.HasValue ? (L.T("подключён к окнам: ") + num4.Value) : L.T("автоаттач включён")));
+				statPotSub.Text = real ? (Store.Flag(dictionary, "autoAttachProblem") ? L.T("Auto Inject выключен!") : L.T("инжектит сам (Auto Inject)")) : (Store.Flag(dictionary, "autoAttachProblem") ? L.T("автоаттач выключен!") : (num4.HasValue ? (L.T("подключён к окнам: ") + num4.Value) : L.T("автоаттач включён")));
 			}
 		}
 		else

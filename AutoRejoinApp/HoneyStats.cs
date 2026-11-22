@@ -27,13 +27,26 @@ public static class HoneyStats
 		"  pcall(function() writefile(\"autorejoin_stats_\" .. player.UserId .. \".txt\", tostring(honey()) .. \"|\" .. os.time()) end)\n" +
 		"end\n";
 
-	private static string PotassiumDir => Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.LocalApplicationData), "Potassium");
+	// "potassium" or "real": whose autoexec gets the script and whose workspace has the file.
+	public static volatile string Executor = "potassium";
 
-	// Puts the script into autoexec (or removes it). Only touches our own file.
+	private static string Local => Environment.GetFolderPath(Environment.SpecialFolder.LocalApplicationData);
+
+	private static string PotassiumDir => Path.Combine(Local, Executor == "real" ? "Real" : "Potassium");
+
+	private static string OtherDir => Path.Combine(Local, Executor == "real" ? "Potassium" : "Real");
+
+	// Puts the script into the chosen executor's autoexec (or removes it); our copy in the other executor is removed.
+	// Only touches our own file.
 	public static void Apply(bool enabled)
 	{
 		try
 		{
+			string other = Path.Combine(OtherDir, "autoexec", ScriptName);
+			if (File.Exists(other) && File.ReadAllText(other).StartsWith("-- AutoRejoin:", StringComparison.Ordinal))
+			{
+				File.Delete(other);
+			}
 			if (!Directory.Exists(PotassiumDir))
 			{
 				return;

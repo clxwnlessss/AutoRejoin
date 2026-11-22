@@ -602,23 +602,62 @@ public class SettingsPage
 
 	private void BuildPotassium()
 	{
-		StackPanel section = Section("\ue943", L.T("Потассиум"));
+		StackPanel section = Section("\ue943", L.T("Экзекьютор"));
 		List<UIElement> dependent = new List<UIElement>();
+		List<UIElement> potassiumOnly = new List<UIElement>();
 		StackPanel credentials = null;
+		TextBlock realHint = null;
 		Action refresh = delegate
 		{
+			bool real = Cfg.executor == "real";
 			foreach (UIElement item in dependent)
 			{
-				item.IsEnabled = Cfg.potassium && (item != credentials || Cfg.potassiumAutoLogin);
+				item.IsEnabled = Cfg.potassium && (item != credentials || Cfg.potassiumAutoLogin) && (!real || !potassiumOnly.Contains(item));
+			}
+			if (realHint != null)
+			{
+				realHint.Visibility = (real ? Visibility.Visible : Visibility.Collapsed);
 			}
 		};
+		ChoiceItem[] executors = new ChoiceItem[2]
+		{
+			new ChoiceItem
+			{
+				Value = "potassium",
+				Name = L.T("Потассиум")
+			},
+			new ChoiceItem
+			{
+				Value = "real",
+				Name = "REAL (Real Executor)"
+			}
+		};
+		ComboBox executorBox = Choice(executors, Cfg.executor ?? "potassium", delegate(string v)
+		{
+			if (!((Cfg.executor ?? "potassium") == v))
+			{
+				Cfg.executor = v;
+				refresh();
+				main.ConfigChanged();
+			}
+		}, 220.0);
+		dependent.Add(executorBox);
+		FrameworkElement executorRow = AddRow(section, L.T("Чем подключать скрипт"), L.T("Потассиум или REAL. Скрипт фермы — в autoexec выбранного."), executorBox);
+		realHint = new TextBlock
+		{
+			Text = L.T("В REAL включи Settings → Client → Auto Inject и Auto Execute. AutoRejoin сам откроет REAL, положит в его autoexec отметку инжекта и будет проверять инжект и запуск скрипта."),
+			Style = Res("Hint"),
+			TextWrapping = TextWrapping.Wrap,
+			Margin = new Thickness(0.0, 8.0, 0.0, 0.0)
+		};
+		((StackPanel)((Grid)executorRow).Children[0]).Children.Add(realHint);
 		CheckBox control = Switch(Cfg.potassium, delegate(bool v)
 		{
 			Cfg.potassium = v;
 			refresh();
 			main.ConfigChanged();
 		});
-		AddRow(section, L.T("Работать с Потассиумом"), L.T("Открывать и перезапускать Потассиум."), control);
+		AddRow(section, L.T("Работать с экзекьютором"), L.T("Открывать и перезапускать его, проверять инжект."), control);
 		TextBox pathBox = Field(L.T("Пусто — найдётся сам"), Cfg.potassiumPath);
 		pathBox.LostKeyboardFocus += delegate
 		{
@@ -657,6 +696,7 @@ public class SettingsPage
 		Grid.SetColumn(button, 1);
 		grid.Children.Add(button);
 		dependent.Add(grid);
+		potassiumOnly.Add(grid);
 		AddStacked(section, L.T("Путь к Potassium.exe"), L.T("Пусто — найдёт сам."), grid);
 		CheckBox checkBox = Switch(Cfg.keepAutoAttach, delegate(bool v)
 		{
@@ -664,6 +704,7 @@ public class SettingsPage
 			main.ConfigChanged();
 		});
 		dependent.Add(checkBox);
+		potassiumOnly.Add(checkBox);
 		AddRow(section, L.T("Держать автоаттач включённым"), L.T("Включает Auto attach обратно, если он выключился."), checkBox);
 		TextBox loginBox = Field(L.T("Логин"), main.Vault.potassium.user);
 		loginBox.Width = 200.0;
@@ -700,9 +741,11 @@ public class SettingsPage
 			main.ConfigChanged();
 		});
 		dependent.Add(checkBox2);
+		potassiumOnly.Add(checkBox2);
 		FrameworkElement frameworkElement = AddRow(section, L.T("Автовход"), L.T("Входит сам, если Потассиум разлогинился."), checkBox2);
 		((StackPanel)((Grid)frameworkElement).Children[0]).Children.Add(credentials);
 		dependent.Add(credentials);
+		potassiumOnly.Add(credentials);
 		AddRow(section, L.T("Проверять запуск скрипта"), L.T("Нужен загрузчик в автоэкзекуте. Нет скрипта — перезаход."), Track(dependent, NumberWithSwitch(Cfg.scriptCheck, Cfg.scriptStartTimeout, 15.0, 600.0, integer: true, L.T("сек"), delegate(bool on)
 		{
 			Cfg.scriptCheck = on;
