@@ -192,11 +192,9 @@ public class SettingsPage
 					((Button)s).IsEnabled = false;
 					try
 					{
-						botCode = await Leaderboard.DiscordCode(Leaderboard.BaseUrl(Cfg), main.Vault.leaderboardToken);
-						botCodeUntil = DateTime.UtcNow.AddSeconds(botCode.ExpiresIn);
-						main.Bot.ExpectLink();
+						BotCodeResult(await Leaderboard.DiscordCode(Leaderboard.BaseUrl(Cfg), main.Vault.leaderboardToken));
 					}
-					catch (Leaderboard.ApiException ex)
+					catch (Exception ex)
 					{
 						MessageDialog.Ask(main.Window, L.T("Не получилось получить код"), ex.Message, "OK", MessageDialog.Kind.Warning, null);
 					}
@@ -224,24 +222,48 @@ public class SettingsPage
 			}));
 			return;
 		}
-		AddRow(botBody, L.T("Привязать бота"), L.T("Смотри, какие аккаунты стоят, и управляй ими из Discord или Telegram."), Button(L.T("Привязать бота"), async delegate(object s, RoutedEventArgs e)
+		AddRow(botBody, L.T("Привязать бота"), L.T("Получи 6-значный код и введи его у Discord-бота («Привязать аккаунт») или пришли Telegram-боту."), Button(L.T("Получить код"), async delegate(object s, RoutedEventArgs e)
 		{
 			Button b = (Button)s;
 			b.IsEnabled = false;
 			b.Content = L.T("Секунду…");
+			// Free Render sleeps when idle: the first request can take up to a minute.
+			System.Windows.Threading.DispatcherTimer slow = new System.Windows.Threading.DispatcherTimer
+			{
+				Interval = TimeSpan.FromSeconds(4.0)
+			};
+			slow.Tick += delegate
+			{
+				slow.Stop();
+				b.Content = L.T("Сервер просыпается…");
+			};
+			slow.Start();
 			try
 			{
-				botCode = await Leaderboard.DiscordCode(Leaderboard.BaseUrl(Cfg), main.Vault.leaderboardToken);
-				botCodeUntil = DateTime.UtcNow.AddSeconds(botCode.ExpiresIn);
-				main.Bot.ExpectLink();
+				BotCodeResult(await Leaderboard.DiscordCode(Leaderboard.BaseUrl(Cfg), main.Vault.leaderboardToken));
 			}
-			catch (Leaderboard.ApiException ex)
+			catch (Exception ex)
 			{
 				MessageDialog.Ask(main.Window, L.T("Не получилось получить код"), ex.Message, "OK", MessageDialog.Kind.Warning, null);
+			}
+			finally
+			{
+				slow.Stop();
 			}
 			RenderBot();
 		}));
 		RenderCode();
+	}
+
+	private void BotCodeResult(Leaderboard.BotCode code)
+	{
+		if (code == null || string.IsNullOrEmpty(code.Code) || code.Code.Length < 6)
+		{
+			throw new Exception(L.T("Сервер не прислал код — попробуй ещё раз."));
+		}
+		botCode = code;
+		botCodeUntil = DateTime.UtcNow.AddSeconds(code.ExpiresIn);
+		main.Bot.ExpectLink();
 	}
 
 	// Code card: the code, how to use it (Discord and Telegram), invite / Telegram / copy buttons.

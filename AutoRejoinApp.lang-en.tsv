@@ -850,3 +850,7 @@ WEAO: не получилось проверить — 	WEAO: couldn't check —
 пикс.	px
 Плотность карточек	Card opacity
 Насколько карточки закрывают обои: 100% — сплошные. После перезапуска.	How much the cards cover the wallpaper: 100% — solid. After a restart.
+Получи 6-значный код и введи его у Discord-бота («Привязать аккаунт») или пришли Telegram-боту.	Get a 6-digit code and enter it in the Discord bot ("Link account") or send it to the Telegram bot.
+Получить код	Get code
+Сервер просыпается…	Server is waking up…
+Сервер не прислал код — попробуй ещё раз.	The server sent no code — try again.

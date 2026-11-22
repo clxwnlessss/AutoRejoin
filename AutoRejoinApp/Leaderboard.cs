@@ -211,9 +211,46 @@ public static class Leaderboard
 	}
 
 	// Бесплатный сервер Render засыпает без запросов и просыпается до минуты — отсюда большой таймаут.
+	// HttpWebRequest.Timeout does not apply to async calls in .NET Framework: a hung connection used to leave buttons
+	// on "Секунду…" forever. Here the whole call gets a real deadline (the request is aborted), and any failure
+	// comes back as ApiException with a readable message.
 	private static async Task<IDictionary<string, object>> Call(string baseUrl, string method, string path, object body, string token, int timeoutMs = 70000)
 	{
+		HttpWebRequest current = null;
+		Task<IDictionary<string, object>> work = CallCore(baseUrl, method, path, body, token, timeoutMs, delegate(HttpWebRequest r)
+		{
+			current = r;
+		});
+		if (await Task.WhenAny(work, Task.Delay(timeoutMs)) != work)
+		{
+			try
+			{
+				current?.Abort();
+			}
+			catch
+			{
+			}
+			_ = work.ContinueWith((Task<IDictionary<string, object>> t) => t.Exception, TaskContinuationOptions.OnlyOnFaulted);
+			throw new ApiException(0, L.T("Сервер не ответил — попробуй ещё раз через минуту."));
+		}
+		try
+		{
+			return await work;
+		}
+		catch (ApiException)
+		{
+			throw;
+		}
+		catch (Exception ex)
+		{
+			throw new ApiException(0, L.T("Нет связи с сервером.") + " (" + ex.Message + ")");
+		}
+	}
+
+	private static async Task<IDictionary<string, object>> CallCore(string baseUrl, string method, string path, object body, string token, int timeoutMs, Action<HttpWebRequest> started)
+	{
 		HttpWebRequest req = (HttpWebRequest)WebRequest.Create(baseUrl + path);
+		started(req);
 		req.Method = method;
 		req.Timeout = timeoutMs;
 		req.ReadWriteTimeout = timeoutMs;
