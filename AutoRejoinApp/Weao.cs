@@ -28,6 +28,8 @@ public static class Weao
 
 		public string Website;
 
+		public string PcVersion;
+
 		public DateTime CheckedAt;
 	}
 
@@ -93,6 +95,7 @@ public static class Weao
 			CurrentRoblox = current,
 			UpdatedDate = Store.Str(entry, "updatedDate"),
 			Website = Store.Str(entry, "websitelink"),
+			PcVersion = RobloxInstall.Version,
 			CheckedAt = DateTime.UtcNow
 		};
 		cached = s;
@@ -100,21 +103,50 @@ public static class Weao
 		return s;
 	}
 
-	/// One line for the UI: "✓ обновлён под Роблокс · 3.2.3" or "⚠ не обновлён под текущий Роблокс".
+	/// One line for the UI: compares the Roblox build on this PC with the current one (weao.xyz/api/versions/current)
+	/// and with the build the executor supports.
 	public static string Describe(Status s)
 	{
 		if (s == null)
 		{
 			return "";
 		}
-		bool ok = s.Updated && (string.IsNullOrEmpty(s.CurrentRoblox) || string.IsNullOrEmpty(s.RobloxVersion) || s.CurrentRoblox == s.RobloxVersion);
-		string version = string.IsNullOrEmpty(s.Version) ? "" : (" · " + s.Version);
-		return ok ? (L.T("WEAO: работает с текущим Роблоксом") + version) : (L.T("WEAO: не обновлён под текущий Роблокс — скрипт в окна может не попасть") + version);
+		string name = s.Title == "Real" ? "REAL" : s.Title;
+		string pc = s.PcVersion, cur = s.CurrentRoblox, exe = s.RobloxVersion;
+		string version = string.IsNullOrEmpty(s.Version) ? "" : (" · " + name + " " + s.Version);
+		if (string.IsNullOrEmpty(pc))
+		{
+			return (IsOk(s) ? L.T("WEAO: работает с текущим Роблоксом") : L.T("WEAO: не обновлён под текущий Роблокс — скрипт в окна может не попасть")) + version;
+		}
+		string pcText = string.Format(L.T("Роблокс на ПК: {0}"), RobloxInstall.Short(pc));
+		if (!string.IsNullOrEmpty(exe) && pc == exe)
+		{
+			return pcText + " — " + string.Format(L.T("совпадает с версией, под которую обновлён {0} ✓"), name) + ((!string.IsNullOrEmpty(cur) && cur != pc) ? (" (" + string.Format(L.T("актуальный на WEAO: {0}"), RobloxInstall.Short(cur)) + ")") : "") + version;
+		}
+		if (!string.IsNullOrEmpty(cur) && pc != cur && exe == cur)
+		{
+			return pcText + " — " + string.Format(L.T("устарел, актуальный {0}. Обнови Роблокс: {1} уже под новую версию."), RobloxInstall.Short(cur), name) + version;
+		}
+		if (!string.IsNullOrEmpty(cur) && pc == cur)
+		{
+			return pcText + " — " + string.Format(L.T("актуальный, а {0} ещё не обновлён под него (собран под {1}). Ждём обновление {0}."), name, RobloxInstall.Short(exe)) + version;
+		}
+		return pcText + ", " + string.Format(L.T("на WEAO: {0}, {1} собран под {2} — версии не совпадают."), RobloxInstall.Short(cur), name, RobloxInstall.Short(exe)) + version;
 	}
 
+	/// The executor supports the Roblox build on this PC (or, if it is unknown, the current one).
 	public static bool IsOk(Status s)
 	{
-		return s == null || (s.Updated && (string.IsNullOrEmpty(s.CurrentRoblox) || string.IsNullOrEmpty(s.RobloxVersion) || s.CurrentRoblox == s.RobloxVersion));
+		if (s == null)
+		{
+			return true;
+		}
+		string target = !string.IsNullOrEmpty(s.PcVersion) ? s.PcVersion : s.CurrentRoblox;
+		if (string.IsNullOrEmpty(target) || string.IsNullOrEmpty(s.RobloxVersion))
+		{
+			return s.Updated;
+		}
+		return s.RobloxVersion == target;
 	}
 
 	private static async Task<string> Get(string path)

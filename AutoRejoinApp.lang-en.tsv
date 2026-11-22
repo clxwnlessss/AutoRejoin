@@ -854,3 +854,10 @@ WEAO: не получилось проверить — 	WEAO: couldn't check —
 Получить код	Get code
 Сервер просыпается…	Server is waking up…
 Сервер не прислал код — попробуй ещё раз.	The server sent no code — try again.
+Роблокс на ПК: {0}	Roblox on this PC: {0}
+совпадает с версией, под которую обновлён {0} ✓	matches the version {0} is updated for ✓
+актуальный на WEAO: {0}	current on WEAO: {0}
+устарел, актуальный {0}. Обнови Роблокс: {1} уже под новую версию.	outdated, current is {0}. Update Roblox: {1} is already on the new version.
+актуальный, а {0} ещё не обновлён под него (собран под {1}). Ждём обновление {0}.	is current, but {0} is not updated for it yet (built for {1}). Waiting for a {0} update.
+на WEAO: {0}, {1} собран под {2} — версии не совпадают.	WEAO: {0}, {1} is built for {2} — the versions don't match.
+версия Роблокса не совпадает (WEAO)	Roblox version mismatch (WEAO)

@@ -1430,7 +1430,7 @@ public class MainController
 				statPotValue.Text = L.T("Работает");
 				statPotValue.Foreground = Palette.Text;
 				double? num4 = Store.Num(dictionary, "clients");
-				statPotSub.Text = (!Weao.IsOk(Weao.Last) && Weao.Last != null && Weao.Last.Title == Weao.Title(config.executor)) ? L.T("не обновлён под Роблокс (WEAO)") : real ? (Store.Flag(dictionary, "autoAttachProblem") ? L.T("Auto Inject выключен!") : L.T("инжектит сам (Auto Inject)")) : (Store.Flag(dictionary, "autoAttachProblem") ? L.T("автоаттач выключен!") : (num4.HasValue ? (L.T("подключён к окнам: ") + num4.Value) : L.T("автоаттач включён")));
+				statPotSub.Text = (!Weao.IsOk(Weao.Last) && Weao.Last != null && Weao.Last.Title == Weao.Title(config.executor)) ? L.T("версия Роблокса не совпадает (WEAO)") : real ? (Store.Flag(dictionary, "autoAttachProblem") ? L.T("Auto Inject выключен!") : L.T("инжектит сам (Auto Inject)")) : (Store.Flag(dictionary, "autoAttachProblem") ? L.T("автоаттач выключен!") : (num4.HasValue ? (L.T("подключён к окнам: ") + num4.Value) : L.T("автоаттач включён")));
 			}
 		}
 		else
