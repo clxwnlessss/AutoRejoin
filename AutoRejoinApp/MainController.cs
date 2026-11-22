@@ -534,6 +534,12 @@ public class MainController
 		clock.Start();
 		discord.Apply();
 		ApplyFarmOptions();
+		ApplyWallpaper();
+	}
+
+	public void ApplyWallpaper()
+	{
+		Wallpaper.Apply(window, config);
 	}
 
 	// Drop storyboard on/off, honey stats script in/out of Potassium's autoexec.
@@ -576,6 +582,34 @@ public class MainController
 			await CheckForUpdates(interactive: false);
 		};
 		updateTimer.Start();
+		// WEAO: раз в 10 минут — обновлён ли выбранный экзекьютор под текущий Роблокс. Стал «не обновлён» — пишем в журнал.
+		DispatcherTimer weaoTimer = new DispatcherTimer
+		{
+			Interval = TimeSpan.FromSeconds(30.0)
+		};
+		bool? weaoWasOk = null;
+		weaoTimer.Tick += async delegate
+		{
+			weaoTimer.Interval = TimeSpan.FromMinutes(10.0);
+			if (!config.potassium)
+			{
+				return;
+			}
+			try
+			{
+				Weao.Status st = await Weao.GetAsync(config.executor ?? "potassium", force: true);
+				bool ok = Weao.IsOk(st);
+				if (weaoWasOk != ok)
+				{
+					AppLog(null, Weao.DisplayName(config.executor) + ": " + Weao.Describe(st), ok ? "DarkGray" : "Yellow");
+					weaoWasOk = ok;
+				}
+			}
+			catch
+			{
+			}
+		};
+		weaoTimer.Start();
 		// После автообновления: движок работал до обновления — запускаем снова.
 		if (App.Resume && !engine.IsRunning && vault.accounts.Any((VaultAccount a) => a.enabled && !string.IsNullOrEmpty(a.cookie)))
 		{
@@ -1360,10 +1394,16 @@ public class MainController
 			statMemValue.Foreground = ((memoryInfo.FreeCommitGB < 2.0) ? Palette.Red : ((memoryInfo.FreeCommitGB < 4.0) ? Palette.Yellow : Palette.Text));
 		}
 		IDictionary<string, object> dictionary = Store.Obj(lastStatus, "potassium");
-		bool real = config.executor == "real";
+		bool real = config.executor != "potassium";
 		if (statPotLabel != null)
 		{
-			statPotLabel.Text = real ? "REAL" : L.T("Потассиум");
+			statPotLabel.Text = Weao.DisplayName(config.executor);
+		}
+		string execDir = Store.Str(dictionary, "dir");
+		if (real && !string.IsNullOrEmpty(execDir) && HoneyStats.ExternalDir != execDir)
+		{
+			HoneyStats.ExternalDir = execDir;
+			ApplyFarmOptions();
 		}
 		if (!config.potassium)
 		{
@@ -1390,7 +1430,7 @@ public class MainController
 				statPotValue.Text = L.T("Работает");
 				statPotValue.Foreground = Palette.Text;
 				double? num4 = Store.Num(dictionary, "clients");
-				statPotSub.Text = real ? (Store.Flag(dictionary, "autoAttachProblem") ? L.T("Auto Inject выключен!") : L.T("инжектит сам (Auto Inject)")) : (Store.Flag(dictionary, "autoAttachProblem") ? L.T("автоаттач выключен!") : (num4.HasValue ? (L.T("подключён к окнам: ") + num4.Value) : L.T("автоаттач включён")));
+				statPotSub.Text = (!Weao.IsOk(Weao.Last) && Weao.Last != null && Weao.Last.Title == Weao.Title(config.executor)) ? L.T("не обновлён под Роблокс (WEAO)") : real ? (Store.Flag(dictionary, "autoAttachProblem") ? L.T("Auto Inject выключен!") : L.T("инжектит сам (Auto Inject)")) : (Store.Flag(dictionary, "autoAttachProblem") ? L.T("автоаттач выключен!") : (num4.HasValue ? (L.T("подключён к окнам: ") + num4.Value) : L.T("автоаттач включён")));
 			}
 		}
 		else

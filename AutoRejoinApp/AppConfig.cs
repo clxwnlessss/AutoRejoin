@@ -48,8 +48,11 @@ public class AppConfig
 
 	public string potassiumPath { get; set; }
 
-	// Экзекьютор: "potassium" или "real" (Real Executor). Скрипт фермы пишет файлы в workspace выбранного.
+	// Экзекьютор: "potassium", "real" (Real Executor), "volt" или "synapsez". Скрипт фермы пишет файлы в workspace выбранного.
 	public string executor { get; set; }
+
+	// Папка или exe Volt / Synapse Z, если AutoRejoin не нашёл его сам.
+	public string executorPath { get; set; }
 
 	public bool keepAutoAttach { get; set; }
 
@@ -95,6 +98,15 @@ public class AppConfig
 
 	// Оформление: "potassium" (по умолчанию, как у Потассиума) или "neon". Меняется после перезапуска.
 	public string theme { get; set; }
+
+	// Свои обои: файл в папке данных (wallpaper-*.jpg/png), затемнение и размытие (сразу), прозрачность карточек (после перезапуска).
+	public string wallpaper { get; set; }
+
+	public int wallpaperDim { get; set; }
+
+	public int wallpaperBlur { get; set; }
+
+	public int wallpaperCards { get; set; }
 
 	public bool leaderboardGuest { get; set; }
 
@@ -165,6 +177,10 @@ public class AppConfig
 		language = "";
 		theme = "potassium";
 		autoUpdate = true;
+		wallpaper = "";
+		wallpaperDim = 55;
+		wallpaperBlur = 0;
+		wallpaperCards = 80;
 		leaderboardGuest = false;
 		leaderboardUrl = "";
 		logCleanupOn = true;
@@ -185,9 +201,13 @@ public class AppConfig
 		{
 			discordMentions = "";
 		}
-		if (executor != "real")
+		if (executor != "real" && executor != "volt" && executor != "synapsez")
 		{
 			executor = "potassium";
+		}
+		if (executorPath == null)
+		{
+			executorPath = "";
 		}
 		if (theme != "neon" && theme != "potassium")
 		{

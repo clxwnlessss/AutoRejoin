@@ -412,6 +412,87 @@ public class SettingsPage
 				main.RestartApp();
 			}
 		}, 220.0));
+		BuildWallpaper(section);
+	}
+
+	// Свои обои: выбрать картинку / убрать, затемнение, размытие, прозрачность карточек.
+	private void BuildWallpaper(StackPanel section)
+	{
+		TextBlock state = HintBlock("");
+		state.Margin = new Thickness(0.0, 3.0, 0.0, 0.0);
+		Action showState = delegate
+		{
+			state.Text = Wallpaper.FilePath(Cfg) != null ? L.T("Стоят свои обои.") : L.T("Свои обои не выбраны.");
+		};
+		bool hadWallpaper = Wallpaper.FilePath(Cfg) != null;
+		Action askRestart = delegate
+		{
+			bool has = Wallpaper.FilePath(Cfg) != null;
+			if (has != hadWallpaper && MessageDialog.Ask(main.Window, L.T("Перезапустить AutoRejoin?"), L.T("Обои уже стоят. Чтобы карточки и панель стали полупрозрачными (или снова плотными), нужен перезапуск. Окна Роблокса останутся открытыми."), L.T("Перезапустить"), MessageDialog.Kind.Info, L.T("Позже")))
+			{
+				main.RestartApp();
+			}
+		};
+		Button pick = Button(L.T("Выбрать…"), delegate
+		{
+			OpenFileDialog dialog = new OpenFileDialog
+			{
+				Filter = L.T("Картинки") + "|*.jpg;*.jpeg;*.png;*.bmp;*.gif",
+				Title = L.T("Выбери обои")
+			};
+			if (dialog.ShowDialog(main.Window) != true)
+			{
+				return;
+			}
+			try
+			{
+				Cfg.wallpaper = Wallpaper.Import(dialog.FileName);
+				main.ConfigChanged();
+				main.ApplyWallpaper();
+				showState();
+				askRestart();
+			}
+			catch (Exception ex)
+			{
+				MessageDialog.Show(main.Window, L.T("Не получилось поставить обои"), ex.Message, MessageDialog.Kind.Warning);
+			}
+		});
+		Button clear = Button(L.T("Убрать"), delegate
+		{
+			Cfg.wallpaper = "";
+			Wallpaper.RemoveOld(null);
+			main.ConfigChanged();
+			main.ApplyWallpaper();
+			showState();
+			askRestart();
+		});
+		clear.Margin = new Thickness(10.0, 0.0, 0.0, 0.0);
+		StackPanel buttons = new StackPanel
+		{
+			Orientation = Orientation.Horizontal
+		};
+		buttons.Children.Add(pick);
+		buttons.Children.Add(clear);
+		FrameworkElement row = AddRow(section, L.T("Обои"), L.T("Своя картинка на фоне программы: jpg, png, bmp или gif."), buttons);
+		((StackPanel)((Grid)row).Children[0]).Children.Add(state);
+		showState();
+		AddRow(section, L.T("Затемнение обоев"), L.T("Чтобы текст хорошо читался. Меняется сразу."), WithSuffix(NumberBox(Cfg.wallpaperDim, 0.0, 95.0, integer: true, delegate(double v)
+		{
+			Cfg.wallpaperDim = (int)v;
+			main.ConfigChanged();
+			main.ApplyWallpaper();
+		}), "%"));
+		AddRow(section, L.T("Размытие обоев"), L.T("0 — чёткая картинка. Меняется сразу."), WithSuffix(NumberBox(Cfg.wallpaperBlur, 0.0, 40.0, integer: true, delegate(double v)
+		{
+			Cfg.wallpaperBlur = (int)v;
+			main.ConfigChanged();
+			main.ApplyWallpaper();
+		}), L.T("пикс.")));
+		AddRow(section, L.T("Плотность карточек"), L.T("Насколько карточки закрывают обои: 100% — сплошные. После перезапуска."), WithSuffix(NumberBox(Cfg.wallpaperCards, 20.0, 100.0, integer: true, delegate(double v)
+		{
+			Cfg.wallpaperCards = (int)v;
+			main.ConfigChanged();
+		}), "%"));
 	}
 
 	private void BuildAccounts()
@@ -607,9 +688,12 @@ public class SettingsPage
 		List<UIElement> potassiumOnly = new List<UIElement>();
 		StackPanel credentials = null;
 		TextBlock realHint = null;
+		TextBlock weaoLine = null;
+		FrameworkElement pathRow = null;
+		Action refreshWeao = null;
 		Action refresh = delegate
 		{
-			bool real = Cfg.executor == "real";
+			bool real = Cfg.executor != "potassium";
 			foreach (UIElement item in dependent)
 			{
 				item.IsEnabled = Cfg.potassium && (item != credentials || Cfg.potassiumAutoLogin) && (!real || !potassiumOnly.Contains(item));
@@ -617,9 +701,17 @@ public class SettingsPage
 			if (realHint != null)
 			{
 				realHint.Visibility = (real ? Visibility.Visible : Visibility.Collapsed);
+				realHint.Text = Cfg.executor == "real"
+					? L.T("В REAL включи Settings → Client → Auto Inject и Auto Execute. AutoRejoin сам откроет REAL, положит в его autoexec отметку инжекта и будет проверять инжект и запуск скрипта.")
+					: string.Format(L.T("В {0} включи автоинжект (Auto Inject / Auto Attach) и автоэкзекут. Скрипт фермы положи в его папку autoexec. AutoRejoin сам откроет {0}, найдёт его папку и будет проверять инжект и запуск скрипта."), Weao.DisplayName(Cfg.executor));
 			}
+			if (pathRow != null)
+			{
+				pathRow.Visibility = (Cfg.executor == "volt" || Cfg.executor == "synapsez") ? Visibility.Visible : Visibility.Collapsed;
+			}
+			refreshWeao?.Invoke();
 		};
-		ChoiceItem[] executors = new ChoiceItem[2]
+		ChoiceItem[] executors = new ChoiceItem[4]
 		{
 			new ChoiceItem
 			{
@@ -630,6 +722,16 @@ public class SettingsPage
 			{
 				Value = "real",
 				Name = "REAL (Real Executor)"
+			},
+			new ChoiceItem
+			{
+				Value = "volt",
+				Name = "Volt"
+			},
+			new ChoiceItem
+			{
+				Value = "synapsez",
+				Name = "Synapse Z"
 			}
 		};
 		ComboBox executorBox = Choice(executors, Cfg.executor ?? "potassium", delegate(string v)
@@ -642,15 +744,99 @@ public class SettingsPage
 			}
 		}, 220.0);
 		dependent.Add(executorBox);
-		FrameworkElement executorRow = AddRow(section, L.T("Чем подключать скрипт"), L.T("Потассиум или REAL. Скрипт фермы — в autoexec выбранного."), executorBox);
+		FrameworkElement executorRow = AddRow(section, L.T("Чем подключать скрипт"), L.T("Потассиум, REAL, Volt или Synapse Z. Скрипт фермы — в autoexec выбранного."), executorBox);
 		realHint = new TextBlock
 		{
-			Text = L.T("В REAL включи Settings → Client → Auto Inject и Auto Execute. AutoRejoin сам откроет REAL, положит в его autoexec отметку инжекта и будет проверять инжект и запуск скрипта."),
 			Style = Res("Hint"),
 			TextWrapping = TextWrapping.Wrap,
 			Margin = new Thickness(0.0, 8.0, 0.0, 0.0)
 		};
 		((StackPanel)((Grid)executorRow).Children[0]).Children.Add(realHint);
+		weaoLine = new TextBlock
+		{
+			Style = Res("Hint"),
+			TextWrapping = TextWrapping.Wrap,
+			Margin = new Thickness(0.0, 6.0, 0.0, 0.0)
+		};
+		((StackPanel)((Grid)executorRow).Children[0]).Children.Add(weaoLine);
+		refreshWeao = async delegate
+		{
+			string exec = Cfg.executor ?? "potassium";
+			weaoLine.Text = L.T("WEAO: проверяю…");
+			weaoLine.Foreground = Palette.Text3;
+			try
+			{
+				Weao.Status st = await Weao.GetAsync(exec);
+				if ((Cfg.executor ?? "potassium") != exec)
+				{
+					return;
+				}
+				weaoLine.Text = Weao.Describe(st);
+				weaoLine.Foreground = Weao.IsOk(st) ? Palette.Green : Palette.Yellow;
+			}
+			catch (Exception ex)
+			{
+				weaoLine.Text = L.T("WEAO: не получилось проверить — ") + ex.Message;
+				weaoLine.Foreground = Palette.Text3;
+			}
+		};
+		TextBox execPathBox = Field(L.T("Пусто — найду сам"), Cfg.executorPath);
+		execPathBox.LostKeyboardFocus += delegate
+		{
+			string text = (execPathBox.Text ?? "").Trim().Trim('"');
+			if (text != Cfg.executorPath)
+			{
+				Cfg.executorPath = text;
+				main.ConfigChanged();
+			}
+		};
+		Button execBrowse = Button(L.T("Обзор…"), delegate
+		{
+			OpenFileDialog dialog = new OpenFileDialog
+			{
+				Filter = L.T("Программы (*.exe)|*.exe"),
+				Title = string.Format(L.T("Где лежит {0}"), Weao.DisplayName(Cfg.executor))
+			};
+			if (dialog.ShowDialog(main.Window) == true)
+			{
+				execPathBox.Text = dialog.FileName;
+				Cfg.executorPath = dialog.FileName;
+				main.ConfigChanged();
+			}
+		});
+		execBrowse.Margin = new Thickness(10.0, 0.0, 0.0, 0.0);
+		Grid execGrid = new Grid();
+		execGrid.ColumnDefinitions.Add(new ColumnDefinition
+		{
+			Width = new GridLength(1.0, GridUnitType.Star)
+		});
+		execGrid.ColumnDefinitions.Add(new ColumnDefinition
+		{
+			Width = GridLength.Auto
+		});
+		execGrid.Children.Add(execPathBox);
+		Grid.SetColumn(execBrowse, 1);
+		execGrid.Children.Add(execBrowse);
+		StackPanel execPathPanel = new StackPanel
+		{
+			Margin = new Thickness(0.0, 12.0, 0.0, 0.0)
+		};
+		execPathPanel.Children.Add(new TextBlock
+		{
+			Text = L.T("Где лежит экзекьютор"),
+			FontSize = 13.0,
+			FontWeight = FontWeights.SemiBold
+		});
+		execPathPanel.Children.Add(new TextBlock
+		{
+			Text = L.T("Его exe или папка, где есть workspace и autoexec. Пусто — AutoRejoin найдёт сам (Рабочий стол, Загрузки, Документы, AppData, Program Files)."),
+			Style = Res("Hint"),
+			TextWrapping = TextWrapping.Wrap,
+			Margin = new Thickness(0.0, 3.0, 0.0, 8.0)
+		});
+		execPathPanel.Children.Add(execGrid);
+		((StackPanel)((Grid)executorRow).Children[0]).Children.Add(execPathPanel);
+		pathRow = execPathPanel;
 		CheckBox control = Switch(Cfg.potassium, delegate(bool v)
 		{
 			Cfg.potassium = v;

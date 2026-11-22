@@ -27,14 +27,16 @@ public static class HoneyStats
 		"  pcall(function() writefile(\"autorejoin_stats_\" .. player.UserId .. \".txt\", tostring(honey()) .. \"|\" .. os.time()) end)\n" +
 		"end\n";
 
-	// "potassium" or "real": whose autoexec gets the script and whose workspace has the file.
+	// The chosen executor's folder (autoexec + workspace): Potassium, Real, or the Volt / Synapse Z folder.
 	public static volatile string Executor = "potassium";
+
+	public static volatile string ExternalDir;
 
 	private static string Local => Environment.GetFolderPath(Environment.SpecialFolder.LocalApplicationData);
 
-	private static string PotassiumDir => Path.Combine(Local, Executor == "real" ? "Real" : "Potassium");
+	private static string PotassiumDir => Executor == "potassium" ? Path.Combine(Local, "Potassium") : (Executor == "real" ? Path.Combine(Local, "Real") : (ExternalDir ?? Path.Combine(Local, "AutoRejoin-none")));
 
-	private static string OtherDir => Path.Combine(Local, Executor == "real" ? "Potassium" : "Real");
+	private static string OtherDir => Executor == "potassium" ? Path.Combine(Local, "Real") : Path.Combine(Local, "Potassium");
 
 	// Puts the script into the chosen executor's autoexec (or removes it); our copy in the other executor is removed.
 	// Only touches our own file.

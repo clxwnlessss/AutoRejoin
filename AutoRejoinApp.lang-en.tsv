@@ -816,3 +816,37 @@ AutoRejoin обновился до\s	AutoRejoin updated to\s
 Обновить сейчас	Update now
 Обновляться автоматически	Update automatically
 Вышла новая версия — ставится сама в течение 5 минут, ферма продолжает работать.	A new version installs itself within 5 minutes, the farm keeps running.
+WEAO не знает такой экзекьютор	WEAO doesn't know this executor
+WEAO: работает с текущим Роблоксом	WEAO: works with the current Roblox
+WEAO: не обновлён под текущий Роблокс — скрипт в окна может не попасть	WEAO: not updated for the current Roblox — the script may not get into the windows
+WEAO: проверяю…	WEAO: checking…
+WEAO: не получилось проверить — 	WEAO: couldn't check —\s
+не обновлён под Роблокс (WEAO)	not updated for Roblox (WEAO)
+В {0} включи автоинжект (Auto Inject / Auto Attach) и автоэкзекут. Скрипт фермы положи в его папку autoexec. AutoRejoin сам откроет {0}, найдёт его папку и будет проверять инжект и запуск скрипта.	In {0} turn on auto inject (Auto Inject / Auto Attach) and auto execute. Put the farm script into its autoexec folder. AutoRejoin opens {0}, finds its folder and checks the inject and the script start.
+Потассиум, REAL, Volt или Synapse Z. Скрипт фермы — в autoexec выбранного.	Potassium, REAL, Volt or Synapse Z. Put the farm script into its autoexec.
+Пусто — найду сам	Empty — I'll find it
+Программы (*.exe)|*.exe	Programs (*.exe)|*.exe
+Где лежит {0}	Where is {0}
+Где лежит экзекьютор	Where the executor is
+Его exe или папка, где есть workspace и autoexec. Пусто — AutoRejoin найдёт сам (Рабочий стол, Загрузки, Документы, AppData, Program Files).	Its exe or the folder with workspace and autoexec. Empty — AutoRejoin finds it (Desktop, Downloads, Documents, AppData, Program Files).
+нужна картинка: jpg, png, bmp или gif	needs a picture: jpg, png, bmp or gif
+картинка больше 40 МБ	the picture is bigger than 40 MB
+не получилось открыть картинку	couldn't open the picture
+обои	wallpaper
+Стоят свои обои.	Custom wallpaper is set.
+Свои обои не выбраны.	No custom wallpaper.
+Обои уже стоят. Чтобы карточки и панель стали полупрозрачными (или снова плотными), нужен перезапуск. Окна Роблокса останутся открытыми.	The wallpaper is on. To make the cards and the sidebar see-through (or solid again), restart. Roblox windows stay open.
+Картинки	Pictures
+Выбери обои	Choose a wallpaper
+Не получилось поставить обои	Couldn't set the wallpaper
+Выбрать…	Choose…
+Убрать	Remove
+Обои	Wallpaper
+Своя картинка на фоне программы: jpg, png, bmp или gif.	Your own picture behind the app: jpg, png, bmp or gif.
+Затемнение обоев	Wallpaper dim
+Чтобы текст хорошо читался. Меняется сразу.	Keeps the text readable. Applies at once.
+Размытие обоев	Wallpaper blur
+0 — чёткая картинка. Меняется сразу.	0 — sharp picture. Applies at once.
+пикс.	px
+Плотность карточек	Card opacity
+Насколько карточки закрывают обои: 100% — сплошные. После перезапуска.	How much the cards cover the wallpaper: 100% — solid. After a restart.

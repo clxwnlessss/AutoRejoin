@@ -117,7 +117,9 @@ public static class App
 			LogError(L.T("ошибка фоновой задачи"), e.Exception);
 			e.SetObserved();
 		};
-		app.Resources.MergedDictionaries.Add(Xaml.Load<ResourceDictionary>(ThemeInfo.Neon ? "Theme.xaml" : "Theme.Mono.xaml"));
+		ResourceDictionary theme = Xaml.Load<ResourceDictionary>(ThemeInfo.Neon ? "Theme.xaml" : "Theme.Mono.xaml");
+		Wallpaper.PrepareTheme(theme);
+		app.Resources.MergedDictionaries.Add(theme);
 		Window window = Xaml.Load<Window>("MainWindow.xaml");
 		MainController controller = new MainController(window, flag);
 		Thread thread = new Thread((ThreadStart)delegate

@@ -27,6 +27,9 @@
             </EventTrigger>
         </Border.Triggers>
         <Grid ClipToBounds="True">
+            <!-- свои обои (Настройки → Оформление): картинка, затемнение поверх неё (Wallpaper.cs) -->
+            <Image x:Name="WallpaperImage" Stretch="UniformToFill" IsHitTestVisible="False" Visibility="Collapsed" RenderOptions.BitmapScalingMode="HighQuality"/>
+            <Border x:Name="WallpaperDim" Background="#000000" IsHitTestVisible="False" Visibility="Collapsed"/>
             <!-- живой неоновый фон: клетка и три плывущих пятна света -->
             <Border Background="{StaticResource GridBrush}" IsHitTestVisible="False"/>
             <Canvas IsHitTestVisible="False" Visibility="{StaticResource FxVisibility}">
