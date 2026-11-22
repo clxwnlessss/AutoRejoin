@@ -21,6 +21,9 @@ public static class App
 
 	public static bool StartHidden;
 
+	// --data from the command line (kept when the app restarts after an update).
+	public static string DataOverride;
+
 	[STAThread]
 	public static int Main(string[] args)
 	{
@@ -66,6 +69,7 @@ public static class App
 				i++;
 			}
 		}
+		DataOverride = dataOverride;
 		AppPaths.Init(dataOverride);
 		try
 		{

@@ -713,7 +713,7 @@ public class MainController
 		ShowBanner("update", L.T("Скачиваю обновление ") + version + "…", null, null, warning: false);
 		try
 		{
-			string args = ((wasRunning ? "--resume " : "") + (wasHidden ? "--hidden" : "")).Trim();
+			string args = ((wasRunning ? "--resume " : "") + (wasHidden ? "--hidden " : "") + (string.IsNullOrEmpty(App.DataOverride) ? "" : ("--data \"" + App.DataOverride + "\""))).Trim();
 			await Updater.PrepareAsync(release, args);
 		}
 		catch (Exception ex)
