@@ -16,7 +16,7 @@ function lastMonths(n) {
 
 export default function Top() {
   const { t, lang } = useLang();
-  const { session } = useAuth();
+  const { session, openAuth } = useAuth();
   const months = useMemo(() => lastMonths(6), []);
   const [month, setMonth] = useState(months[0]);
   const [data, setData] = useState(null);
@@ -47,7 +47,7 @@ export default function Top() {
           <select value={month} onChange={(e) => setMonth(e.target.value)} aria-label={t('Месяц', 'Month')}>
             {months.map((m) => <option key={m} value={m}>{label(m)}</option>)}
           </select>
-          {!session && <Link to="/register" className="btn btn-sm btn-primary">{t('Попасть в топ', 'Join the top')}</Link>}
+          {!session && <button className="btn btn-sm btn-primary" onClick={() => openAuth('register')}>{t('Попасть в топ', 'Join the top')}</button>}
         </div>
         {err && <div className="error">{errorText(err, t)}</div>}
         {!data && !err && (

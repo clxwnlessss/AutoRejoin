@@ -1,6 +1,7 @@
 import { useEffect, useState } from 'react';
 import { Link } from 'react-router-dom';
 import { useLang } from '../i18n.jsx';
+import { useAuth } from '../auth.jsx';
 import { api, DISCORD } from '../api.js';
 
 const B = import.meta.env.BASE_URL;
@@ -35,6 +36,7 @@ function Stats() {
 
 export default function Home() {
   const { t, lang } = useLang();
+  const { openAuth } = useAuth();
   const features = [
     ['🔁', t('Сам перезаходит', 'Rejoins by itself'), t('Кик, дисконнект, зависание, вылет, утечка памяти — окно закрывается и аккаунт заходит обратно.', 'Kick, disconnect, freeze, crash or memory leak — the window closes and the account joins back.')],
     ['👥', t('Сколько угодно аккаунтов', 'Unlimited accounts'), t('Запуск по очереди, мейн первым. Свой сервер, FPS и графика для каждого аккаунта.', 'Launches one by one, main first. Own server, FPS and graphics per account.')],
@@ -54,7 +56,7 @@ export default function Home() {
           <p className="lead">{t('AutoRejoin следит за каждым окном Roblox и сам возвращает аккаунты в Bee Swarm после кика, дисконнекта или зависания. Спи спокойно — ферма работает.', 'AutoRejoin watches every Roblox window and brings your accounts back to Bee Swarm after kicks, disconnects and freezes. Sleep — your farm keeps going.')}</p>
           <div className="btns">
             <Link to="/download" className="btn btn-primary">⬇ {t('Скачать бесплатно', 'Download free')}</Link>
-            <Link to="/register" className="btn btn-ghost">{t('Создать аккаунт', 'Create account')}</Link>
+            <button className="btn btn-ghost" onClick={() => openAuth('register')}>{t('Создать аккаунт', 'Create account')}</button>
           </div>
           <p className="note">{t('Один аккаунт для программы и сайта: Топ АФК, панель аккаунтов, Discord-бот.', 'One account for the app and the site: AFK top, account panel, Discord bot.')}</p>
         </div>

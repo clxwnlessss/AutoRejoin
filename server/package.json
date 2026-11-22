@@ -11,7 +11,7 @@
   },
   "scripts": {
     "start": "node index.js",
-    "test": "node test.js && node test-discord.js && node test-guild.js && node test-farm.js"
+    "test": "node test.js && node test-discord.js && node test-guild.js && node test-farm.js && node test-email.js"
   },
   "dependencies": {
     "discord.js": "^14.16.3",

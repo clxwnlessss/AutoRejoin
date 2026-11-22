@@ -6,6 +6,8 @@ const express = require('express');
 const crypto = require('crypto');
 const { createDiscord, DISCORD_SCHEMA } = require('./discord');
 const { createTelegram, TELEGRAM_SCHEMA } = require('./telegram');
+const { mountEmail, EMAIL_SCHEMA } = require('./email');
+const { createMailer } = require('./mailer');
 
 const HEARTBEAT_MAX_GAP = 150; // сек: дольше между пульсами — промежуток не засчитывается (ПК спал, интернет пропал)
 const ONLINE_WINDOW = 180;     // сек: пульс свежее — человек «сейчас стоит»
@@ -69,7 +71,7 @@ function rateLimiter(limit, windowMs) {
 }
 
 async function initDb(pool) {
-  for (const sql of SCHEMA.concat(DISCORD_SCHEMA, TELEGRAM_SCHEMA)) await pool.query(sql);
+  for (const sql of SCHEMA.concat(DISCORD_SCHEMA, TELEGRAM_SCHEMA, EMAIL_SCHEMA)) await pool.query(sql);
 }
 
 function createApp(pool, options = {}) {
@@ -254,7 +256,8 @@ function createApp(pool, options = {}) {
   app.get('/api/me', auth, async (req, res, next) => {
     try {
       const month = monthKey(now());
-      res.json({ nickname: req.user.nickname, month, admin: isAdmin(req.user), ...(await stats(req.user.id, month)) });
+      const em = await pool.query('SELECT email FROM user_emails WHERE user_id = $1', [req.user.id]);
+      res.json({ nickname: req.user.nickname, month, admin: isAdmin(req.user), email: em.rows.length ? em.rows[0].email : null, ...(await stats(req.user.id, month)) });
     } catch (e) { next(e); }
   });
 
@@ -275,6 +278,11 @@ function createApp(pool, options = {}) {
       res.json({ ok: true });
     } catch (e) { next(e); }
   });
+
+  // Почта: привязка с кодом и сброс забытого пароля по коду из письма.
+  const mailer = options.mailer || createMailer(options.mail || {});
+  const emailLimit = rateLimiter(options.authLimit || 20, 10 * 60 * 1000);
+  mountEmail(app, pool, { now, auth, authLimit: emailLimit, mailer, checkPassword, setPassword, dropSessions, issueToken, log: (...a) => console.log(...a) });
 
   // ---------- админка ----------
   app.get('/api/admin/users', auth, adminOnly, async (req, res, next) => {

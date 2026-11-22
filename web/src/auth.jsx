@@ -25,6 +25,18 @@ export function AuthProvider({ children }) {
     return s;
   }, []);
 
+  // Password reset by email signs the browser in with the token the server returns.
+  const adopt = useCallback((token, nickname) => {
+    const s = { token, nickname };
+    save(s);
+    setSession(s);
+  }, []);
+
+  // Sign-in modal: openAuth('login' | 'register' | 'forgot'), closeAuth().
+  const [authModal, setAuthModal] = useState(null);
+  const openAuth = useCallback((mode = 'login') => setAuthModal(mode), []);
+  const closeAuth = useCallback(() => setAuthModal(null), []);
+
   const signOut = useCallback(async () => {
     const token = session && session.token;
     save(null);
@@ -41,7 +53,7 @@ export function AuthProvider({ children }) {
     return () => window.removeEventListener('storage', onStorage);
   }, []);
 
-  return <AuthContext.Provider value={{ session, signIn, signOut, expired }}>{children}</AuthContext.Provider>;
+  return <AuthContext.Provider value={{ session, signIn, signOut, expired, adopt, authModal, openAuth, closeAuth }}>{children}</AuthContext.Provider>;
 }
 
 export const useAuth = () => useContext(AuthContext);

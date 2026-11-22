@@ -1,5 +1,5 @@
 import { useEffect, useState } from 'react';
-import { Link, NavLink, Navigate, Route, Routes, useLocation } from 'react-router-dom';
+import { Link, NavLink, Navigate, Route, Routes, useLocation, useNavigate } from 'react-router-dom';
 import { useLang } from './i18n.jsx';
 import { useAuth } from './auth.jsx';
 import { DISCORD, REPO } from './api.js';
@@ -12,12 +12,14 @@ import Changelog from './pages/Changelog.jsx';
 import Faq from './pages/Faq.jsx';
 import NotFound from './pages/NotFound.jsx';
 import Admin from './pages/Admin.jsx';
+import AuthModal from './components/AuthModal.jsx';
 
 const ICON = `${import.meta.env.BASE_URL}icon.png`;
 
 function Header() {
   const { t, lang, setLang } = useLang();
-  const { session } = useAuth();
+  const { session, signOut, openAuth } = useAuth();
+  const navigate = useNavigate();
   const [open, setOpen] = useState(false);
   const location = useLocation();
   useEffect(() => setOpen(false), [location.pathname]);
@@ -39,9 +41,17 @@ function Header() {
           <button className="lang" onClick={() => setLang(lang === 'ru' ? 'en' : 'ru')} title={t('Switch to English', 'Переключить на русский')}>
             {lang === 'ru' ? 'EN' : 'RU'}
           </button>
-          {session
-            ? <NavLink to="/dashboard" className="btn btn-sm btn-ghost">👤 {session.nickname}</NavLink>
-            : <NavLink to="/login" className="btn btn-sm btn-ghost">{t('Войти', 'Sign in')}</NavLink>}
+          {session ? (
+            <span className="nav-user">
+              <NavLink to="/dashboard" className="btn btn-sm btn-ghost">👤 {session.nickname}</NavLink>
+              <button className="btn btn-sm btn-ghost" onClick={() => { signOut(); navigate('/'); }} title={t('Выйти из аккаунта', 'Sign out')}>{t('Выйти', 'Sign out')}</button>
+            </span>
+          ) : (
+            <>
+              <button className="btn btn-sm btn-ghost" onClick={() => { setOpen(false); openAuth('login'); }}>{t('Войти', 'Sign in')}</button>
+              <button className="btn btn-sm btn-ghost" onClick={() => { setOpen(false); openAuth('register'); }}>{t('Регистрация', 'Sign up')}</button>
+            </>
+          )}
           <Link to="/download" className="btn btn-sm btn-primary">{t('Скачать', 'Download')}</Link>
         </nav>
       </div>
@@ -85,6 +95,7 @@ function Title() {
       '/top': t('Топ АФК за месяц', 'Monthly AFK top'),
       '/login': t('Вход', 'Sign in'),
       '/register': t('Регистрация', 'Sign up'),
+      '/forgot': t('Сброс пароля', 'Reset password'),
       '/dashboard': t('Мой аккаунт', 'My account'),
       '/faq': 'FAQ',
       '/admin': t('Админка', 'Admin'),
@@ -109,6 +120,7 @@ export default function App() {
           <Route path="/top" element={<Top />} />
           <Route path="/login" element={<Auth mode="login" />} />
           <Route path="/register" element={<Auth mode="register" />} />
+          <Route path="/forgot" element={<Auth mode="forgot" />} />
           <Route path="/dashboard" element={<Private><Dashboard /></Private>} />
           <Route path="/admin" element={<Private><Admin /></Private>} />
           <Route path="/changelog" element={<Changelog />} />
@@ -117,6 +129,7 @@ export default function App() {
         </Routes>
       </main>
       <Footer />
+      <AuthModal />
     </>
   );
 }

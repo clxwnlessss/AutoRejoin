@@ -26,3 +26,9 @@ services:
       # Telegram bot (@BotFather → /newbot). Secret — paste it only into Render.
       - key: TELEGRAM_BOT_TOKEN
         sync: false
+      # Email codes (link email, reset password): Brevo free plan → SMTP & API → API key. Secret — only into Render.
+      - key: BREVO_API_KEY
+        sync: false
+      # Sender address verified in Brevo (Senders → Add a sender), e.g. your Gmail.
+      - key: MAIL_FROM
+        sync: false

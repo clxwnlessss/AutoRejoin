@@ -1,6 +1,7 @@
 import { useEffect, useState } from 'react';
 import { Link } from 'react-router-dom';
 import { useLang } from '../i18n.jsx';
+import { useAuth } from '../auth.jsx';
 import { releases, REPO, DISCORD } from '../api.js';
 
 function ruPlural(n, one, few, many) {
@@ -14,6 +15,7 @@ const FALLBACK =`https://github.com/${REPO}/releases/latest/download/AutoRejoin.
 
 export default function Download() {
   const { t, lang } = useLang();
+  const { openAuth } = useAuth();
   const [rel, setRel] = useState(null);
   const [err, setErr] = useState(false);
   useEffect(() => { releases().then((r) => setRel(r[0] || null)).catch(() => setErr(true)); }, []);
@@ -55,7 +57,7 @@ export default function Download() {
           </div>
           <div className="card step">
             <h3>{t('Войди в Топ АФК (по желанию)', 'Sign in to the AFK top (optional)')}</h3>
-            <p>{t('Тот же ник и пароль, что на этом сайте. ', 'Same nickname and password as on this site. ')}<Link to="/register">{t('Создать аккаунт', 'Create an account')}</Link>{t(' — тогда часы АФК идут в зачёт, а аккаунты видно в панели на сайте.', ' — then your AFK hours count and your accounts show up in the site panel.')}</p>
+            <p>{t('Тот же ник и пароль, что на этом сайте. ', 'Same nickname and password as on this site. ')}<a href="/register" onClick={(e) => { e.preventDefault(); openAuth('register'); }}>{t('Создать аккаунт', 'Create an account')}</a>{t(' — тогда часы АФК идут в зачёт, а аккаунты видно в панели на сайте.', ' — then your AFK hours count and your accounts show up in the site panel.')}</p>
           </div>
           <div className="card step">
             <h3>{t('Добавь аккаунты Roblox', 'Add your Roblox accounts')}</h3>

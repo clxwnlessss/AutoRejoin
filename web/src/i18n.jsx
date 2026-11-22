@@ -41,7 +41,13 @@ export function errorText(e, t) {
     'Нужно войти в аккаунт.': 'Please sign in.',
     'Только для администратора.': 'Admins only.',
     'Пользователь не найден.': 'User not found.',
-    'Сначала привяжи Discord-бота в программе: Настройки → Привязать бота.': 'Link the Discord bot in the app first: Settings → Link bot.'
+    'Сначала привяжи Discord-бота в программе: Настройки → Привязать бота.': 'Link the Discord bot in the app first: Settings → Link bot.',
+    'Похоже, это не почта.': 'That doesn’t look like an email.',
+    'Эта почта уже привязана к другому аккаунту.': 'This email is already linked to another account.',
+    'Код уже отправлен. Новый можно запросить через минуту.': 'A code was just sent. You can ask for a new one in a minute.',
+    'Неверный или просроченный код.': 'Wrong or expired code.',
+    'Отправка писем на сервере ещё не настроена.': 'Sending emails isn’t set up on the server yet.',
+    'Не удалось отправить письмо. Попробуй позже.': 'Couldn’t send the email. Try again later.'
   };
   return map[e.message] || e.message;
 }

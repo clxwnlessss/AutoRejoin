@@ -23,7 +23,10 @@ initDb(pool)
     const port = process.env.PORT || 3000;
     // Telegram bot (optional): TELEGRAM_BOT_TOKEN from @BotFather; the webhook goes to this server's public URL.
     const telegram = { token: process.env.TELEGRAM_BOT_TOKEN || '' };
-    const app = createApp(pool, { discord, telegram });
+    // Email codes (optional): BREVO_API_KEY + MAIL_FROM (sender verified in Brevo). Without them email features answer 503.
+    const mail = { brevoKey: process.env.BREVO_API_KEY || '', from: process.env.MAIL_FROM || '' };
+    const app = createApp(pool, { discord, telegram, mail });
+    console.log(mail.brevoKey && mail.from ? `Почта: письма уходят от ${mail.from}` : 'Почта: не настроена (нет BREVO_API_KEY/MAIL_FROM)');
     app.listen(port, () => console.log(`AutoRejoin Server слушает порт ${port}`));
     const publicUrl = process.env.PUBLIC_URL || process.env.RENDER_EXTERNAL_URL || '';
     if (telegram.token && publicUrl) {

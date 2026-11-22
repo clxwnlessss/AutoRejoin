@@ -1,10 +1,11 @@
 import { useCallback, useEffect, useRef, useState } from 'react';
-import { Link } from 'react-router-dom';
+import { Link, useNavigate } from 'react-router-dom';
 import { useLang, errorText } from '../i18n.jsx';
 import { useAuth } from '../auth.jsx';
 import { api, formatHours, DISCORD } from '../api.js';
 import ChangePassword from '../components/ChangePassword.jsx';
 import Analytics from '../components/Analytics.jsx';
+import EmailCard from '../components/EmailCard.jsx';
 
 const BADGE = { ingame: 'b-green', script: 'b-cyan', loading: 'b-cyan', launching: 'b-cyan', queued: 'b-orange', waiting: 'b-orange', offline: 'b-orange', problem: 'b-red', blocked: 'b-red', deferred: 'b-red' };
 
@@ -20,6 +21,7 @@ function stateLabel(state, t) {
 export default function Dashboard() {
   const { t, lang } = useLang();
   const { session, signOut, expired } = useAuth();
+  const navigate = useNavigate();
   const [me, setMe] = useState(null);
   const [agent, setAgent] = useState(null);
   const [err, setErr] = useState(null);
@@ -131,7 +133,7 @@ export default function Dashboard() {
         </div>
         <div className="row">
           {me && me.admin && <Link to="/admin" className="btn btn-sm btn-ghost">🛠️ {t('Админка', 'Admin')}</Link>}
-          <button className="btn btn-sm btn-ghost" onClick={signOut}>{t('Выйти', 'Sign out')}</button>
+          <button className="btn btn-sm btn-ghost" onClick={() => { signOut(); navigate('/'); }}>{t('Выйти', 'Sign out')}</button>
         </div>
       </div>
       {err && <div className="error">{errorText(err, t)}</div>}
@@ -199,7 +201,8 @@ export default function Dashboard() {
         </div>
       )}
 
-      <ChangePassword token={token} onExpired={expired} />
+      <ChangePassword token={token} email={me ? me.email : null} onExpired={expired} />
+      <EmailCard token={token} email={me ? me.email || null : undefined} onChange={(email) => setMe((m) => ({ ...m, email }))} onExpired={expired} />
     </div>
   );
 }

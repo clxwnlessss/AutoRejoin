@@ -8,7 +8,7 @@ import { SITE_URL } from '../site.config.js';
 const out = join(dirname(fileURLToPath(import.meta.url)), '..', '..', 'docs');
 copyFileSync(join(out, 'index.html'), join(out, '404.html'));
 const pages = ['', 'download', 'top', 'faq', 'changelog'];
-for (const p of [...pages.filter(Boolean), 'login', 'register', 'dashboard', 'admin']) {
+for (const p of [...pages.filter(Boolean), 'login', 'register', 'forgot', 'dashboard', 'admin']) {
   mkdirSync(join(out, p), { recursive: true });
   copyFileSync(join(out, 'index.html'), join(out, p, 'index.html'));
 }
