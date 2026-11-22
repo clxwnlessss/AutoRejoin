@@ -16,7 +16,7 @@ export default function AuthForm({ mode, onMode, onDone, autoFocus }) {
   const [repeat, setRepeat] = useState('');
   const [email, setEmail] = useState('');
   const [code, setCode] = useState('');
-  const [step, setStep] = useState(1); // forgot: 1 = email, 2 = code + new password
+  const [step, setStep] = useState(1); // forgot / register: 1 = form, 2 = code from the email
   const [busy, setBusy] = useState(false);
   const [slow, setSlow] = useState(false);
   const [err, setErr] = useState('');
@@ -38,12 +38,31 @@ export default function AuthForm({ mode, onMode, onDone, autoFocus }) {
   function submit(e) {
     e.preventDefault();
     if (forgot) return step === 1 ? sendCode() : resetPassword();
-    if (register) {
-      if (!NICK_RE.test(nickname.trim())) return setErr(t('Ник: 3–20 символов, латиница, цифры и _.', 'Nickname: 3–20 characters, latin letters, digits and _.'));
-      if (password.length < 6) return setErr(t('Пароль: от 6 символов.', 'Password: at least 6 characters.'));
-      if (password !== repeat) return setErr(t('Пароли не совпадают.', 'Passwords don’t match.'));
-    }
-    return run(async () => { await signIn(mode, nickname.trim(), password); onDone && onDone(); });
+    if (register) return step === 1 ? signupCode() : signupConfirm();
+    return run(async () => { await signIn('login', nickname.trim(), password); onDone && onDone(); });
+  }
+
+  // Sign-up: email + nickname + password → a code goes to the email → the code creates the account.
+  function signupCode() {
+    if (!EMAIL_RE.test(email.trim())) return setErr(t('Похоже, это не почта.', 'That doesn’t look like an email.'));
+    if (!NICK_RE.test(nickname.trim())) return setErr(t('Ник: 3–20 символов, латиница, цифры и _.', 'Nickname: 3–20 characters, latin letters, digits and _.'));
+    if (password.length < 6) return setErr(t('Пароль: от 6 символов.', 'Password: at least 6 characters.'));
+    if (password !== repeat) return setErr(t('Пароли не совпадают.', 'Passwords don’t match.'));
+    return run(async () => {
+      const r = await api('/api/register/start', { method: 'POST', body: { email: email.trim(), nickname: nickname.trim(), password } });
+      setStep(2);
+      setCode('');
+      setNote(t(`Мы отправили 6-значный код на ${r.email}. Проверь и «Спам».`, `We sent a 6-digit code to ${r.email}. Check spam too.`));
+    });
+  }
+
+  function signupConfirm() {
+    if (!/^\d{6}$/.test(code.trim())) return setErr(t('Код — 6 цифр из письма.', 'The code is the 6 digits from the email.'));
+    return run(async () => {
+      const data = await api('/api/register/confirm', { method: 'POST', body: { email: email.trim(), code: code.trim() } });
+      adopt(data.token, data.nickname);
+      onDone && onDone();
+    });
   }
 
   function sendCode() {
@@ -68,7 +87,13 @@ export default function AuthForm({ mode, onMode, onDone, autoFocus }) {
 
   return (
     <div>
-      {!forgot && (
+      {register && step === 2 && (
+        <div style={{ marginBottom: 18 }}>
+          <h3 style={{ margin: '0 0 4px' }}>✉️ {t('Подтверди почту', 'Confirm your email')}</h3>
+          <p className="muted" style={{ margin: 0, fontSize: 14 }}>{t('Аккаунт создастся, когда введёшь код из письма.', 'The account is created once you enter the code from the email.')}</p>
+        </div>
+      )}
+      {!forgot && !(register && step === 2) && (
         <div className="tabs">
           <a href="#login" className={register ? '' : 'on'} onClick={(e) => { e.preventDefault(); onMode('login'); }}>{t('Вход', 'Sign in')}</a>
           <a href="#register" className={register ? 'on' : ''} onClick={(e) => { e.preventDefault(); onMode('register'); }}>{t('Регистрация', 'Sign up')}</a>
@@ -87,11 +112,25 @@ export default function AuthForm({ mode, onMode, onDone, autoFocus }) {
       {err && <div className="error" role="alert">{err}</div>}
       {note && !err && <div className="info" style={{ marginBottom: 16 }}>{note}</div>}
       <form onSubmit={submit}>
-        {!forgot && (
+        {register && step === 1 && (
+          <div className="field">
+            <label htmlFor="af-remail">{t('Почта', 'Email')}</label>
+            <input id="af-remail" ref={first} type="email" value={email} onChange={(e) => setEmail(e.target.value)} autoComplete="email" required maxLength={254} />
+            <div className="hint">{t('Придёт код подтверждения. Нужна, чтобы восстановить пароль.', 'A confirmation code goes here. Needed to recover your password.')}</div>
+          </div>
+        )}
+        {register && step === 2 && (
+          <div className="field">
+            <label htmlFor="af-scode">{t('Код из письма', 'Code from the email')}</label>
+            <input id="af-scode" ref={first} className="code-input" inputMode="numeric" autoComplete="one-time-code" value={code} onChange={(e) => setCode(e.target.value.replace(/\D/g, '').slice(0, 6))} required placeholder="••••••" />
+            <div className="hint">{email} · <a href="#resend" onClick={(e) => { e.preventDefault(); signupCode(); }}>{t('прислать ещё раз', 'send again')}</a> · <a href="#edit" onClick={(e) => { e.preventDefault(); setStep(1); setNote(''); }}>{t('изменить данные', 'edit details')}</a></div>
+          </div>
+        )}
+        {!forgot && !(register && step === 2) && (
           <>
             <div className="field">
-              <label htmlFor="af-nick">{t('Ник', 'Nickname')}</label>
-              <input id="af-nick" ref={first} value={nickname} onChange={(e) => setNickname(e.target.value)} autoComplete="username" required maxLength={20} />
+              <label htmlFor="af-nick">{register ? t('Ник', 'Nickname') : t('Ник или почта', 'Nickname or email')}</label>
+              <input id="af-nick" ref={register ? undefined : first} value={nickname} onChange={(e) => setNickname(e.target.value)} autoComplete="username" required maxLength={register ? 20 : 254} />
               {register && <div className="hint">{t('Виден в Топе АФК. Латиница, цифры и _, 3–20 символов.', 'Shown in the AFK top. Latin letters, digits and _, 3–20 characters.')}</div>}
             </div>
             <div className="field">
@@ -135,7 +174,7 @@ export default function AuthForm({ mode, onMode, onDone, autoFocus }) {
         <button className="btn btn-primary full" disabled={busy}>
           {busy ? <span className="spinner" />
             : forgot ? (step === 1 ? t('Прислать код', 'Send code') : t('Сменить пароль и войти', 'Change password & sign in'))
-            : register ? t('Создать аккаунт', 'Create account') : t('Войти', 'Sign in')}
+            : register ? (step === 1 ? t('Продолжить', 'Continue') : t('Подтвердить и войти', 'Confirm & sign in')) : t('Войти', 'Sign in')}
         </button>
         {slow && <p className="muted center" style={{ fontSize: 14 }}>{t('Сервер просыпается — до минуты…', 'The server is waking up — up to a minute…')}</p>}
       </form>

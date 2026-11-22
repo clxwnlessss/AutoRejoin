@@ -37,7 +37,6 @@ public class TopPage
 
 	private DateTime topLoadedAt = DateTime.MinValue;
 
-	private bool busy;
 
 	private string Token => main.Vault.leaderboardToken;
 
@@ -131,30 +130,7 @@ public class TopPage
 			Style = (Style)host.FindResource("H2"),
 			FontSize = 17.0
 		});
-		panel.Children.Add(Hint(L.T("Пока аккаунты в игре, сервер копит твоё АФК-время.")));
-		TextBox nick = new TextBox
-		{
-			Style = Res("Field"),
-			Tag = L.T("Ник (3–20: латиница, цифры, _)"),
-			MaxLength = 20,
-			Margin = new Thickness(0.0, 16.0, 0.0, 0.0)
-		};
-		PasswordBox password = new PasswordBox
-		{
-			Style = Res("PasswordField"),
-			MaxLength = 100,
-			Margin = new Thickness(0.0, 10.0, 0.0, 0.0)
-		};
-		TextBlock passLabel = Hint(L.T("Пароль (от 6 символов)"));
-		passLabel.Margin = new Thickness(2.0, 10.0, 0.0, -6.0);
-		TextBlock error = Hint("");
-		error.Foreground = Palette.Red;
-		error.Margin = new Thickness(2.0, 10.0, 0.0, 0.0);
-		error.Visibility = Visibility.Collapsed;
-		panel.Children.Add(nick);
-		panel.Children.Add(passLabel);
-		panel.Children.Add(password);
-		panel.Children.Add(error);
+		panel.Children.Add(Hint(L.T("Пока аккаунты в игре, сервер копит твоё АФК-время. Один аккаунт для программы и сайта.")));
 		StackPanel buttons = new StackPanel
 		{
 			Orientation = Orientation.Horizontal,
@@ -169,57 +145,13 @@ public class TopPage
 		buttons.Children.Add(register);
 		buttons.Children.Add(guest);
 		panel.Children.Add(buttons);
-		Action<bool> submit = async delegate(bool create)
-		{
-			if (busy)
-			{
-				return;
-			}
-			string n = (nick.Text ?? "").Trim();
-			string p = password.Password ?? "";
-			error.Visibility = Visibility.Collapsed;
-			busy = true;
-			login.IsEnabled = register.IsEnabled = guest.IsEnabled = false;
-			Button pressed = create ? register : login;
-			object label = pressed.Content;
-			pressed.Content = L.T("Подключаюсь…");
-			try
-			{
-				Tuple<string, string> session = create ? (await Leaderboard.Register(BaseUrl, n, p)) : (await Leaderboard.Login(BaseUrl, n, p));
-				main.SetLeaderboardSession(session.Item1, session.Item2);
-				main.AppLog(null, (create ? L.T("Создан аккаунт топа АФК: ") : L.T("Вход в топ АФК: ")) + session.Item2, "Cyan");
-				busy = false;
-				Build();
-				Anim.SlideIn(host, 12.0, 0.3);
-				await Beat();
-				await LoadTop();
-			}
-			catch (Leaderboard.ApiException ex)
-			{
-				error.Text = ex.Message;
-				error.Visibility = Visibility.Visible;
-			}
-			finally
-			{
-				busy = false;
-				login.IsEnabled = register.IsEnabled = guest.IsEnabled = true;
-				pressed.Content = label;
-			}
-		};
 		login.Click += delegate
 		{
-			submit(obj: false);
+			OpenAuth(register: false);
 		};
 		register.Click += delegate
 		{
-			submit(obj: true);
-		};
-		password.KeyDown += delegate(object s, KeyEventArgs e)
-		{
-			if (e.Key == Key.Return)
-			{
-				submit(obj: false);
-			}
+			OpenAuth(register: true);
 		};
 		guest.Click += delegate
 		{
@@ -230,6 +162,30 @@ public class TopPage
 		};
 		card.Child = panel;
 		host.Children.Add(card);
+	}
+
+	// Modal sign in / sign up (with the email code). On success the session is saved and the page shows the profile.
+	private async void OpenAuth(bool register)
+	{
+		AuthDialog dialog = new AuthDialog(BaseUrl, register);
+		if (!dialog.ShowDialog(main.Window))
+		{
+			return;
+		}
+		main.Config.leaderboardGuest = false;
+		main.ConfigChanged();
+		main.SetLeaderboardSession(dialog.Token, dialog.Nickname);
+		main.AppLog(null, (dialog.Registered ? L.T("Создан аккаунт топа АФК: ") : L.T("Вход в топ АФК: ")) + dialog.Nickname, "Cyan");
+		Build();
+		Anim.SlideIn(host, 12.0, 0.3);
+		try
+		{
+			await Beat();
+			await LoadTop();
+		}
+		catch
+		{
+		}
 	}
 
 	private void BuildGuest()
@@ -258,10 +214,7 @@ public class TopPage
 		enter.VerticalAlignment = VerticalAlignment.Center;
 		enter.Click += delegate
 		{
-			main.Config.leaderboardGuest = false;
-			main.ConfigChanged();
-			Build();
-			Anim.SlideIn(host, 12.0, 0.3);
+			OpenAuth(register: false);
 		};
 		Grid.SetColumn(enter, 1);
 		grid.Children.Add(text);

@@ -11,6 +11,18 @@ const EMAIL_SCHEMA = [
      email_lc TEXT NOT NULL UNIQUE,
      verified_at TIMESTAMPTZ NOT NULL DEFAULT NOW()
    )`,
+  // Sign-up waiting for the email code: the account is created only after the code fits.
+  `CREATE TABLE IF NOT EXISTS pending_signups (
+     email_lc TEXT PRIMARY KEY,
+     email TEXT NOT NULL,
+     nickname TEXT NOT NULL,
+     pass_hash TEXT NOT NULL,
+     pass_salt TEXT NOT NULL,
+     code_hash TEXT NOT NULL,
+     attempts INTEGER NOT NULL DEFAULT 0,
+     created_at TIMESTAMPTZ NOT NULL,
+     expires_at TIMESTAMPTZ NOT NULL
+   )`,
   `CREATE TABLE IF NOT EXISTS email_codes (
      id SERIAL PRIMARY KEY,
      user_id INTEGER NOT NULL REFERENCES users(id) ON DELETE CASCADE,
@@ -34,7 +46,7 @@ const sha = (s) => crypto.createHash('sha256').update(s).digest('hex');
 const codeHash = (id, code) => sha(`${id}:${code}`);
 
 function mountEmail(app, pool, h) {
-  const { now, auth, authLimit, mailer, checkPassword, setPassword, dropSessions, issueToken, log } = h;
+  const { now, auth, authLimit, mailer, checkPassword, setPassword, dropSessions, issueToken, log, nickRe, hashPassword } = h;
 
   async function sendCode(user, purpose, email) {
     const at = now();
@@ -119,6 +131,76 @@ function mountEmail(app, pool, h) {
       await pool.query('DELETE FROM user_emails WHERE user_id = $1', [req.user.id]);
       await pool.query('DELETE FROM email_codes WHERE user_id = $1', [req.user.id]);
       res.json({ ok: true });
+    } catch (e) { next(e); }
+  });
+
+  // ---------- sign-up with a confirmed email ----------
+  // Step 1: nickname + email + password are checked, a code goes to the email. Nothing is created yet.
+  app.post('/api/register/start', authLimit, async (req, res, next) => {
+    try {
+      const b = req.body || {};
+      const nickname = String(b.nickname || '').trim();
+      const email = normEmail(b.email);
+      const password = String(b.password || '');
+      if (!nickRe.test(nickname)) return res.status(400).json({ error: 'Ник: 3–20 символов, латиница, цифры и _.' });
+      if (!EMAIL_RE.test(email)) return res.status(400).json({ error: 'Похоже, это не почта.' });
+      const bad = checkPassword(password);
+      if (bad) return res.status(400).json({ error: bad });
+      if (!mailer.configured) return mailError(res, new Error('mail not configured'));
+      const nickTaken = await pool.query('SELECT 1 FROM users WHERE nickname_lc = $1', [nickname.toLowerCase()]);
+      if (nickTaken.rows.length) return res.status(409).json({ error: 'Такой ник уже занят.' });
+      const mailTaken = await pool.query('SELECT 1 FROM user_emails WHERE email_lc = $1', [email.toLowerCase()]);
+      if (mailTaken.rows.length) return res.status(409).json({ error: 'Эта почта уже привязана к другому аккаунту.' });
+      const at = now();
+      const prev = await pool.query('SELECT created_at FROM pending_signups WHERE email_lc = $1', [email.toLowerCase()]);
+      if (prev.rows.length && at - new Date(prev.rows[0].created_at) < RESEND_GAP) return res.status(429).json({ error: WAIT });
+      const code = String(crypto.randomInt(0, 1000000)).padStart(6, '0');
+      const salt = crypto.randomBytes(16).toString('hex');
+      await pool.query('DELETE FROM pending_signups WHERE email_lc = $1 OR expires_at < $2', [email.toLowerCase(), at]);
+      await pool.query(
+        'INSERT INTO pending_signups (email_lc, email, nickname, pass_hash, pass_salt, code_hash, created_at, expires_at) VALUES ($1, $2, $3, $4, $5, $6, $7, $8)',
+        [email.toLowerCase(), email, nickname, hashPassword(password, salt), salt, codeHash('signup:' + email.toLowerCase(), code), at, new Date(at.getTime() + CODE_TTL)]);
+      const m = codeEmail(code, 'signup', nickname);
+      try { await mailer.send(email, m.subject, m.text, m.html); } catch (e) {
+        await pool.query('DELETE FROM pending_signups WHERE email_lc = $1', [email.toLowerCase()]);
+        return mailError(res, e);
+      }
+      res.json({ ok: true, email });
+    } catch (e) { next(e); }
+  });
+
+  // Step 2: the code from the letter → the account is created with this email, and signed in.
+  app.post('/api/register/confirm', authLimit, async (req, res, next) => {
+    try {
+      const email = normEmail(req.body && req.body.email);
+      const code = String((req.body && req.body.code) || '').trim();
+      const { rows } = await pool.query('SELECT * FROM pending_signups WHERE email_lc = $1', [email.toLowerCase()]);
+      const p = rows[0];
+      if (!p || new Date(p.expires_at) < now() || p.attempts >= MAX_TRIES) return res.status(400).json({ error: BAD_CODE });
+      const good = /^\d{6}$/.test(code) && crypto.timingSafeEqual(Buffer.from(codeHash('signup:' + p.email_lc, code)), Buffer.from(p.code_hash));
+      if (!good) {
+        await pool.query('UPDATE pending_signups SET attempts = attempts + 1 WHERE email_lc = $1', [p.email_lc]);
+        return res.status(400).json({ error: BAD_CODE });
+      }
+      let id;
+      try {
+        const ins = await pool.query('INSERT INTO users (nickname, nickname_lc, pass_hash, pass_salt) VALUES ($1, $2, $3, $4) RETURNING id',
+          [p.nickname, p.nickname.toLowerCase(), p.pass_hash, p.pass_salt]);
+        id = ins.rows[0].id;
+      } catch (e) {
+        if (e.code === '23505' || /unique|duplicate/i.test(e.message)) return res.status(409).json({ error: 'Такой ник уже занят.' });
+        throw e;
+      }
+      try {
+        await pool.query('INSERT INTO user_emails (user_id, email, email_lc, verified_at) VALUES ($1, $2, $3, $4)', [id, p.email, p.email_lc, now()]);
+      } catch (e) {
+        await pool.query('DELETE FROM users WHERE id = $1', [id]);
+        if (e.code === '23505' || /unique|duplicate/i.test(e.message)) return res.status(409).json({ error: 'Эта почта уже привязана к другому аккаунту.' });
+        throw e;
+      }
+      await pool.query('DELETE FROM pending_signups WHERE email_lc = $1', [p.email_lc]);
+      log('new account with email: ' + p.nickname);
+      res.json({ token: await issueToken(id), nickname: p.nickname, email: p.email });
     } catch (e) { next(e); }
   });
 

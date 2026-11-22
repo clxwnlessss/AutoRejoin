@@ -720,3 +720,31 @@ Discord: команда «Перезайти»	Discord: "Rejoin" command
 ~^окно не отвечает уже (\d+) сек$	window not responding for $1 s
 кука перестала работать (401)	cookie stopped working (401)
 Роблокс не пускает аккаунт (модерация)	Roblox blocks the account (moderation)
+Один аккаунт для программы и сайта (Топ АФК).	One account for the app and the website (AFK top).
+Регистрация	Sign up
+НИК ИЛИ ПОЧТА	NICKNAME OR EMAIL
+Ник или почта	Nickname or email
+Забыл пароль?	Forgot password?
+ПОЧТА	EMAIL
+На неё придёт код подтверждения. Нужна, чтобы восстановить пароль.	A confirmation code goes here. Needed to recover your password.
+НИК	NICKNAME
+3–20: латиница, цифры, _	3–20: latin letters, digits, _
+Виден в Топе АФК.	Shown in the AFK top.
+ПОВТОРИ ПАРОЛЬ	REPEAT PASSWORD
+КОД ИЗ ПИСЬМА	CODE FROM THE EMAIL
+Прислать ещё раз	Send again
+Изменить данные	Edit details
+Вход в аккаунт	Sign in
+Продолжить	Continue
+Подтверди почту	Confirm your email
+Подтвердить	Confirm
+Мы отправили 6-значный код на {0}. Проверь и «Спам».	We sent a 6-digit code to {0}. Check spam too.
+Новый код отправлен на {0}.	A new code was sent to {0}.
+Введи ник (или почту) и пароль.	Enter your nickname (or email) and password.
+Вхожу…	Signing in…
+Похоже, это не почта.	That doesn’t look like an email.
+Пароль: от 6 символов.	Password: at least 6 characters.
+Пароли не совпадают.	Passwords don’t match.
+Отправляю код…	Sending the code…
+Код — 6 цифр из письма.	The code is the 6 digits from the email.
+Пока аккаунты в игре, сервер копит твоё АФК-время. Один аккаунт для программы и сайта.	While accounts are in game, the server counts your AFK time. One account for the app and the website.

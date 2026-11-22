@@ -27,7 +27,9 @@ function createMailer(options = {}) {
 function codeEmail(code, purpose, nickname) {
   const what = purpose === 'reset'
     ? { ru: 'сброса пароля', en: 'to reset your password', subj: 'Код для сброса пароля / Password reset code' }
-    : { ru: 'привязки почты', en: 'to link this email', subj: 'Код подтверждения почты / Email confirmation code' };
+    : purpose === 'signup'
+      ? { ru: 'подтверждения регистрации', en: 'to finish signing up', subj: 'Код подтверждения регистрации / Sign-up code' }
+      : { ru: 'привязки почты', en: 'to link this email', subj: 'Код подтверждения почты / Email confirmation code' };
   const text = `AutoRejoin — ${nickname}\n\nКод для ${what.ru}: ${code}\nYour code ${what.en}: ${code}\n\n` +
     'Код действует 15 минут. Если это был не ты — просто игнорируй письмо.\nThe code is valid for 15 minutes. If it wasn’t you, ignore this email.';
   const html = `<div style="font-family:Segoe UI,Arial,sans-serif;max-width:460px;margin:0 auto;padding:24px;background:#0b0b12;color:#ededed;border-radius:16px">

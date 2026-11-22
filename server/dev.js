@@ -14,7 +14,7 @@ const { createApp, initDb, monthKey } = require('./app');
   // Local mail: codes are printed here instead of being emailed.
   const mailer = { configured: true, async send(to, subject, text) { console.log(`[mail to ${to}] ${subject}
 ${text}`); } };
-  createApp(pool, { adminNicks: 'clxwnlesss', mailer }).listen(port, '127.0.0.1');
+  createApp(pool, { adminNicks: 'clxwnlesss', mailer, allowPlainRegister: true }).listen(port, '127.0.0.1');
   const base = `http://127.0.0.1:${port}`;
   const post = async (path, body, token) => (await fetch(base + path, {
     method: 'POST',

@@ -49,6 +49,23 @@ internal static class Screenshots
 				await Task.Delay(500);
 				Save((FrameworkElement)dialogWindow.Content, Path.Combine(dir, "dialog_add.png"));
 				dialogWindow.Close();
+				foreach (string mode in new string[3] { "login", "register", "code" })
+				{
+					AuthDialog auth = new AuthDialog("http://127.0.0.1:1", mode != "login");
+					if (mode == "code")
+					{
+						auth.ShowCodeStepForTest("bee@gmail.com");
+					}
+					Window authWindow = auth.WindowForTest;
+					authWindow.WindowStartupLocation = WindowStartupLocation.Manual;
+					authWindow.Left = -20000.0;
+					authWindow.Top = -20000.0;
+					authWindow.ShowActivated = false;
+					authWindow.Show();
+					await Task.Delay(400);
+					Save((FrameworkElement)authWindow.Content, Path.Combine(dir, "dialog_auth_" + mode + ".png"));
+					authWindow.Close();
+				}
 			}
 			catch (Exception ex)
 			{

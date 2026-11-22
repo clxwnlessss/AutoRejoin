@@ -66,6 +66,30 @@ public static class Leaderboard
 		return Tuple.Create(Store.Str(r, "token"), Store.Str(r, "nickname"));
 	}
 
+	// Sign-up step 1: the server checks nickname/email/password and emails a 6-digit code. Returns the email it was sent to.
+	public static async Task<string> RegisterStart(string baseUrl, string nickname, string email, string password)
+	{
+		IDictionary<string, object> r = await Call(baseUrl, "POST", "/api/register/start", new Dictionary<string, object>
+		{
+			["nickname"] = nickname,
+			["email"] = email,
+			["password"] = password
+		}, null);
+		return Store.Str(r, "email");
+	}
+
+	// Sign-up step 2: the code from the email → the account is created; returns (token, nickname).
+	public static async Task<Tuple<string, string>> RegisterConfirm(string baseUrl, string email, string code)
+	{
+		IDictionary<string, object> r = await Call(baseUrl, "POST", "/api/register/confirm", new Dictionary<string, object>
+		{
+			["email"] = email,
+			["code"] = code
+		}, null);
+		return Tuple.Create(Store.Str(r, "token"), Store.Str(r, "nickname"));
+	}
+
+	// Sign in by nickname or by the linked email.
 	public static async Task<Tuple<string, string>> Login(string baseUrl, string nickname, string password)
 	{
 		IDictionary<string, object> r = await Call(baseUrl, "POST", "/api/login", new Dictionary<string, object>

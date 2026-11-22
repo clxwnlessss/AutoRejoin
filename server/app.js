@@ -189,8 +189,19 @@ function createApp(pool, options = {}) {
   app.get('/', (req, res) => res.json({ name: 'AutoRejoin Server', owner: 'clxwnlesss', ok: true }));
   app.get('/health', (req, res) => res.json({ ok: true }));
 
+  // Почта: регистрация с кодом, привязка почты и сброс забытого пароля по коду из письма.
+  const mailer = options.mailer || createMailer(options.mail || {});
+  const emailLimit = rateLimiter(options.authLimit || 20, 10 * 60 * 1000);
+  mountEmail(app, pool, { now, auth, authLimit: emailLimit, mailer, checkPassword, setPassword, dropSessions, issueToken,
+    nickRe: NICK_RE, hashPassword, log: (...a) => console.log(...a) });
+
+  // Регистрация без почты — только пока отправка писем не настроена (и для тестов).
+  // Когда почта работает, новые аккаунты создаются через /api/register/start + /api/register/confirm.
   app.post('/api/register', authLimit, async (req, res, next) => {
     try {
+      if (mailer.configured && !options.allowPlainRegister) {
+        return res.status(400).json({ error: 'Регистрация теперь с подтверждением почты — обнови AutoRejoin или зарегистрируйся на сайте.' });
+      }
       const nickname = String((req.body && req.body.nickname) || '').trim();
       const password = String((req.body && req.body.password) || '');
       if (!NICK_RE.test(nickname)) return res.status(400).json({ error: 'Ник: 3–20 символов, латиница, цифры и _.' });
@@ -213,12 +224,15 @@ function createApp(pool, options = {}) {
 
   app.post('/api/login', authLimit, async (req, res, next) => {
     try {
+      // Вход по нику или по привязанной почте.
       const nickname = String((req.body && req.body.nickname) || '').trim();
       const password = String((req.body && req.body.password) || '');
-      const { rows } = await pool.query('SELECT id, nickname, pass_hash, pass_salt FROM users WHERE nickname_lc = $1', [nickname.toLowerCase()]);
+      const { rows } = nickname.includes('@')
+        ? await pool.query('SELECT u.id, u.nickname, u.pass_hash, u.pass_salt FROM user_emails e JOIN users u ON u.id = e.user_id WHERE e.email_lc = $1', [nickname.toLowerCase()])
+        : await pool.query('SELECT id, nickname, pass_hash, pass_salt FROM users WHERE nickname_lc = $1', [nickname.toLowerCase()]);
       const user = rows[0];
       const ok = user && crypto.timingSafeEqual(Buffer.from(hashPassword(password, user.pass_salt), 'hex'), Buffer.from(user.pass_hash, 'hex'));
-      if (!ok) return res.status(401).json({ error: 'Неверный ник или пароль.' });
+      if (!ok) return res.status(401).json({ error: 'Неверный ник/почта или пароль.' });
       res.json({ token: await issueToken(user.id), nickname: user.nickname });
     } catch (e) { next(e); }
   });
@@ -278,11 +292,6 @@ function createApp(pool, options = {}) {
       res.json({ ok: true });
     } catch (e) { next(e); }
   });
-
-  // Почта: привязка с кодом и сброс забытого пароля по коду из письма.
-  const mailer = options.mailer || createMailer(options.mail || {});
-  const emailLimit = rateLimiter(options.authLimit || 20, 10 * 60 * 1000);
-  mountEmail(app, pool, { now, auth, authLimit: emailLimit, mailer, checkPassword, setPassword, dropSessions, issueToken, log: (...a) => console.log(...a) });
 
   // ---------- админка ----------
   app.get('/api/admin/users', auth, adminOnly, async (req, res, next) => {

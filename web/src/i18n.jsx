@@ -36,6 +36,8 @@ export function errorText(e, t) {
     'Пароль: от 6 до 100 символов.': 'Password: 6 to 100 characters.',
     'Такой ник уже занят.': 'This nickname is taken.',
     'Неверный ник или пароль.': 'Wrong nickname or password.',
+    'Неверный ник/почта или пароль.': 'Wrong nickname/email or password.',
+    'Регистрация теперь с подтверждением почты — обнови AutoRejoin или зарегистрируйся на сайте.': 'Sign-up now needs a confirmed email — update AutoRejoin or sign up on the website.',
     'Слишком много попыток. Подожди 10 минут.': 'Too many attempts. Wait 10 minutes.',
     'Сессия устарела — войди заново.': 'Session expired — sign in again.',
     'Нужно войти в аккаунт.': 'Please sign in.',
