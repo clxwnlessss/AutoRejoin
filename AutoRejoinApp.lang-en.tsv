@@ -756,3 +756,63 @@ Discord: команда «Перезайти»	Discord: "Rejoin" command
 Открывать и перезапускать его, проверять инжект.	Open and restart it, check the inject.
 Auto Inject выключен!	Auto Inject is off!
 инжектит сам (Auto Inject)	injects by itself (Auto Inject)
+\s(жмёт только в окне Роблокса)	\s(presses only in the Roblox window)
+\sзапущен	\sstarted
+\sостановлен:\s	\sstopped:\s
+Beans первыми	Beans first
+Jelly Beans и Star Saw по очереди раз в N секунд.	Jelly Beans and Star Saw one after another every N seconds.
+{0} мин {1:00} с	{0} min {1:00} s
+{0} с	{0} s
+{0} циклов	{0} cycles
+{0} ч {1:00} мин	{0} h {1:00} min
+Всего: {0} нажатий за {1} запусков, {2}	Total: {0} presses in {1} runs, {2}
+Двойной клик	Double click
+Держать, мс	Hold, ms
+Жмёт слот Jelly Beans раз в N секунд.	Presses the Jelly Beans slot every N seconds.
+Жмёт слот Star Saw раз в N секунд.	Presses the Star Saw slot every N seconds.
+Каждые, сек	Every, sec
+Клавиша	Hotkey
+Кликает мышью с заданной скоростью (до 500 в сек).	Clicks the mouse at the set speed (up to 500 per sec).
+Кликов в сек	Clicks per sec
+Кнопка	Button
+Левая	Left
+Макс. циклов	Max cycles
+Между, мс	Between, ms
+Нажатий за раз	Presses per cycle
+Остановить все	Stop all
+Пауза между, мс	Gap between, ms
+Пока активно другое окно, макросы ждут и ничего не нажимают.	While another window is active, macros wait and press nothing.
+Правая	Right
+Разброс ±, мс	Jitter ±, ms
+Слот	Slot
+Слот Beans	Beans slot
+Слот Saw	Saw slot
+Средняя	Middle
+Старт	Start
+Старт через, мс	Start delay, ms
+Стоп	Stop
+Стоп через, мин	Stop after, min
+Стоп-всё	Stop all key
+Только в окне Роблокса	Only in the Roblox window
+Эти клавиши заняты другой программой:\s	These keys are taken by another program:\s
+выход из программы	app closing
+горячие клавиши макросов	macro hotkeys
+нажатий {0}	presses {0}
+нажми клавишу	press a key
+новые настройки	new settings
+остановлен вручную	stopped manually
+остановлены вручную	stopped manually
+пауза — ждёт окно Роблокса	paused — waiting for the Roblox window
+работает	running
+следующий через {0:0.0} с	next in {0:0.0} s
+стоп-клавиша\s	stop key\s
+таймер {0} мин	timer {0} min
+циклов {0}	cycles {0}
+Макросы	Macros
+AutoRejoin обновился до\s	AutoRejoin updated to\s
+\s— продолжаю работу.	\s— carrying on.
+Вышла версия\s	Version\s
+\s— поставлю, когда остановишь макросы.	\sis out — I'll install it when you stop the macros.
+Обновить сейчас	Update now
+Обновляться автоматически	Update automatically
+Вышла новая версия — ставится сама в течение 5 минут, ферма продолжает работать.	A new version installs itself within 5 minutes, the farm keeps running.

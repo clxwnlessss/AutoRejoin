@@ -187,6 +187,7 @@
                             <RadioButton x:Name="NavAccounts" Style="{StaticResource Nav}" Tag="&#xE716;" Content="Аккаунты" IsChecked="True" GroupName="Nav"/>
                             <RadioButton x:Name="NavTop" Style="{StaticResource Nav}" Tag="&#xE734;" Content="Топ АФК" GroupName="Nav"/>
                             <RadioButton x:Name="NavSchedule" Style="{StaticResource Nav}" Tag="&#xE787;" Content="Расписание" GroupName="Nav"/>
+                            <RadioButton x:Name="NavMacros" Style="{StaticResource Nav}" Tag="bolt" Content="Макросы" GroupName="Nav"/>
                             <RadioButton x:Name="NavSettings" Style="{StaticResource Nav}" Tag="&#xE713;" Content="Настройки" GroupName="Nav"/>
                             <RadioButton x:Name="NavLog" Style="{StaticResource Nav}" Tag="&#xE8A5;" Content="Журнал" GroupName="Nav"/>
                             <RadioButton x:Name="NavHelp" Style="{StaticResource Nav}" Tag="&#xE946;" Content="Помощь" GroupName="Nav"/>
@@ -492,6 +493,15 @@
                                 <TextBlock Text="Топ АФК" Style="{StaticResource H1}"/>
                                 <TextBlock Text="Кто дольше всех простоял в АФК за месяц." Style="{StaticResource Sub}" Margin="0,4,0,0"/>
                                 <StackPanel x:Name="TopHost" Margin="0,22,0,0" MinWidth="640"/>
+                            </StackPanel>
+                        </ScrollViewer>
+
+                        <!-- ===== Макросы OverFlux (карточки собирает MacrosPage.cs) ===== -->
+                        <ScrollViewer x:Name="PageMacros" Visibility="Collapsed" VerticalScrollBarVisibility="Auto">
+                            <StackPanel Margin="34,0,34,28" MaxWidth="860" HorizontalAlignment="Left">
+                                <TextBlock Text="Макросы" Style="{StaticResource H1}"/>
+                                <TextBlock Text="Из OverFlux: Star Saw, Jelly Beans, Auto Clicker и Saw + Beans. Жмут в активное окно Роблокса." Style="{StaticResource Sub}" Margin="0,4,0,0" TextWrapping="Wrap"/>
+                                <StackPanel x:Name="MacrosHost" Margin="0,22,0,0" MinWidth="640"/>
                             </StackPanel>
                         </ScrollViewer>
 

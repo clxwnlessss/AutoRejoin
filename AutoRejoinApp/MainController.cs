@@ -176,6 +176,8 @@ public class MainController
 
 	private TopPage topPage;
 
+	private MacrosPage macrosPage;
+
 	// Сколько аккаунтов сейчас в игре — для пульса топа АФК (0, если AutoRejoin не работает).
 	public int InGameCount
 	{
@@ -471,6 +473,7 @@ public class MainController
 		bot = new BotAgent(this, window.Dispatcher);
 		settingsPage = new SettingsPage(this, Find<StackPanel>("SettingsHost"));
 		topPage = new TopPage(this, Find<StackPanel>("TopHost"));
+		macrosPage = new MacrosPage(this, Find<StackPanel>("MacrosHost"));
 		Find<Button>("ContactButton").Click += delegate
 		{
 			ContactOwner();
@@ -561,17 +564,27 @@ public class MainController
 		{
 			StartEngine(0);
 		}
-		// Тихая проверка обновлений через 20 сек после запуска: нашлось — баннер с кнопкой «Обновить».
+		// Проверка обновлений: через 20 сек после запуска, дальше раз в 5 минут. Вышла новая версия — ставится сама
+		// (выключается в настройках: тогда только баннер с кнопкой «Обновить»).
 		DispatcherTimer updateTimer = new DispatcherTimer
 		{
 			Interval = TimeSpan.FromSeconds(20.0)
 		};
 		updateTimer.Tick += async delegate
 		{
-			updateTimer.Stop();
+			updateTimer.Interval = TimeSpan.FromMinutes(5.0);
 			await CheckForUpdates(interactive: false);
 		};
 		updateTimer.Start();
+		// После автообновления: движок работал до обновления — запускаем снова.
+		if (App.Resume && !engine.IsRunning && vault.accounts.Any((VaultAccount a) => a.enabled && !string.IsNullOrEmpty(a.cookie)))
+		{
+			AppLog(null, L.T("AutoRejoin обновился до ") + Updater.CurrentText + L.T(" — продолжаю работу."), "Green");
+			if (!engineWanted)
+			{
+				StartEngine(0);
+			}
+		}
 		// Очистка старых логов: проверяем раз в 10 мин (первый раз — через 2 мин после запуска), чистим раз в N часов.
 		DispatcherTimer cleanupTimer = new DispatcherTimer
 		{
@@ -649,6 +662,11 @@ public class MainController
 		string version = release.Version.ToString(3);
 		if (!interactive)
 		{
+			if (config.autoUpdate)
+			{
+				InstallUpdate(release, auto: true);
+				return L.T("доступна версия ") + version;
+			}
 			ShowBanner("update", L.T("Вышла новая версия AutoRejoin ") + version + ".", L.T("Обновить"), delegate
 			{
 				InstallUpdate(release);
@@ -659,21 +677,35 @@ public class MainController
 		return L.T("доступна версия ") + version;
 	}
 
-	private async void InstallUpdate(Updater.Release release)
+	private async void InstallUpdate(Updater.Release release, bool auto = false)
 	{
 		if (updateBusy)
 		{
 			return;
 		}
-		ShowWindow();
 		string version = release.Version.ToString(3);
+		// Автообновление не прерывает работающий макрос: поставится на следующей проверке, когда макросы остановятся.
+		if (auto && macrosPage != null && macrosPage.AnyRunning)
+		{
+			ShowBanner("update", L.T("Вышла версия ") + version + L.T(" — поставлю, когда остановишь макросы."), L.T("Обновить сейчас"), delegate
+			{
+				InstallUpdate(release);
+			}, warning: false);
+			return;
+		}
+		bool wasHidden = !window.IsVisible;
+		bool wasRunning = engineWanted || engine.IsRunning;
+		if (!auto)
+		{
+			ShowWindow();
+		}
 		string notes = (release.Notes ?? "").Trim();
 		if (notes.Length > 600)
 		{
 			notes = notes.Substring(0, 600) + "…";
 		}
 		string message = L.T("Сейчас ") + Updater.CurrentText + L.T(", вышла ") + version + "." + ((notes.Length > 0) ? ("\n\n" + notes) : "") + L.T("\n\nAutoRejoin скачает обновление, закроется и откроется уже новой версией. Окна Роблокса останутся открытыми, аккаунты и настройки сохранятся.");
-		if (!MessageDialog.Ask(window, L.T("Установить обновление ") + version + "?", message, L.T("Обновить"), MessageDialog.Kind.Info, L.T("Позже")))
+		if (!auto && !MessageDialog.Ask(window, L.T("Установить обновление ") + version + "?", message, L.T("Обновить"), MessageDialog.Kind.Info, L.T("Позже")))
 		{
 			return;
 		}
@@ -681,7 +713,8 @@ public class MainController
 		ShowBanner("update", L.T("Скачиваю обновление ") + version + "…", null, null, warning: false);
 		try
 		{
-			await Updater.PrepareAsync(release);
+			string args = ((wasRunning ? "--resume " : "") + (wasHidden ? "--hidden" : "")).Trim();
+			await Updater.PrepareAsync(release, args);
 		}
 		catch (Exception ex)
 		{
@@ -700,6 +733,7 @@ public class MainController
 			await engine.StopAsync();
 		}
 		discord?.Stop();
+		macrosPage?.Dispose();
 		quitting = true;
 		if (saveTimer.IsEnabled)
 		{
@@ -775,6 +809,7 @@ public class MainController
 			await engine.StopAsync();
 		}
 		discord?.Stop();
+		macrosPage?.Dispose();
 		quitting = true;
 		if (saveTimer.IsEnabled)
 		{
@@ -791,6 +826,8 @@ public class MainController
 		pages["top"] = Find<FrameworkElement>("PageTop");
 		navs["top"] = Find<RadioButton>("NavTop");
 		pages["schedule"] = Find<FrameworkElement>("PageSchedule");
+		pages["macros"] = Find<FrameworkElement>("PageMacros");
+		navs["macros"] = Find<RadioButton>("NavMacros");
 		pages["settings"] = Find<FrameworkElement>("PageSettings");
 		pages["log"] = Find<FrameworkElement>("PageLog");
 		pages["help"] = Find<FrameworkElement>("PageHelp");
@@ -1462,6 +1499,7 @@ public class MainController
 			await engine.StopAsync();
 		}
 		discord?.Stop();
+		macrosPage?.Dispose();
 		quitting = true;
 		tray.Dispose();
 		Application.Current.Shutdown();

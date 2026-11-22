@@ -83,7 +83,13 @@ public class AppConfig
 
 	public AdvancedConfig advanced { get; set; }
 
+	// Макросы OverFlux (Star Saw, Jelly Beans, Auto Clicker, Saw + Beans): клавиши, интервалы, счётчики.
+	public MacrosConfig macros { get; set; }
+
 	public bool trayHintShown { get; set; }
+
+	// Ставить новые версии с GitHub самому, как только они вышли (проверка раз в 5 минут).
+	public bool autoUpdate { get; set; }
 
 	public string language { get; set; }
 
@@ -155,8 +161,10 @@ public class AppConfig
 		autoAcceptWarnings = false;
 		schedule = new ScheduleConfig();
 		advanced = new AdvancedConfig();
+		macros = new MacrosConfig();
 		language = "";
 		theme = "potassium";
+		autoUpdate = true;
 		leaderboardGuest = false;
 		leaderboardUrl = "";
 		logCleanupOn = true;
@@ -225,6 +233,11 @@ public class AppConfig
 		{
 			advanced = new AdvancedConfig();
 		}
+		if (macros == null)
+		{
+			macros = new MacrosConfig();
+		}
+		macros.Normalize();
 		if (string.IsNullOrEmpty(schedule.time))
 		{
 			schedule.time = "09:51";

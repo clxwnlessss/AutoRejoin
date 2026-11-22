@@ -16,6 +16,11 @@ public static class App
 
 	private static Mutex instanceMutex;
 
+	// Restart after an automatic update: start the engine again (--resume) and stay in the tray (--hidden).
+	public static bool Resume;
+
+	public static bool StartHidden;
+
 	[STAThread]
 	public static int Main(string[] args)
 	{
@@ -31,6 +36,14 @@ public static class App
 			if (text2 == "--autostart")
 			{
 				flag = true;
+			}
+			else if (text2 == "--resume")
+			{
+				Resume = true;
+			}
+			else if (text2 == "--hidden")
+			{
+				StartHidden = true;
 			}
 			else if (text2 == "--data" && text3 != null)
 			{
@@ -117,7 +130,7 @@ public static class App
 			Screenshots.Run(app, window, controller, text, fakeStatus, fakeLog);
 			return 0;
 		}
-		if (!flag)
+		if (!flag && !StartHidden)
 		{
 			window.Show();
 		}

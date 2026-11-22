@@ -867,6 +867,11 @@ public class SettingsPage
 		});
 		FrameworkElement updateRow = AddRow(section, L.T("Обновления"), L.T("Версия ") + Updater.CurrentText + L.T(". Ставятся с GitHub сами."), updateButton);
 		((StackPanel)((Grid)updateRow).Children[0]).Children.Add(updateState);
+		AddRow(section, L.T("Обновляться автоматически"), L.T("Вышла новая версия — ставится сама в течение 5 минут, ферма продолжает работать."), Switch(Cfg.autoUpdate, delegate(bool v)
+		{
+			Cfg.autoUpdate = v;
+			main.ConfigChanged();
+		}));
 		AddRow(section, L.T("Импорт из accounts.txt"), L.T("Кука на строку, ссылка — через пробел."), Button(L.T("Импорт…"), delegate
 		{
 			main.ImportAccountsTxt();

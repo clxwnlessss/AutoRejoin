@@ -23,7 +23,7 @@ internal static class Screenshots
 			try
 			{
 				controller.FeedFake(fakeStatus, fakeLog);
-				foreach (string page2 in new string[6] { "accounts", "top", "schedule", "settings", "log", "help" })
+				foreach (string page2 in new string[7] { "accounts", "top", "macros", "schedule", "settings", "log", "help" })
 				{
 					controller.ShowPage(page2);
 					await Task.Delay((page2 == "top") ? 2500 : 500);

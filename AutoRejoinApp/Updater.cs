@@ -108,7 +108,7 @@ public static class Updater
 
 	// Скачивает и распаковывает релиз, запускает скрипт, который дождётся выхода программы, заменит файлы
 	// и запустит её снова. После этого вызывающий должен закрыть программу.
-	public static async Task PrepareAsync(Release release)
+	public static async Task PrepareAsync(Release release, string restartArgs = "")
 	{
 		string work = Path.Combine(Path.GetTempPath(), "AutoRejoin-update");
 		if (Directory.Exists(work))
@@ -149,7 +149,7 @@ public static class Updater
 			"    try { Copy-Item -Path " + Quote(Path.Combine(root, "*")) + " -Destination " + Quote(appDir) + " -Recurse -Force; $ok = $true }\r\n" +
 			"    catch { Start-Sleep -Seconds 1 }\r\n" +
 			"}\r\n" +
-			"Start-Process -FilePath " + Quote(exe) + "\r\n";
+			"Start-Process -FilePath " + Quote(exe) + (string.IsNullOrWhiteSpace(restartArgs) ? "" : (" -ArgumentList " + Quote(restartArgs))) + "\r\n";
 		File.WriteAllText(script, text, new UTF8Encoding(encoderShouldEmitUTF8Identifier: true));
 		ProcessStartInfo info = new ProcessStartInfo(Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.System), "WindowsPowerShell\\v1.0\\powershell.exe"), "-NoLogo -NoProfile -NonInteractive -ExecutionPolicy Bypass -WindowStyle Hidden -File \"" + script + "\"")
 		{
