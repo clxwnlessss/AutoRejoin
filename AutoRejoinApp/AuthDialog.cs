@@ -164,7 +164,7 @@ public class AuthDialog
 		forgot.SetResourceReference(FrameworkElement.StyleProperty, "LinkBtn");
 		forgot.Click += delegate
 		{
-			OpenUrl("https://clxwnlessss.github.io/AutoRejoin/forgot");
+			OpenUrl("https://autorejoin.is-a.bot/forgot");
 		};
 		passHead.Children.Add(forgot);
 		loginPanel.Children.Add(passHead);
