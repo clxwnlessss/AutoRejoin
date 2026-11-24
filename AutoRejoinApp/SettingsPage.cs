@@ -7,6 +7,7 @@ using System.Windows;
 using System.Windows.Controls;
 using System.Windows.Input;
 using System.Windows.Media;
+using System.Windows.Media.Imaging;
 using Microsoft.Win32;
 
 namespace AutoRejoinApp;
@@ -527,9 +528,86 @@ public class SettingsPage
 		}));
 	}
 
+	// Which game the accounts join when no server link is set: icon + name, "Choose a game…" opens the picker.
+	private void BuildGameRow(StackPanel section)
+	{
+		Border icon = new Border
+		{
+			Width = 44.0,
+			Height = 44.0,
+			CornerRadius = new CornerRadius(10.0),
+			Margin = new Thickness(0.0, 0.0, 12.0, 0.0)
+		};
+		icon.SetResourceReference(Border.BackgroundProperty, "FieldBg");
+		TextBlock name = new TextBlock
+		{
+			FontSize = 14.0,
+			FontWeight = FontWeights.SemiBold,
+			VerticalAlignment = VerticalAlignment.Center
+		};
+		Action show = async delegate
+		{
+			name.Text = Cfg.gameName;
+			icon.SetResourceReference(Border.BackgroundProperty, "FieldBg");
+			GameCatalog.Game g = GameCatalog.Find(Cfg.gamePlaceId) ?? new GameCatalog.Game
+			{
+				Name = Cfg.gameName,
+				PlaceId = Cfg.gamePlaceId,
+				UniverseId = Cfg.gameUniverseId
+			};
+			if (g.IconUrl == null && g.UniverseId > 0)
+			{
+				await GameCatalog.LoadLiveAsync(new List<GameCatalog.Game> { g });
+			}
+			if (!string.IsNullOrEmpty(g.IconUrl) && g.PlaceId == Cfg.gamePlaceId)
+			{
+				BitmapImage img = new BitmapImage();
+				img.BeginInit();
+				img.UriSource = new Uri(g.IconUrl);
+				img.DecodePixelWidth = 88;
+				img.EndInit();
+				icon.Background = new ImageBrush(img) { Stretch = Stretch.UniformToFill };
+			}
+		};
+		StackPanel current = new StackPanel
+		{
+			Orientation = Orientation.Horizontal
+		};
+		current.Children.Add(icon);
+		current.Children.Add(name);
+		Button pick = Button(L.T("Выбрать игру…"), delegate
+		{
+			GameCatalog.Game custom = GameCatalog.Find(Cfg.gamePlaceId) == null ? new GameCatalog.Game
+			{
+				Name = Cfg.gameName,
+				PlaceId = Cfg.gamePlaceId,
+				UniverseId = Cfg.gameUniverseId,
+				Genre = L.T("Своя игра"),
+				Custom = true
+			} : null;
+			GameCatalog.Game chosen = new GamePicker(Cfg.gamePlaceId, custom).ShowDialog(main.Window);
+			if (chosen == null || chosen.PlaceId == Cfg.gamePlaceId)
+			{
+				return;
+			}
+			Cfg.gamePlaceId = chosen.PlaceId;
+			Cfg.gameName = chosen.Name;
+			Cfg.gameUniverseId = chosen.UniverseId;
+			main.ConfigChanged();
+			main.AppLog(null, L.T("Игра по умолчанию: ") + chosen.Name + L.T(" — применится при следующих перезаходах."), "Cyan");
+			show();
+		});
+		FrameworkElement row = AddRow(section, L.T("Игра"), L.T("Куда заходят аккаунты, если ссылка на сервер не задана: Bee Swarm, Blox Fruits, Anime Adventures и другие."), pick);
+		StackPanel left = (StackPanel)((Grid)row).Children[0];
+		current.Margin = new Thickness(0.0, 10.0, 0.0, 0.0);
+		left.Children.Add(current);
+		show();
+	}
+
 	private void BuildServer()
 	{
 		StackPanel section = Section("\ue774", L.T("Сервер"));
+		BuildGameRow(section);
 		TextBox linkBox = Field("https://www.roblox.com/share?code=…&type=Server", Cfg.link);
 		TextBlock error = HintBlock("");
 		error.Foreground = Palette.Red;
@@ -564,7 +642,7 @@ public class SettingsPage
 			textBlock.Foreground = Palette.Yellow;
 			stackPanel.Children.Add(textBlock);
 		}
-		AddStacked(section, L.T("Ссылка на сервер"), L.T("VIP-ссылка, ссылка на игру или ID плейса. Пусто — обычный BSS."), stackPanel);
+		AddStacked(section, L.T("Ссылка на сервер"), L.T("VIP-ссылка, ссылка на игру или ID плейса. Пусто — публичный сервер выбранной игры."), stackPanel);
 	}
 
 	private void BuildWindows()

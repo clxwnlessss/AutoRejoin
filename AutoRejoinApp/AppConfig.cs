@@ -8,6 +8,13 @@ public class AppConfig
 
 	public string linkFile { get; set; }
 
+	// Игра по умолчанию (публичные сервера), если ссылка на сервер не задана: ID плейса, название, universe (для иконки).
+	public string gamePlaceId { get; set; }
+
+	public string gameName { get; set; }
+
+	public long gameUniverseId { get; set; }
+
 	public bool autoStartEngine { get; set; }
 
 	public int startupDelay { get; set; }
@@ -137,6 +144,9 @@ public class AppConfig
 		version = 1;
 		link = "";
 		linkFile = "";
+		gamePlaceId = "1537690962";
+		gameName = "Bee Swarm Simulator";
+		gameUniverseId = 601130232L;
 		autoStartEngine = true;
 		startupDelay = 0;
 		minimizeWindows = true;
@@ -232,6 +242,16 @@ public class AppConfig
 		if (link == null)
 		{
 			link = "";
+		}
+		if (string.IsNullOrEmpty(gamePlaceId) || !System.Text.RegularExpressions.Regex.IsMatch(gamePlaceId, "^\\d{4,20}$"))
+		{
+			gamePlaceId = "1537690962";
+			gameName = "Bee Swarm Simulator";
+			gameUniverseId = 601130232L;
+		}
+		if (string.IsNullOrEmpty(gameName))
+		{
+			gameName = gamePlaceId;
 		}
 		if (linkFile == null)
 		{

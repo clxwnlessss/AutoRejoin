@@ -861,3 +861,36 @@ WEAO: не получилось проверить — 	WEAO: couldn't check —
 актуальный, а {0} ещё не обновлён под него (собран под {1}). Ждём обновление {0}.	is current, but {0} is not updated for it yet (built for {1}). Waiting for a {0} update.
 на WEAO: {0}, {1} собран под {2} — версии не совпадают.	WEAO: {0}, {1} is built for {2} — the versions don't match.
 версия Роблокса не совпадает (WEAO)	Roblox version mismatch (WEAO)
+Симулятор	Simulator
+Аниме · RPG	Anime · RPG
+Аниме · TD	Anime · TD
+Казуальная	Casual
+Выживание	Survival
+Ролевая	Roleplay
+Мини-игры	Minigames
+Шутер	Shooter
+Файтинг	Fighting
+Спорт	Sports
+Хоррор	Horror
+Аниме	Anime
+Своя игра	Custom game
+Вставь ссылку на игру Роблокса или ID плейса (только цифры).	Paste a Roblox game link or a place ID (digits only).
+Роблокс не знает такую игру — проверь ссылку.	Roblox doesn't know this game — check the link.
+\sмлн онлайн	M online
+\sтыс. онлайн	K online
+\sонлайн	 online
+Выбери игру	Choose a game
+Аккаунты будут заходить на публичные сервера этой игры. Ссылка на сервер в настройках, если задана, важнее.	Accounts will join public servers of this game. A server link in the settings, if set, comes first.
+Играть в эту игру	Play this game
+Открыть на roblox.com	Open on roblox.com
+Поиск игры…	Search games…
+Своя игра: ссылка на неё или ID плейса	Your own game: its link or place ID
+Найти	Find
+Все функции: проверка скрипта, статистика мёда, Atlas, Balloon-перезаход.	Every feature: script check, honey stats, Atlas, Balloon rejoin.
+Перезаход, вылеты, макросы, Discord и Telegram работают в любой игре. Функции для Bee Swarm (мёд, Atlas, Balloon) здесь не нужны.	Rejoins, drops, macros, Discord and Telegram work in any game. Bee Swarm features (honey, Atlas, Balloon) aren't needed here.
+Выбрать игру…	Choose a game…
+Игра по умолчанию:\s	Default game:\s
+\s— применится при следующих перезаходах.	\s— applies on the next rejoins.
+Игра	Game
+Куда заходят аккаунты, если ссылка на сервер не задана: Bee Swarm, Blox Fruits, Anime Adventures и другие.	Where accounts join when no server link is set: Bee Swarm, Blox Fruits, Anime Adventures and more.
+VIP-ссылка, ссылка на игру или ID плейса. Пусто — публичный сервер выбранной игры.	VIP link, game link or place ID. Empty — a public server of the chosen game.

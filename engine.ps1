@@ -56,7 +56,8 @@ param(
 $Link            = ''    # ссылка для аккаунтов без своей: https://www.roblox.com/share?code=XXXX&type=Server (VIP),
                          # .../games/1537690962/...?privateServerLinkCode=XXXX, ссылка на игру или просто ID плейса
 $LinkFile        = ''    # файл, из которого брать ссылку (первая ссылка Роблокса в нём, меняется на лету); пусто — не брать
-$DefaultPlace    = '1537690962'   # ссылки нет вовсе — обычный (публичный) сервер Bee Swarm Simulator
+$DefaultPlace    = '1537690962'   # ссылки нет вовсе — публичный сервер выбранной игры (по умолчанию Bee Swarm Simulator)
+$DefaultGameName = 'Bee Swarm Simulator'
 
 $CheckInterval   = 1     # как часто проверять окна, сек (движок при этом занимает ~2–3% одного ядра)
 $LaunchTimeout   = 120   # сколько ждать, пока откроется окно (с учётом обновления Роблокса)
@@ -697,7 +698,7 @@ public static class RejoinInput {
 # Строки из логов Роблокса: заход на сервер, ID аккаунта и вылет с сервера.
 $JoinPattern       = "! Joining game '[^']+' place (\d+)"
 $UserIdPattern     = 'game_join_loadtime:.*\buserid:(\d+)'
-$DisconnectPattern = 'Disconnected from server for reason:\s*(?<r>.+)$|Sending disconnect with reason:\s*(?<r>\d+)|Time to disconnect replication data|Lost connection|Connection lost|Disconnection Notification|leaveUGCGameInternal'
+$DisconnectPattern = 'Disconnected from server for reason:\s*(?<r>.+)$|Sending disconnect with reason:\s*(?<r>\d+)|Time to disconnect replication data|Lost connection|Connection lost|Disconnection Notification|ID_CONNECTION_LOST|ID_DISCONNECTION_NOTIFICATION|leaveUGCGameInternal'
 $KickPattern       = 'setting replicator disconnect reason to (\d+)'
 # Роблокс не принял вход в окне: билет (gameinfo) не прошёл, окно закрывается, не зайдя в игру. Вторая строка —
 # причина, из-за которой это случается чаще всего (см. Get-BrowserTrackerId).
@@ -707,6 +708,9 @@ $BtidMismatchPattern = 'Cookie BTID is not the same as the web BTID passed in'
 # Коды вылета Роблокса (из строки "setting replicator disconnect reason to N").
 function Get-KickText([int]$Code) {
     $text = switch ($Code) {
+        256 { 'потеряна связь с сервером: неизвестная ошибка или сервер закрылся' }
+        264 { 'аккаунт зашёл в эту игру с другого устройства' }
+        266 { 'сервер не отвечает (таймаут)' }
         267 { 'кикнули из игры' }
         268 { 'Роблокс заподозрил стороннюю программу (Unexpected client behavior)' }
         273 { 'аккаунт зашёл в игру с другого устройства' }
@@ -716,6 +720,11 @@ function Get-KickText([int]$Code) {
         278 { 'кик за 20 минут бездействия' }
         279 { 'не удалось подключиться к серверу' }
         280 { 'клиент Роблокса устарел' }
+        282 { 'потеряна связь с сервером' }
+        284 { 'сервер не отвечает' }
+        286 { 'сервер выключили' }
+        288 { 'сервер закрылся' }
+        292 { 'игра перегружена (лаги сервера)' }
         default { 'вылет с сервера' }
     }
     return "$text (код $Code)"
@@ -1086,7 +1095,7 @@ function Update-DefaultLink {
 
 # Ссылка для журнала: код приватного сервера скрыт (журнал виден в окне приложения — его могут заскринить и отправить).
 function Get-LinkForLog([string]$Url) {
-    if ($Url -eq $DefaultPlace) { return 'публичный сервер Bee Swarm Simulator (ссылка не задана)' }
+    if ($Url -eq $DefaultPlace) { return "публичный сервер $DefaultGameName (ссылка не задана)" }
     return [regex]::Replace($Url, '((?:code|linkCode|privateServerLinkCode)=)([^&#\s]+)', {
         param($match)
         $code = $match.Groups[2].Value
@@ -1257,6 +1266,12 @@ function Update-TrackerFromLog($Tracker) {
             # там "Disconnected ... 285" и через 0.2 сек "Teleported" и вход на новый сервер. Перезаходим без ожидания.
             $Tracker.KickCode = [int]$Matches[1]
             $Tracker.KickAt = Get-Date
+            # Роблокс показал окно "Disconnected" (например 256 "Lost connection due to an unknown error"): строки
+            # "Disconnected from server" после него может и не быть — окно уже не на сервере. Заход следом сбросит это.
+            if ($Tracker.InGame) {
+                $Tracker.InGame = $false
+                $Tracker.StateSince = Get-Date
+            }
         }
         elseif ($line -match $DisconnectPattern) {
             if ($Matches.r) { $Tracker.LastReason = $Matches.r.Trim() }
@@ -3892,6 +3907,10 @@ function Get-ConfigFlag($Config, [string]$Name, [bool]$Default) {
 function Set-EngineConfig($Config) {
     $script:Link = [string](Get-ConfigValue $Config 'link' '')
     $script:LinkFile = [string](Get-ConfigValue $Config 'linkFile' '')
+    # Игра по умолчанию (выбирается в приложении: Настройки -> Сервер -> Игра).
+    $game = [string](Get-ConfigValue $Config 'gamePlaceId' '')
+    $script:DefaultPlace = if ($game -match '^\d{4,20}$') { $game } else { '1537690962' }
+    $script:DefaultGameName = if ($script:DefaultPlace -eq '1537690962') { 'Bee Swarm Simulator' } else { $name = [string](Get-ConfigValue $Config 'gameName' ''); if ($name) { $name } else { "игра $($script:DefaultPlace)" } }
     $script:NoMinimize = -not (Get-ConfigFlag $Config 'minimizeWindows' $true)
     $script:WindowWidth = [int](Get-ConfigNumber $Config 'windowWidth' 800 320 3840)
     $script:WindowHeight = [int](Get-ConfigNumber $Config 'windowHeight' 600 240 2160)

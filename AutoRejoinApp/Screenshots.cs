@@ -49,6 +49,16 @@ internal static class Screenshots
 				await Task.Delay(500);
 				Save((FrameworkElement)dialogWindow.Content, Path.Combine(dir, "dialog_add.png"));
 				dialogWindow.Close();
+				GamePicker picker = new GamePicker("2753915549", null);
+				Window pickerWindow = picker.WindowForTest;
+				pickerWindow.WindowStartupLocation = WindowStartupLocation.Manual;
+				pickerWindow.Left = -20000.0;
+				pickerWindow.Top = -20000.0;
+				pickerWindow.ShowActivated = false;
+				pickerWindow.Show();
+				await Task.Delay(9000);
+				Save((FrameworkElement)pickerWindow.Content, Path.Combine(dir, "dialog_games.png"));
+				pickerWindow.Close();
 				foreach (string mode in new string[3] { "login", "register", "code" })
 				{
 					AuthDialog auth = new AuthDialog("http://127.0.0.1:1", mode != "login");
