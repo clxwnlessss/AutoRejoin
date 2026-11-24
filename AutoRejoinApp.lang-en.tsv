@@ -894,3 +894,13 @@ WEAO: не получилось проверить — 	WEAO: couldn't check —
 Игра	Game
 Куда заходят аккаунты, если ссылка на сервер не задана: Bee Swarm, Blox Fruits, Anime Adventures и другие.	Where accounts join when no server link is set: Bee Swarm, Blox Fruits, Anime Adventures and more.
 VIP-ссылка, ссылка на игру или ID плейса. Пусто — публичный сервер выбранной игры.	VIP link, game link or place ID. Empty — a public server of the chosen game.
+ИГРА ДЛЯ ЭТОГО АККАУНТА	GAME FOR THIS ACCOUNT
+Как в настройках	Same as settings
+Только для этого аккаунта	Only for this account
+Как в настройках — меняется вместе с ними	Same as settings — follows them
+Пусто — публичный сервер игры выше	Empty — a public server of the game above
+Игра\s	Game\s
+игра — как в настройках.	game — same as settings.
+игра:\s	game:\s
+\s— со следующего перезахода.	\s— from the next rejoin.
+Своя игра у этого аккаунта	This account has its own game

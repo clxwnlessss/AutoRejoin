@@ -2,7 +2,10 @@ using System;
 using System.Threading.Tasks;
 using System.Windows;
 using System.Windows.Controls;
+using System.Collections.Generic;
 using System.Windows.Input;
+using System.Windows.Media;
+using System.Windows.Media.Imaging;
 
 namespace AutoRejoinApp;
 
@@ -61,6 +64,22 @@ public class AccountDialog
 
 	private bool forceLogin;
 
+	private readonly GameCatalog.Game defaultGame;
+
+	private string gamePlace = "";
+
+	private string gameName = "";
+
+	private long gameUniverse;
+
+	private readonly Border gameIcon;
+
+	private readonly TextBlock gameNameText;
+
+	private readonly TextBlock gameHintText;
+
+	private readonly Button gameReset;
+
 	public Outcome Result { get; private set; }
 
 	public string AccountId { get; private set; }
@@ -79,15 +98,26 @@ public class AccountDialog
 
 	public bool Main { get; private set; }
 
+	public string GamePlaceId { get; private set; }
+
+	public string GameName { get; private set; }
+
+	public long GameUniverseId { get; private set; }
+
 	public RobloxUser User { get; private set; }
 
 	public Window WindowForTest => window;
 
 	private bool PasswordMode => modePassword.IsChecked == true;
 
-	public AccountDialog(VaultAccount existing, Func<string, string, string> duplicateCheck, bool suggestMain, bool autoAccept)
+	public AccountDialog(VaultAccount existing, Func<string, string, string> duplicateCheck, bool suggestMain, bool autoAccept, GameCatalog.Game defaultGame = null)
 	{
 		AccountDialog accountDialog = this;
+		this.defaultGame = defaultGame ?? GameCatalog.Find(GameCatalog.BeeSwarm) ?? new GameCatalog.Game
+		{
+			Name = "Bee Swarm Simulator",
+			PlaceId = GameCatalog.BeeSwarm
+		};
 		this.existing = existing;
 		this.duplicateCheck = duplicateCheck;
 		this.autoAccept = autoAccept;
@@ -112,6 +142,28 @@ public class AccountDialog
 		deleteButton = Xaml.Find<Button>(window, "DeleteButton");
 		reloginButton = Xaml.Find<Button>(window, "ReloginButton");
 		Border howPanel = Xaml.Find<Border>(window, "HowCookiePanel");
+		gameIcon = Xaml.Find<Border>(window, "GameIcon");
+		gameNameText = Xaml.Find<TextBlock>(window, "GameNameText");
+		gameHintText = Xaml.Find<TextBlock>(window, "GameHintText");
+		gameReset = Xaml.Find<Button>(window, "GameReset");
+		if (existing != null && !string.IsNullOrEmpty(existing.gamePlaceId))
+		{
+			gamePlace = existing.gamePlaceId;
+			gameName = string.IsNullOrEmpty(existing.gameName) ? (L.T("Игра ") + existing.gamePlaceId) : existing.gameName;
+			gameUniverse = existing.gameUniverseId;
+		}
+		ShowGame();
+		Xaml.Find<Button>(window, "GamePick").Click += delegate
+		{
+			accountDialog.PickGame();
+		};
+		gameReset.Click += delegate
+		{
+			accountDialog.gamePlace = "";
+			accountDialog.gameName = "";
+			accountDialog.gameUniverse = 0L;
+			accountDialog.ShowGame();
+		};
 		if (existing != null)
 		{
 			Xaml.Find<TextBlock>(window, "TitleText").Text = existing.name;
@@ -221,6 +273,72 @@ public class AccountDialog
 		};
 	}
 
+	private void PickGame()
+	{
+		string current = string.IsNullOrEmpty(gamePlace) ? defaultGame.PlaceId : gamePlace;
+		GameCatalog.Game custom = null;
+		if (GameCatalog.Find(current) == null)
+		{
+			custom = new GameCatalog.Game
+			{
+				Name = string.IsNullOrEmpty(gamePlace) ? defaultGame.Name : gameName,
+				PlaceId = current,
+				UniverseId = string.IsNullOrEmpty(gamePlace) ? defaultGame.UniverseId : gameUniverse,
+				Genre = L.T("Своя игра"),
+				Custom = true
+			};
+		}
+		GameCatalog.Game chosen = new GamePicker(current, custom).ShowDialog(window);
+		if (chosen == null)
+		{
+			return;
+		}
+		gamePlace = chosen.PlaceId;
+		gameName = chosen.Name;
+		gameUniverse = chosen.UniverseId;
+		ShowGame();
+	}
+
+	private async void ShowGame()
+	{
+		bool own = !string.IsNullOrEmpty(gamePlace);
+		GameCatalog.Game g = own ? (GameCatalog.Find(gamePlace) ?? new GameCatalog.Game
+		{
+			Name = gameName,
+			PlaceId = gamePlace,
+			UniverseId = gameUniverse
+		}) : (GameCatalog.Find(defaultGame.PlaceId) ?? defaultGame);
+		string place = g.PlaceId;
+		gameNameText.Text = own ? gameName : defaultGame.Name;
+		gameHintText.Text = own ? L.T("Только для этого аккаунта") : L.T("Как в настройках — меняется вместе с ними");
+		gameReset.Visibility = own ? Visibility.Visible : Visibility.Collapsed;
+		linkBox.Tag = own ? L.T("Пусто — публичный сервер игры выше") : L.T("Пусто — общая ссылка из настроек");
+		gameIcon.SetResourceReference(Border.BackgroundProperty, "AccentSoft");
+		try
+		{
+			if (g.IconUrl == null && g.UniverseId > 0)
+			{
+				await GameCatalog.LoadLiveAsync(new List<GameCatalog.Game> { g });
+			}
+			string shown = string.IsNullOrEmpty(gamePlace) ? defaultGame.PlaceId : gamePlace;
+			if (!string.IsNullOrEmpty(g.IconUrl) && place == shown)
+			{
+				BitmapImage img = new BitmapImage();
+				img.BeginInit();
+				img.UriSource = new Uri(g.IconUrl);
+				img.DecodePixelWidth = 76;
+				img.EndInit();
+				gameIcon.Background = new ImageBrush(img)
+				{
+					Stretch = Stretch.UniformToFill
+				};
+			}
+		}
+		catch
+		{
+		}
+	}
+
 	private void UpdateMode()
 	{
 		passwordPanel.Visibility = ((!PasswordMode) ? Visibility.Collapsed : Visibility.Visible);
@@ -264,6 +382,9 @@ public class AccountDialog
 		}
 		Link = link;
 		Main = mainSwitch.IsChecked == true;
+		GamePlaceId = gamePlace ?? "";
+		GameName = string.IsNullOrEmpty(gamePlace) ? "" : (gameName ?? "");
+		GameUniverseId = string.IsNullOrEmpty(gamePlace) ? 0 : gameUniverse;
 		if (PasswordMode)
 		{
 			await SavePassword(force);

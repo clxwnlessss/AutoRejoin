@@ -58,6 +58,7 @@ $Link            = ''    # ссылка для аккаунтов без сво�
 $LinkFile        = ''    # файл, из которого брать ссылку (первая ссылка Роблокса в нём, меняется на лету); пусто — не брать
 $DefaultPlace    = '1537690962'   # ссылки нет вовсе — публичный сервер выбранной игры (по умолчанию Bee Swarm Simulator)
 $DefaultGameName = 'Bee Swarm Simulator'
+$script:GameNames = @{}       # своя игра аккаунта: ID плейса -> название (для журнала)
 
 $CheckInterval   = 1     # как часто проверять окна, сек (движок при этом занимает ~2–3% одного ядра)
 $LaunchTimeout   = 120   # сколько ждать, пока откроется окно (с учётом обновления Роблокса)
@@ -1093,9 +1094,21 @@ function Update-DefaultLink {
     Write-Status "новая ссылка на сервер: $(Get-LinkForLog $url) — применится при следующих перезаходах." Cyan
 }
 
+# Своя ссылка аккаунта из приложения: его ссылка на сервер, иначе его игра (ID плейса), иначе '' — общая из настроек.
+function Get-EntryOwnLink($Entry) {
+    $link = ([string]$Entry.link).Trim()
+    if ($link) { return $link }
+    $game = if ($Entry.PSObject.Properties['gamePlaceId']) { ([string]$Entry.gamePlaceId).Trim() } else { '' }
+    if ($game -notmatch '^\d{4,20}$') { return '' }
+    $name = if ($Entry.PSObject.Properties['gameName']) { [string]$Entry.gameName } else { '' }
+    if ($name) { $script:GameNames[$game] = $name }
+    return $game
+}
+
 # Ссылка для журнала: код приватного сервера скрыт (журнал виден в окне приложения — его могут заскринить и отправить).
 function Get-LinkForLog([string]$Url) {
     if ($Url -eq $DefaultPlace) { return "публичный сервер $DefaultGameName (ссылка не задана)" }
+    if ($Url -match '^\d{4,20}$' -and $script:GameNames.ContainsKey($Url)) { return "публичный сервер $($script:GameNames[$Url])" }
     return [regex]::Replace($Url, '((?:code|linkCode|privateServerLinkCode)=)([^&#\s]+)', {
         param($match)
         $code = $match.Groups[2].Value
@@ -1133,7 +1146,7 @@ function Get-LoginMode($Entry) {
 # Аккаунт из записи vault.dat. Бросает исключение, если своя ссылка аккаунта не подходит.
 function New-VaultAccount($Entry) {
     if (-not $script:DefaultLink) { $script:DefaultLink = Get-DefaultLink; $script:DefaultLinkCheckedAt = Get-Date }
-    $ownLink = ([string]$Entry.link).Trim()
+    $ownLink = Get-EntryOwnLink $Entry
     $accountLink = if ($ownLink) { $ownLink } else { $script:DefaultLink }
     $target = Get-LaunchTarget $accountLink
 
@@ -1186,7 +1199,7 @@ function Update-AccountEntry($Account, $Entry) {
         $what = if ($isMain) { 'теперь мейн: FPS мейна и полный экран — со следующего захода' } else { 'теперь хелпер: FPS хелпера — со следующего захода' }
         Write-Status "$what." DarkGray $Account
     }
-    $ownLink = ([string]$Entry.link).Trim()
+    $ownLink = Get-EntryOwnLink $Entry
     if ($ownLink -eq $Account.OwnLink) { return }
     $link = if ($ownLink) { $ownLink } else { $script:DefaultLink }
     try {
@@ -3807,7 +3820,7 @@ function Sync-VaultAccounts($Vault) {
                 continue
             }
         }
-        $ownLink = ([string]$entry.link).Trim()
+        $ownLink = Get-EntryOwnLink $entry
         $problem = $script:Problems[$key]
         if ($problem -and $problem.Cookie -eq $cookie -and $problem.Link -eq $ownLink) { continue }   # всё то же — ждём, пока поправят
         $script:Problems.Remove($key)
@@ -4290,7 +4303,7 @@ function Start-Watchdog {
         if ($script:StopRequested) { return }
         try { $account = New-VaultAccount $entry }
         catch {
-            $script:Problems[[string]$entry.id] = [pscustomobject]@{ Text = "своя ссылка не подходит: $($_.Exception.Message)"; Cookie = Get-CleanCookie $entry.cookie; Link = ([string]$entry.link).Trim() }
+            $script:Problems[[string]$entry.id] = [pscustomobject]@{ Text = "своя ссылка не подходит: $($_.Exception.Message)"; Cookie = Get-CleanCookie $entry.cookie; Link = Get-EntryOwnLink $entry }
             Write-Status "аккаунт $($entry.name): своя ссылка не подходит — $($_.Exception.Message)" Red
             continue
         }

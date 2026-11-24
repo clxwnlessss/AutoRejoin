@@ -1761,10 +1761,20 @@ public class MainController
 		return null;
 	}
 
+	private GameCatalog.Game DefaultGame()
+	{
+		return new GameCatalog.Game
+		{
+			Name = config.gameName,
+			PlaceId = config.gamePlaceId,
+			UniverseId = config.gameUniverseId
+		};
+	}
+
 	public void AddAccount()
 	{
 		ShowWindow();
-		AccountDialog accountDialog = new AccountDialog(null, DuplicateOf, !vault.accounts.Any((VaultAccount a) => a.main), config.autoAcceptWarnings);
+		AccountDialog accountDialog = new AccountDialog(null, DuplicateOf, !vault.accounts.Any((VaultAccount a) => a.main), config.autoAcceptWarnings, DefaultGame());
 		if (accountDialog.ShowDialog(window) != AccountDialog.Outcome.Saved)
 		{
 			return;
@@ -1774,6 +1784,9 @@ public class MainController
 		vaultAccount.cookie = accountDialog.Cookie;
 		vaultAccount.link = accountDialog.Link;
 		vaultAccount.main = accountDialog.Main;
+		vaultAccount.gamePlaceId = accountDialog.GamePlaceId;
+		vaultAccount.gameName = accountDialog.GameName;
+		vaultAccount.gameUniverseId = accountDialog.GameUniverseId;
 		vaultAccount.enabled = true;
 		vaultAccount.userId = accountDialog.User.Id;
 		vaultAccount.name = accountDialog.User.Name;
@@ -1814,7 +1827,7 @@ public class MainController
 		{
 			return;
 		}
-		AccountDialog accountDialog = new AccountDialog(vaultAccount, DuplicateOf, suggestMain: false, config.autoAcceptWarnings);
+		AccountDialog accountDialog = new AccountDialog(vaultAccount, DuplicateOf, suggestMain: false, config.autoAcceptWarnings, DefaultGame());
 		switch (accountDialog.ShowDialog(window))
 		{
 		case AccountDialog.Outcome.Deleted:
@@ -1834,6 +1847,13 @@ public class MainController
 		{
 			vaultAccount.link = accountDialog.Link;
 			vaultAccount.main = accountDialog.Main;
+			if (vaultAccount.gamePlaceId != accountDialog.GamePlaceId)
+			{
+				AppLog(vaultAccount.name, string.IsNullOrEmpty(accountDialog.GamePlaceId) ? L.T("игра — как в настройках.") : (L.T("игра: ") + accountDialog.GameName + L.T(" — со следующего перезахода.")), "Cyan");
+			}
+			vaultAccount.gamePlaceId = accountDialog.GamePlaceId;
+			vaultAccount.gameName = accountDialog.GameName;
+			vaultAccount.gameUniverseId = accountDialog.GameUniverseId;
 			bool usesPassword = vaultAccount.UsesPassword;
 			vaultAccount.login = accountDialog.LoginMode;
 			vaultAccount.username = accountDialog.Username ?? "";

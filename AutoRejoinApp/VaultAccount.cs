@@ -31,6 +31,13 @@ public class VaultAccount
 
 	public string cookieAt { get; set; }
 
+	// Игра только для этого аккаунта (пусто — игра из настроек). Своя ссылка на сервер важнее.
+	public string gamePlaceId { get; set; }
+
+	public string gameName { get; set; }
+
+	public long gameUniverseId { get; set; }
+
 	[ScriptIgnore]
 	public bool UsesPassword => login == "password";
 
@@ -48,5 +55,7 @@ public class VaultAccount
 		password = "";
 		master = "";
 		cookieAt = "";
+		gamePlaceId = "";
+		gameName = "";
 	}
 }

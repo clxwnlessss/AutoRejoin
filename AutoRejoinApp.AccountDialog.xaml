@@ -72,6 +72,26 @@
                 </Border>
             </StackPanel>
 
+            <TextBlock Text="ИГРА ДЛЯ ЭТОГО АККАУНТА" Style="{StaticResource Label}" Margin="0,18,0,7"/>
+            <Border Background="{StaticResource FieldBg}" CornerRadius="10" Padding="10,8">
+                <Grid>
+                    <Grid.ColumnDefinitions>
+                        <ColumnDefinition Width="Auto"/>
+                        <ColumnDefinition Width="*"/>
+                        <ColumnDefinition Width="Auto"/>
+                    </Grid.ColumnDefinitions>
+                    <Border x:Name="GameIcon" Width="38" Height="38" CornerRadius="9" Background="{StaticResource AccentSoft}" Margin="0,0,11,0"/>
+                    <StackPanel Grid.Column="1" VerticalAlignment="Center">
+                        <TextBlock x:Name="GameNameText" FontWeight="SemiBold" FontSize="13.5" TextTrimming="CharacterEllipsis"/>
+                        <TextBlock x:Name="GameHintText" Style="{StaticResource Hint}" Margin="0,1,0,0"/>
+                    </StackPanel>
+                    <StackPanel Grid.Column="2" Orientation="Horizontal" VerticalAlignment="Center">
+                        <Button x:Name="GameReset" Style="{StaticResource LinkBtn}" Content="Как в настройках" Margin="0,0,14,0" Visibility="Collapsed"/>
+                        <Button x:Name="GamePick" Style="{StaticResource LinkBtn}" Content="Выбрать игру…"/>
+                    </StackPanel>
+                </Grid>
+            </Border>
+
             <TextBlock Text="СВОЯ ССЫЛКА НА СЕРВЕР — НЕОБЯЗАТЕЛЬНО" Style="{StaticResource Label}" Margin="0,18,0,7"/>
             <TextBox x:Name="LinkBox" Style="{StaticResource Field}" Tag="Пусто — общая ссылка из настроек"/>
 

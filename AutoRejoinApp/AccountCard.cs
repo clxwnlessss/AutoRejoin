@@ -34,6 +34,8 @@ public class AccountCard : Notify
 
 	private bool ownLink;
 
+	private string gameText = "";
+
 	private bool hasWindow;
 
 	private ImageSource avatar;
@@ -98,6 +100,20 @@ public class AccountCard : Notify
 		get
 		{
 			if (!isMain)
+			{
+				return Visibility.Collapsed;
+			}
+			return Visibility.Visible;
+		}
+	}
+
+	public string GameText => gameText;
+
+	public Visibility GameVisibility
+	{
+		get
+		{
+			if (string.IsNullOrEmpty(gameText))
 			{
 				return Visibility.Collapsed;
 			}
@@ -282,6 +298,12 @@ public class AccountCard : Notify
 		UserId = entry.userId;
 		Set(ref isMain, entry.main, "IsMain", "MainVisibility");
 		Set(ref ownLink, !string.IsNullOrWhiteSpace(entry.link), "OwnLinkVisibility");
+		string game = string.IsNullOrEmpty(entry.gamePlaceId) ? "" : (string.IsNullOrEmpty(entry.gameName) ? entry.gamePlaceId : entry.gameName);
+		if (game.Length > 22)
+		{
+			game = game.Substring(0, 21).TrimEnd() + "…";
+		}
+		Set(ref gameText, game.ToUpperInvariant(), "GameText", "GameVisibility");
 		Set(ref enabled, entry.enabled, "Enabled", "RowOpacity");
 	}
 

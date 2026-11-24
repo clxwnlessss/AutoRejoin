@@ -49,6 +49,23 @@ internal static class Screenshots
 				await Task.Delay(500);
 				Save((FrameworkElement)dialogWindow.Content, Path.Combine(dir, "dialog_add.png"));
 				dialogWindow.Close();
+				AccountDialog editDialog = new AccountDialog(new VaultAccount
+				{
+					name = "PuzanFarm2",
+					userId = "123456789",
+					gamePlaceId = "2753915549",
+					gameName = "Blox Fruits",
+					gameUniverseId = 994732206L
+				}, (string a, string b) => (string)null, suggestMain: false, autoAccept: false);
+				Window editWindow = editDialog.WindowForTest;
+				editWindow.WindowStartupLocation = WindowStartupLocation.Manual;
+				editWindow.Left = -20000.0;
+				editWindow.Top = -20000.0;
+				editWindow.ShowActivated = false;
+				editWindow.Show();
+				await Task.Delay(4000);
+				Save((FrameworkElement)editWindow.Content, Path.Combine(dir, "dialog_account_game.png"));
+				editWindow.Close();
 				GamePicker picker = new GamePicker("2753915549", null);
 				Window pickerWindow = picker.WindowForTest;
 				pickerWindow.WindowStartupLocation = WindowStartupLocation.Manual;

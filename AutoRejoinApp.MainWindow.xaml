@@ -427,6 +427,10 @@
                                                                         Padding="7,1,7,2" Margin="6,0,0,0" VerticalAlignment="Center" ToolTip="Своя ссылка на сервер">
                                                                     <TextBlock Text="СВОЙ СЕРВЕР" Foreground="{StaticResource Blue}" FontSize="9.5" FontWeight="Bold"/>
                                                                 </Border>
+                                                                <Border Visibility="{Binding GameVisibility}" Background="{StaticResource AccentSoft}" CornerRadius="6"
+                                                                        Padding="7,1,7,2" Margin="6,0,0,0" VerticalAlignment="Center" ToolTip="Своя игра у этого аккаунта">
+                                                                    <TextBlock Text="{Binding GameText}" Foreground="{StaticResource AccentText}" FontSize="9.5" FontWeight="Bold"/>
+                                                                </Border>
                                                             </StackPanel>
                                                             <TextBlock Text="{Binding Detail}" Foreground="{StaticResource Text3}" FontSize="12" Margin="0,3,0,0"
                                                                        TextTrimming="CharacterEllipsis" ToolTip="{Binding DetailTip}"/>
