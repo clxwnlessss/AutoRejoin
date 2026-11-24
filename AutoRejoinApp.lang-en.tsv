@@ -910,3 +910,4 @@ VIP-ссылка, ссылка на игру или ID плейса. Пусто 
 Поиск по настройкам — например «память», «Discord», «игра»	Search settings — e.g. "memory", "Discord", "game"
 Ничего не нашлось по запросу «	Nothing found for "
 ». Попробуй другое слово.	". Try another word.
+~^вышел в меню Роблокса и за (\d+) сек не вернулся на сервер$	left to the Roblox menu and didn't come back to a server in $1 s

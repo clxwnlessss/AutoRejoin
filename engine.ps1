@@ -3069,6 +3069,13 @@ function Register-LoginFailure($Account) {
 }
 
 # Возвращает причину перезапуска окна или $null, если всё в порядке.
+# Сколько ждать, что окно само вернётся на сервер после выхода в меню или дисконнекта без кода: в Bee Swarm —
+# $OutOfGameGrace (прыжок на сервер ~0.2 сек), в других играх не меньше 45 сек (телепорт из лобби в матч).
+function Get-OutOfGameGrace($Tracker) {
+    if (-not $Tracker.PlaceId -or $Tracker.PlaceId -eq '1537690962') { return $OutOfGameGrace }
+    return [Math]::Max($OutOfGameGrace, 45)
+}
+
 function Get-RestartReason($Tracker, $Account) {
     $now = Get-Date
 
@@ -3105,12 +3112,15 @@ function Get-RestartReason($Tracker, $Account) {
     if ($Tracker.KickCode -and -not $Tracker.InGame -and ($now - $Tracker.KickAt).TotalSeconds -ge 1) {
         return (Get-KickText $Tracker.KickCode)
     }
-    # Выход в меню Роблокса (так кончается неудачный прыжок скаута: "Teleport failed ... GameFull/GameEnded") — тоже
-    # сразу: из меню окно само на сервер не возвращается (10–11.10: 433 выхода в меню, ни одного возврата).
-    if (-not $Tracker.InGame -and $Tracker.LastReason -eq 'вышел в меню' -and ($now - $Tracker.StateSince).TotalSeconds -ge 1) {
-        return 'вышел в меню Роблокса (неудачный прыжок на сервер)'
+    # Выход в меню Роблокса и непонятный дисконнект — ждём, не зайдёт ли окно само. Новый клиент проводит телепорт через
+    # меню: "leaveUGCGameInternal", через 5–30 сек "Joining game" на новом месте (24.11 у игрока в Anime Adventures скрипт
+    # фермы каждые ~6 мин телепортировал аккаунты из лобби в матч, а мы перезапускали окно через 1 сек после выхода в меню —
+    # и аккаунты так и не доходили до матча). В Bee Swarm прыжок короткий, в остальных играх телепорт в матч дольше.
+    $grace = Get-OutOfGameGrace $Tracker
+    if (-not $Tracker.InGame -and $Tracker.LastReason -eq 'вышел в меню' -and ($now - $Tracker.StateSince).TotalSeconds -ge $grace) {
+        return "вышел в меню Роблокса и за $grace сек не вернулся на сервер"
     }
-    if (-not $Tracker.InGame -and ($now - $Tracker.StateSince).TotalSeconds -ge $OutOfGameGrace) {
+    if (-not $Tracker.InGame -and ($now - $Tracker.StateSince).TotalSeconds -ge $grace) {
         $why = if ($Tracker.LastReason) { " ($($Tracker.LastReason))" } else { '' }
         return "отключило от сервера$why"
     }
