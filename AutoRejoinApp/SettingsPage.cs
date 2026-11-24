@@ -24,6 +24,10 @@ public class SettingsPage
 
 	private TextBlock discordState;
 
+	private string searchQuery = "";
+
+	private TextBlock searchEmpty;
+
 	public SettingsPage(MainController main, StackPanel host)
 	{
 		this.main = main;
@@ -363,6 +367,7 @@ public class SettingsPage
 	public void Build()
 	{
 		host.Children.Clear();
+		BuildSearch();
 		BuildLanguage();
 		BuildServer();
 		BuildWindows();
@@ -373,6 +378,156 @@ public class SettingsPage
 		BuildBot();
 		BuildDiscord();
 		BuildData();
+		ApplySearch();
+	}
+
+	// Search over the settings: keeps the rows whose title, hint, buttons or choices contain the text,
+	// and the whole card when its title matches; cards with nothing left are hidden.
+	private void BuildSearch()
+	{
+		TextBox box = Field(L.T("Поиск по настройкам — например «память», «Discord», «игра»"), searchQuery);
+		Ico icon = Ico.Make("search", 16.0, Palette.Text2);
+		icon.HorizontalAlignment = HorizontalAlignment.Right;
+		icon.VerticalAlignment = VerticalAlignment.Center;
+		icon.Margin = new Thickness(0.0, 0.0, 16.0, 0.0);
+		icon.IsHitTestVisible = false;
+		Grid grid = new Grid
+		{
+			Margin = new Thickness(0.0, 0.0, 0.0, 14.0),
+			Tag = "search"
+		};
+		grid.Children.Add(box);
+		grid.Children.Add(icon);
+		host.Children.Add(grid);
+		searchEmpty = HintBlock("");
+		searchEmpty.Margin = new Thickness(4.0, 0.0, 0.0, 14.0);
+		searchEmpty.Visibility = Visibility.Collapsed;
+		searchEmpty.Tag = "search";
+		host.Children.Add(searchEmpty);
+		box.TextChanged += delegate
+		{
+			searchQuery = box.Text ?? "";
+			ApplySearch();
+		};
+		box.KeyDown += delegate(object s, System.Windows.Input.KeyEventArgs e)
+		{
+			if (e.Key == System.Windows.Input.Key.Escape)
+			{
+				box.Text = "";
+			}
+		};
+	}
+
+	public void SearchForTest(string query)
+	{
+		searchQuery = query ?? "";
+		Build();
+	}
+
+	private void ApplySearch()
+	{
+		string q = (searchQuery ?? "").Trim().ToLowerInvariant();
+		int shown = 0;
+		// Keep the cards as wide as before while filtering (narrow results would otherwise shrink the page).
+		if (q.Length == 0)
+		{
+			host.MinWidth = 0.0;
+		}
+		else if (host.MinWidth == 0.0 && host.ActualWidth > 0.0)
+		{
+			host.MinWidth = host.ActualWidth;
+		}
+		foreach (UIElement child in host.Children)
+		{
+			if (!(child is Border card) || !(card.Child is StackPanel section))
+			{
+				continue;
+			}
+			bool titleHit = q.Length == 0 || TextOf(section.Children.Count > 0 ? section.Children[0] : null).Contains(q);
+			bool any = false;
+			bool seenItem = false;
+			for (int i = 1; i < section.Children.Count; i++)
+			{
+				UIElement item = section.Children[i];
+				if (IsSeparator(item))
+				{
+					continue;
+				}
+				bool hit = titleHit || TextOf(item).Contains(q);
+				item.Visibility = hit ? Visibility.Visible : Visibility.Collapsed;
+				if (i > 1 && IsSeparator(section.Children[i - 1]))
+				{
+					section.Children[i - 1].Visibility = (hit && seenItem) ? Visibility.Visible : Visibility.Collapsed;
+				}
+				if (hit)
+				{
+					any = true;
+					seenItem = true;
+				}
+			}
+			bool visible = titleHit || any;
+			card.Visibility = visible ? Visibility.Visible : Visibility.Collapsed;
+			if (visible)
+			{
+				shown++;
+			}
+		}
+		if (searchEmpty != null)
+		{
+			searchEmpty.Text = L.T("Ничего не нашлось по запросу «") + (searchQuery ?? "").Trim() + L.T("». Попробуй другое слово.");
+			searchEmpty.Visibility = (q.Length > 0 && shown == 0) ? Visibility.Visible : Visibility.Collapsed;
+		}
+	}
+
+	private static bool IsSeparator(UIElement e)
+	{
+		return e is Border b && b.Child == null && b.Height == 1.0;
+	}
+
+	private static string TextOf(object root)
+	{
+		System.Text.StringBuilder sb = new System.Text.StringBuilder();
+		CollectText(root, sb, 0);
+		return sb.ToString().ToLowerInvariant();
+	}
+
+	private static void CollectText(object node, System.Text.StringBuilder sb, int depth)
+	{
+		if (node == null || depth > 40)
+		{
+			return;
+		}
+		if (node is string str)
+		{
+			sb.Append(str).Append(' ');
+			return;
+		}
+		if (node is TextBlock tb)
+		{
+			sb.Append(tb.Text).Append(' ');
+		}
+		else if (node is TextBox)
+		{
+			return;
+		}
+		else if (node is ItemsControl items)
+		{
+			foreach (object it in items.Items)
+			{
+				sb.Append(it is FrameworkElement ? "" : (it?.ToString() ?? "")).Append(' ');
+			}
+		}
+		if (node is FrameworkElement fe && fe.ToolTip is string tip)
+		{
+			sb.Append(tip).Append(' ');
+		}
+		if (node is DependencyObject d)
+		{
+			foreach (object c in LogicalTreeHelper.GetChildren(d))
+			{
+				CollectText(c, sb, depth + 1);
+			}
+		}
 	}
 
 	private void BuildLanguage()

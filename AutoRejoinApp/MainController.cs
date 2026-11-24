@@ -74,6 +74,8 @@ public class MainController
 
 	private SettingsPage settingsPage;
 
+	public SettingsPage SettingsForTest => settingsPage;
+
 	private readonly Border root;
 
 	private readonly Border banner;

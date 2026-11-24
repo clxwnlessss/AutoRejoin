@@ -904,3 +904,9 @@ VIP-ссылка, ссылка на игру или ID плейса. Пусто 
 игра:\s	game:\s
 \s— со следующего перезахода.	\s— from the next rejoin.
 Своя игра у этого аккаунта	This account has its own game
+~^Роблокс показал окно Disconnected \(код (\d+) — (.+)\) — перезахожу\.$	Roblox showed the Disconnected prompt (code $1 — $2) — rejoining.
+~^Роблокс показал окно Disconnected \(код (\d+)\) — перезахожу\.$	Roblox showed the Disconnected prompt (code $1) — rejoining.
+~^проверка вылетов из игры: (.+)$	disconnect check: $1
+Поиск по настройкам — например «память», «Discord», «игра»	Search settings — e.g. "memory", "Discord", "game"
+Ничего не нашлось по запросу «	Nothing found for "
+». Попробуй другое слово.	". Try another word.

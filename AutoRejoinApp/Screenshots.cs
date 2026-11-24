@@ -38,6 +38,14 @@ internal static class Screenshots
 						Save((FrameworkElement)scroll.Content, Path.Combine(dir, page + "_full.png"));
 					}
 				}
+				controller.ShowPage("settings");
+				controller.SettingsForTest.SearchForTest(L.IsEnglish ? "memory" : "память");
+				await Task.Delay(500);
+				Save((FrameworkElement)window.Content, Path.Combine(dir, "settings_search.png"));
+				controller.SettingsForTest.SearchForTest("zzzqqq");
+				await Task.Delay(300);
+				Save((FrameworkElement)window.Content, Path.Combine(dir, "settings_search_empty.png"));
+				controller.SettingsForTest.SearchForTest("");
 				controller.ShowPage("accounts");
 				AccountDialog dialog = new AccountDialog(null, (string a, string b) => (string)null, suggestMain: true, autoAccept: false);
 				Window dialogWindow = dialog.WindowForTest;

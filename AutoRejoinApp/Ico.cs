@@ -51,6 +51,7 @@ public class Ico : FrameworkElement
 		["info"] = Circle + "M12 16 V12 M12 8 H12.01",
 		["close"] = "M18 6 L6 18 M6 6 L18 18",
 		["check"] = "M20 6 L9 17 L4 12",
+		["search"] = "M3 11 A8 8 0 1 0 19 11 A8 8 0 1 0 3 11 Z M21 21 L16.65 16.65",
 		["memory"] = "M7 5 H17 A2 2 0 0 1 19 7 V17 A2 2 0 0 1 17 19 H7 A2 2 0 0 1 5 17 V7 A2 2 0 0 1 7 5 Z M9.5 9.5 H14.5 V14.5 H9.5 Z M9 2 V5 M15 2 V5 M9 19 V22 M15 19 V22 M2 9 H5 M2 15 H5 M19 9 H22 M19 15 H22",
 		["play"] = "M7 4.5 L19 12 L7 19.5 Z",
 		["stop"] = "M7 6 H17 A1 1 0 0 1 18 7 V17 A1 1 0 0 1 17 18 H7 A1 1 0 0 1 6 17 V7 A1 1 0 0 1 7 6 Z",

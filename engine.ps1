@@ -1268,6 +1268,7 @@ function Update-TrackerFromLog($Tracker) {
         if ($line -match $JoinPattern) {
             $Tracker.PlaceId = $Matches[1]
             $Tracker.InGame = $true
+            $Tracker.LastJoinAt = Get-Date
             if (-not $Tracker.EverJoined) { $Tracker.JoinedAt = Get-Date }
             $Tracker.EverJoined = $true
             $Tracker.StateSince = Get-Date
@@ -1419,7 +1420,7 @@ function Update-Trackers {
                 Attached = $false; AttachedAt = $null; ScriptSeen = $false; ScriptSeenAt = $null; ScriptVia = $null
                 Compacted = $false; Recompacted = 0; JoinedAt = $null
                 FullscreenTries = 0; FullscreenAt = $null
-                KickCode = $null; KickAt = $null; PrioritySet = $false
+                KickCode = $null; KickAt = $null; PrioritySet = $false; LastJoinAt = $null
                 LoginError = $null; BtidMismatch = $false   # Роблокс не принял вход в окне (см. $WebLoginPattern)
                 Adopted = $false; UserOpen = $false; SeenOpen = $false; Restores = @()
                 MemoryHeld = $false; MemoryFailed = $false   # Set-HelperMemory: потолок RAM стоит / не поставился
@@ -2085,20 +2086,56 @@ function Start-Real {
     }
 }
 
-# Наш маленький скрипт в autoexec REAL: при инжекте пишет отметку для AutoRejoin. Только свой файл, остальное не трогаем.
+# Наш маленький скрипт в autoexec экзекьютора: при инжекте пишет отметку для AutoRejoin, а когда Роблокс показывает окно
+# "Disconnected" (кик, бездействие, потеря связи, 256 "Lost connection due to an unknown error") — отметку вылета
+# (Update-DisconnectMarks). Новый сетевой движок Роблокса (RbxTransport) строку "setting replicator disconnect reason"
+# в лог не пишет, и окно с таким вылетом по логу выглядело "в игре" — 24.11 у игрока 256 так и не перезашёл.
+# Только свой файл, остальное не трогаем.
 function Install-RealInjectMarker {
-    $dir = Get-ExecAutoexecDir
+    $dir = if ($Executor -eq 'potassium') {
+        $own = Join-Path $env:LOCALAPPDATA 'Potassium\autoexec'
+        if (Test-Path -LiteralPath $own) { $own } else { $null }
+    } else { Get-ExecAutoexecDir }
     if (-not $dir) { return }
     $path = Join-Path $dir $RealMarkerName
     $text = @'
--- AutoRejoin: inject marker. When the executor injects, this writes autorejoin_inject_<UserId>.txt to the workspace,
--- so AutoRejoin knows the window got the executor. Installed and updated by AutoRejoin; it changes nothing in the game.
+-- AutoRejoin: inject marker and disconnect watcher. When the executor injects, this writes autorejoin_inject_<UserId>.txt
+-- to the workspace, so AutoRejoin knows the window got the executor. When Roblox shows the "Disconnected" prompt (kick,
+-- idle, lost connection, error 256...), it writes autorejoin_disconnect_<UserId>.txt, so AutoRejoin rejoins right away.
+-- Installed and updated by AutoRejoin; it only reads the game and changes nothing in it.
 task.spawn(function()
 	pcall(function()
 		local Players = game:GetService("Players")
 		local player = Players.LocalPlayer
 		while not player do task.wait(0.5); player = Players.LocalPlayer end
-		writefile("autorejoin_inject_" .. tostring(player.UserId) .. ".txt", tostring(os.time()) .. " " .. tostring(game.PlaceId))
+		local uid = tostring(player.UserId)
+		writefile("autorejoin_inject_" .. uid .. ".txt", tostring(os.time()) .. " " .. tostring(game.PlaceId))
+		local GuiService = game:GetService("GuiService")
+		local sent = false
+		local function check(title)
+			if sent then return end
+			local code = 0
+			pcall(function() code = GuiService:GetErrorCode().Value end)
+			local message = ""
+			pcall(function() message = tostring(GuiService:GetErrorMessage()) end)
+			local byTitle = title ~= nil and string.find(string.lower(tostring(title)), "disconnect", 1, true) ~= nil
+			if not ((code >= 256 and code < 512) or byTitle) then return end
+			sent = true
+			local text = tostring(os.time()) .. " " .. tostring(code) .. " " .. tostring(game.PlaceId) .. " " .. (string.gsub(message, "[\r\n]+", " "))
+			pcall(writefile, "autorejoin_disconnect_" .. uid .. ".txt", text)
+		end
+		GuiService.ErrorMessageChanged:Connect(function()
+			task.wait(0.2)
+			check(nil)
+		end)
+		local overlay = game:GetService("CoreGui"):WaitForChild("RobloxPromptGui", 60):WaitForChild("promptOverlay", 60)
+		overlay.ChildAdded:Connect(function(child)
+			if child.Name ~= "ErrorPrompt" then return end
+			task.wait(0.3)
+			local title = nil
+			pcall(function() title = child.TitleFrame.ErrorTitle.Text end)
+			check(title)
+		end)
 	end)
 end)
 '@
@@ -2178,6 +2215,33 @@ function Confirm-RealSettings([switch]$Now) {
         }
     } elseif ($inject -eq $true) { $script:AutoAttachWarned = $false }
     return $ok
+}
+
+# Каждый круг: отметки вылета от нашего скрипта в autoexec (Install-RealInjectMarker). Отметка новее последнего захода
+# окна — Роблокс показал "Disconnected": окно уже не на сервере, перезаходим сразу (как по коду кика в логе).
+function Update-DisconnectMarks {
+    foreach ($account in $script:Accounts) {
+        $tracker = $account.Tracker
+        if (-not $tracker -or -not $account.UserId -or -not $tracker.InGame) { continue }
+        $file = Join-Path $Workspace "autorejoin_disconnect_$($account.UserId).txt"
+        $time = try { (Get-Item -LiteralPath $file -ErrorAction Stop).LastWriteTime } catch { $null }
+        if (-not $time) { continue }
+        $since = if ($tracker.LastJoinAt) { $tracker.LastJoinAt } else { $tracker.Start }
+        if ($time -le $since) { continue }
+        $text = try { [IO.File]::ReadAllText($file).Trim() } catch { '' }
+        $parts = @($text -split ' ', 4)
+        $code = 0
+        if ($parts.Count -ge 2) { [void][int]::TryParse($parts[1], [ref]$code) }
+        if ($code -lt 256 -or $code -ge 512) { $code = 256 }
+        $message = if ($parts.Count -ge 4) { $parts[3].Trim() } else { '' }
+        $tracker.KickCode = $code
+        $tracker.KickAt = Get-Date
+        $tracker.InGame = $false
+        $tracker.StateSince = Get-Date
+        $tracker.LastReason = $code
+        $what = if ($message) { " — $message" } else { '' }
+        Write-Status "Роблокс показал окно Disconnected (код $code$what) — перезахожу." Yellow $account
+    }
 }
 
 # Каждый круг: отметки инжекта из workspace REAL. Окна, к которым REAL подключился после их запуска, — Attached.
@@ -4332,6 +4396,7 @@ function Start-Watchdog {
 
     Test-MemoryCapacity
     Remove-AntiAfk
+    if ($Executor -eq 'potassium' -and -not $NoPotassium) { Install-RealInjectMarker }
     $script:Phase = 'potassium'
     Write-AppStatus -Force
     if ($script:PotassiumStartedAt) { Wait-PotassiumWarmup }
@@ -4356,6 +4421,7 @@ function Start-Watchdog {
         try { Update-Schedule } catch { Write-Status "расписание: $($_.Exception.Message)" DarkYellow }
         # Случайная ошибка в одном цикле (окно закрылось посреди проверки и т.п.) не должна останавливать скрипт.
         try { Update-Trackers } catch { Write-Status "проверка окон: $($_.Exception.Message)" DarkYellow }
+        try { Update-DisconnectMarks } catch { Write-Status "проверка вылетов из игры: $($_.Exception.Message)" DarkYellow }
         try { Find-WerCrashes } catch { Write-Status "проверка падений Роблокса: $($_.Exception.Message)" DarkYellow }
         try { Close-ConnectivityDialogs } catch { Write-Status "проверка окон Froststrap: $($_.Exception.Message)" DarkYellow }
         try { Update-PotassiumState } catch { Write-Status "проверка Потассиума: $($_.Exception.Message)" DarkYellow }
