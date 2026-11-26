@@ -30,9 +30,9 @@ DEFAULTS = {
     "accounts": [],          # [{"package": "com.roblox.client", "name": "main", "link": "1537690962"}]
     "link": "1537690962",    # used by accounts without their own link: place ID, game link or VIP link
     "checkEvery": 5,         # seconds between checks
-    "joinTimeout": 120,      # app started but not in game after this many seconds -> relaunch
-    "outGrace": 45,          # out of game (menu, disconnect, teleport) longer than this -> relaunch
-    "launchGap": 8,          # seconds between launches of different apps
+    "joinTimeout": 60,      # app started but not in game after this many seconds -> relaunch
+    "outGrace": 20,          # out of game (menu, disconnect, teleport) longer than this -> relaunch
+    "launchGap": 4,          # seconds between launches of different apps
     "webhook": "",           # optional Discord webhook for drop / back-in-game alerts
 }
 
@@ -68,8 +68,9 @@ def deep_link(link):
     url = urllib.parse.urlparse(link)
     query = urllib.parse.parse_qs(url.query)
     if "/share" in url.path and query.get("code"):
+        # the Roblox app opens roblox.com share links itself (app link); there's no roblox:// form for them
         kind = (query.get("type") or ["Server"])[0]
-        return f"roblox://navigation/share_links?code={urllib.parse.quote(query['code'][0])}&type={kind}"
+        return f"https://www.roblox.com/share?code={urllib.parse.quote(query['code'][0])}&type={kind}"
     m = re.search(r"/games/(\d+)", url.path)
     place = m.group(1) if m else (query.get("placeId") or [None])[0]
     if not place:

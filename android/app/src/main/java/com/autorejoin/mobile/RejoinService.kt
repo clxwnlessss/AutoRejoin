@@ -39,6 +39,7 @@ class RejoinService : Service() {
         var fails = 0
         var nextLaunch = 0L
         var adopted = false
+        var lastType = -1
     }
 
     private var worker: Thread? = null
@@ -77,8 +78,8 @@ class RejoinService : Service() {
         Root.recheck()
         val root = Root.available()
         val common = Store.get(this, "link", Roblox.BEE_SWARM)
-        val grace = (Store.get(this, "grace", "45").toLongOrNull() ?: 45) * 1000
-        val joinTimeout = (Store.get(this, "joinTimeout", "120").toLongOrNull() ?: 120) * 1000
+        val grace = (Store.get(this, "grace", "20").toLongOrNull() ?: 20).coerceIn(5, 600) * 1000
+        val joinTimeout = (Store.get(this, "joinTimeout", "60").toLongOrNull() ?: 60).coerceIn(20, 600) * 1000
         val states = accounts.map { State(it) }
         log(if (root) "Root mode: watching ${states.size} app(s) (process + Roblox log)." else "No root: watching ${states.size} account(s) through Roblox presence.")
         // usernames -> user IDs (needed without root)
@@ -100,7 +101,7 @@ class RejoinService : Service() {
                     val reason = if (root) rootReason(s, joinTimeout, grace) else presenceReason(s, presence, joinTimeout, grace)
                     if (reason == null) continue
                     val now = System.currentTimeMillis()
-                    if (now < s.nextLaunch || now - lastLaunch < 8000) continue
+                    if (now < s.nextLaunch || now - lastLaunch < 4000) continue
                     launch(s, reason, root, common)
                     lastLaunch = System.currentTimeMillis()
                 }
@@ -111,7 +112,7 @@ class RejoinService : Service() {
             } catch (e: Exception) {
                 log("Error: ${e.message}")
             }
-            try { Thread.sleep(if (root) 5000 else 20000) } catch (e: InterruptedException) { break }
+            try { Thread.sleep(if (root) 3000 else 8000) } catch (e: InterruptedException) { break }
         }
     }
 
@@ -128,6 +129,7 @@ class RejoinService : Service() {
         if (presence == null || s.acc.userId == 0L) return null
         val type = presence[s.acc.userId] ?: return null
         val now = System.currentTimeMillis()
+        if (type != s.lastType) { log("${name(s)}: status ${TYPES[type] ?: type}."); s.lastType = type }
         if (type == 2) {
             if (!s.inGame) { log("${name(s)}: in game."); if (s.rejoins > 0) notify("✅ ${name(s)} is back in game.") }
             s.inGame = true; s.everJoined = true; s.fails = 0
@@ -220,7 +222,8 @@ class RejoinService : Service() {
         s.logPath = null
         s.outSince = now
         s.fails++
-        s.nextLaunch = if (s.fails > 1) now + minOf(300_000L, 15_000L shl minOf(4, s.fails - 2)) else 0
+        // a launch that didn't get the account into a game: the next one waits a bit longer (15, 30 ... 90 s on top)
+        s.nextLaunch = if (s.fails > 1) now + minOf(90_000L, 15_000L * (s.fails - 1)) else 0
     }
 
     private fun notify(text: String) {
@@ -251,6 +254,7 @@ class RejoinService : Service() {
     companion object {
         const val ACTION_STOP = "stop"
         private const val CHANNEL = "rejoin"
+        private val TYPES = mapOf(0 to "offline", 1 to "online (not in a game)", 2 to "in game", 3 to "in Studio")
         private val JOIN = Regex("! Joining game '[^']+' place (\\d+)")
         private val KICK = Regex("setting replicator disconnect reason to (\\d+)")
         private val DISCONNECT = Regex("Disconnected from server|Sending disconnect with reason|Lost connection|Connection lost|ID_CONNECTION_LOST|ID_DISCONNECTION_NOTIFICATION|leaveUGCGameInternal")

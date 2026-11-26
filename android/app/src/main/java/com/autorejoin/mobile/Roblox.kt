@@ -65,7 +65,8 @@ object Roblox {
         fun q(name: String) = try { uri.getQueryParameter(name) } catch (e: Exception) { null }
         val code = q("code")
         if (path.contains("/share") && code != null) {
-            return "roblox://navigation/share_links?code=${enc(code)}&type=${q("type") ?: "Server"}"
+            // the Roblox app opens roblox.com share links itself (app link); there's no roblox:// form for them
+            return "https://www.roblox.com/share?code=${enc(code)}&type=${q("type") ?: "Server"}"
         }
         val place = Regex("/games/(\\d+)").find(path)?.groupValues?.get(1) ?: q("placeId")
             ?: throw IllegalArgumentException("Don't understand the link: $text")

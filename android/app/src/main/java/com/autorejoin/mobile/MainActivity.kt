@@ -35,6 +35,8 @@ class MainActivity : Activity() {
     private lateinit var startBtn: Button
     private lateinit var linkBox: EditText
     private lateinit var hookBox: EditText
+    private lateinit var graceBox: EditText
+    private lateinit var joinBox: EditText
     private val rows = ArrayList<Triple<Account, EditText, EditText>>()
     private val checks = HashMap<String, CheckBox>()
 
@@ -97,6 +99,18 @@ class MainActivity : Activity() {
         }
         root.addView(accCard)
 
+        // speed
+        val speedCard = card()
+        speedCard.addView(label("Speed"))
+        speedCard.addView(hint("Rejoin after the account is out of a game for N seconds (teleports into matches take ~10–20 s). Wait N seconds for a fresh launch to get into a game before trying again."))
+        graceBox = field(Store.get(this, "grace", "20"), "20").apply { inputType = InputType.TYPE_CLASS_NUMBER }
+        joinBox = field(Store.get(this, "joinTimeout", "60"), "60").apply { inputType = InputType.TYPE_CLASS_NUMBER }
+        speedCard.addView(hint("Out of game → rejoin after (s)").apply { setPadding(0, dp(10), 0, 0) })
+        speedCard.addView(graceBox)
+        speedCard.addView(hint("Wait for a launch to join (s)").apply { setPadding(0, dp(10), 0, 0) })
+        speedCard.addView(joinBox)
+        root.addView(speedCard)
+
         // discord
         val hookCard = card()
         hookCard.addView(label("Discord alerts (optional)"))
@@ -149,6 +163,8 @@ class MainActivity : Activity() {
         if (list.none { it.enabled }) { toast("Tick at least one Roblox app."); return }
         Store.put(this, "link", link)
         Store.put(this, "webhook", hookBox.text.toString().trim())
+        Store.put(this, "grace", (graceBox.text.toString().toIntOrNull() ?: 20).coerceIn(5, 600).toString())
+        Store.put(this, "joinTimeout", (joinBox.text.toString().toIntOrNull() ?: 60).coerceIn(20, 600).toString())
         Store.saveAccounts(this, list)
         val intent = Intent(this, RejoinService::class.java)
         if (Build.VERSION.SDK_INT >= 26) startForegroundService(intent) else startService(intent)
