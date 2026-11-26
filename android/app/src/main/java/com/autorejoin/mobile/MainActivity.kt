@@ -66,6 +66,7 @@ class MainActivity : Activity() {
     private fun build() {
         root.addView(TextView(this).apply { text = "AutoRejoin"; textSize = 26f; setTextColor(Color.WHITE); typeface = Typeface.DEFAULT_BOLD })
         root.addView(hint("Keeps your Roblox apps in game: rejoins on disconnect, kick, error 256 or a closed app."))
+        root.addView(hint("Version " + Updater.currentVersion(this) + " · updates itself"))
         status = hint("").apply { setPadding(0, dp(8), 0, 0) }
         root.addView(status)
 
@@ -126,6 +127,16 @@ class MainActivity : Activity() {
         permCard.addView(button("Display over other apps", false) {
             startActivity(Intent(Settings.ACTION_MANAGE_OVERLAY_PERMISSION, Uri.parse("package:$packageName")))
         })
+        permCard.addView(button("Install updates (unknown apps)", false) {
+            if (Build.VERSION.SDK_INT >= 26) startActivity(Intent(Settings.ACTION_MANAGE_UNKNOWN_APP_SOURCES, Uri.parse("package:$packageName")))
+        })
+        permCard.addView(button("Check for updates now", false) {
+            toast("Checking for updates…")
+            Thread {
+                val started = Updater.checkAndInstall(this) { RejoinService.log(it) }
+                if (!started) runOnUiThread { toast("You have the latest version (" + Updater.currentVersion(this) + ").") }
+            }.start()
+        })
         permCard.addView(button("Don't optimize battery", false) {
             @Suppress("BatteryLife")
             startActivity(Intent(Settings.ACTION_REQUEST_IGNORE_BATTERY_OPTIMIZATIONS, Uri.parse("package:$packageName")))
@@ -146,6 +157,7 @@ class MainActivity : Activity() {
     private fun toggle() {
         if (RejoinService.isRunning) {
             startService(Intent(this, RejoinService::class.java).setAction(RejoinService.ACTION_STOP))
+            Store.put(this, "running", "0")
             RejoinService.isRunning = false
             refreshStatus()
             return
@@ -169,6 +181,7 @@ class MainActivity : Activity() {
         val intent = Intent(this, RejoinService::class.java)
         if (Build.VERSION.SDK_INT >= 26) startForegroundService(intent) else startService(intent)
         RejoinService.isRunning = true
+        Store.put(this, "running", "1")   // Events restarts the service after an update or a reboot
         refreshStatus()
     }
 

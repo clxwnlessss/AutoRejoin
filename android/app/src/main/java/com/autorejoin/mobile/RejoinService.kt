@@ -91,7 +91,12 @@ class RejoinService : Service() {
             if (root && alive(s.acc.pkg)) { s.adopted = true; s.launchedAt = System.currentTimeMillis(); log("${name(s)}: already open — watching.") }
         }
         var lastLaunch = 0L
+        var nextUpdateCheck = System.currentTimeMillis() + 60_000
         while (running) {
+            if (System.currentTimeMillis() >= nextUpdateCheck) {
+                nextUpdateCheck = System.currentTimeMillis() + 30 * 60_000L
+                if (Store.get(this, "autoUpdate", "1") == "1") Thread { Updater.checkAndInstall(this) { log(it) } }.start()
+            }
             try {
                 val presence = if (root) emptyMap() else try {
                     Roblox.presence(states.map { it.acc.userId }.filter { it > 0 })
