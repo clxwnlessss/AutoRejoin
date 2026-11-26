@@ -23,7 +23,8 @@
 
     <application
         android:label="AutoRejoin"
-        android:icon="@android:drawable/ic_popup_sync"
+        android:icon="@mipmap/ic_launcher"
+        android:roundIcon="@mipmap/ic_launcher"
         android:theme="@android:style/Theme.Material.NoActionBar"
         android:usesCleartextTraffic="false">
 

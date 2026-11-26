@@ -66,6 +66,7 @@ class RejoinService : Service() {
     override fun onDestroy() {
         running = false
         isRunning = false
+        total = 0
         worker?.interrupt()
         try { wake?.release() } catch (_: Exception) {}
         log("Stopped.")
@@ -111,6 +112,9 @@ class RejoinService : Service() {
                     lastLaunch = System.currentTimeMillis()
                 }
                 val inGame = states.count { it.inGame }
+                Companion.inGame = inGame
+                total = states.size
+                rejoinsTotal = states.sumOf { it.rejoins }
                 updateNotification("$inGame of ${states.size} in game")
             } catch (e: InterruptedException) {
                 break
@@ -265,6 +269,9 @@ class RejoinService : Service() {
         private val DISCONNECT = Regex("Disconnected from server|Sending disconnect with reason|Lost connection|Connection lost|ID_CONNECTION_LOST|ID_DISCONNECTION_NOTIFICATION|leaveUGCGameInternal")
 
         @Volatile var isRunning = false
+        @Volatile var inGame = 0
+        @Volatile var total = 0
+        @Volatile var rejoinsTotal = 0
         private val lines = ArrayDeque<String>()
         @Volatile var listener: ((String) -> Unit)? = null
 
