@@ -51,6 +51,17 @@ public static class Store
 			appConfig = new AppConfig();
 		}
 		appConfig.Normalize();
+		if (appConfig.Migrated && File.Exists(AppPaths.ConfigFile))
+		{
+			try
+			{
+				SaveConfig(appConfig);
+			}
+			catch (Exception error)
+			{
+				App.LogError(L.T("не получилось сохранить обновлённые настройки"), error);
+			}
+		}
 		return appConfig;
 	}
 

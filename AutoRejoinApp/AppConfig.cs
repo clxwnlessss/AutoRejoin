@@ -4,6 +4,10 @@ public class AppConfig
 {
 	public int version { get; set; }
 
+	// Normalize changed the config (version upgrade) — LoadConfig saves it, so the engine reads the new values too.
+	[System.Web.Script.Serialization.ScriptIgnore]
+	public bool Migrated { get; private set; }
+
 	public string link { get; set; }
 
 	public string linkFile { get; set; }
@@ -141,7 +145,7 @@ public class AppConfig
 
 	public AppConfig()
 	{
-		version = 1;
+		version = 2;
 		link = "";
 		linkFile = "";
 		gamePlaceId = "1537690962";
@@ -149,7 +153,7 @@ public class AppConfig
 		gameUniverseId = 601130232L;
 		autoStartEngine = true;
 		startupDelay = 0;
-		minimizeWindows = true;
+		minimizeWindows = false;
 		windowWidth = 800;
 		windowHeight = 600;
 		mainFullscreen = false;
@@ -207,6 +211,14 @@ public class AppConfig
 
 	public void Normalize()
 	{
+		// v2 (3.8.3): helper windows are no longer minimized by default — people want to see them, and scripts of
+		// games like Anime Adventures stall in minimized windows. Turned off once for everyone; can be turned back on.
+		if (version < 2)
+		{
+			minimizeWindows = false;
+			version = 2;
+			Migrated = true;
+		}
 		if (discordMentions == null)
 		{
 			discordMentions = "";

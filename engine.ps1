@@ -95,7 +95,7 @@ $AutoReboot      = $false # новые окна умирают сразу пос
 $ViaBootstrapper = $false # запускать Роблокс через Froststrap/Bloxstrap (медленнее)
 $WindowWidth     = 800   # до какого размера уменьшать окно хелпера после захода
 $WindowHeight    = 600
-$NoMinimize      = $false # не уменьшать и не сворачивать окна хелперов
+$NoMinimize      = $true  # не уменьшать и не сворачивать окна хелперов (с 3.8.3 по умолчанию не сворачиваем)
 $MainFps         = 60    # лимит FPS мейна; 0 — не трогать
 $HelperFps       = 30    # лимит FPS хелперов; 0 — не трогать
 $MainPriority    = ''    # приоритет ЦП окна мейна (Idle, BelowNormal, Normal, AboveNormal, High); пусто — не трогать
@@ -264,6 +264,29 @@ public static class RejoinWindows {
         SetWindowPos(hWnd, IntPtr.Zero, 0, 0, width, height, 0x0002 | 0x0004 | 0x0010 | 0x4000 /* NOMOVE | NOZORDER | NOACTIVATE | ASYNCWINDOWPOS */);
         System.Threading.Thread.Sleep(150);
         ShowWindowAsync(hWnd, 7 /* SW_SHOWMINNOACTIVE */);
+    }
+
+    // Свёрнутые окна процесса — обратно на экран, не забирая фокус (выключили "Сворачивать окна хелперов").
+    // Возвращает, сколько окон вернули.
+    public static int RestoreMinimized(int processId) {
+        var found = new List<IntPtr>();
+        EnumWindows((hWnd, lParam) => {
+            uint pid;
+            GetWindowThreadProcessId(hWnd, out pid);
+            if ((int)pid == processId && IsWindowVisible(hWnd) && IsIconic(hWnd) && GetWindow(hWnd, 4 /* GW_OWNER */) == IntPtr.Zero) {
+                var text = new StringBuilder(256);
+                GetWindowText(hWnd, text, text.Capacity);
+                if (text.Length > 0) found.Add(hWnd);
+            }
+            return true;
+        }, IntPtr.Zero);
+        int restored = 0;
+        foreach (var hWnd in found) {
+            if (IsHungAppWindow(hWnd)) continue;
+            ShowWindowAsync(hWnd, 4 /* SW_SHOWNOACTIVATE */);
+            restored++;
+        }
+        return restored;
     }
 
     static readonly HashSet<IntPtr> alreadyClosed = new HashSet<IntPtr>();
@@ -2932,7 +2955,16 @@ function Set-WindowCompact($Tracker, $Account) {
         if (-not $NoMainFullscreen) { Set-WindowFullscreen $Tracker $Account }
         return   # мейн не уменьшаем и не сворачиваем
     }
-    if ($NoMinimize -or $Tracker.UserOpen) { return }
+    if ($NoMinimize) {
+        # Окно хелпера, подхваченное после перезапуска AutoRejoin (например, после обновления на 3.8.3), могло остаться
+        # свёрнутым с прежних версий — один раз возвращаем его на экран.
+        if ($Tracker.Adopted -and -not $Tracker.PSObject.Properties['RestoreChecked']) {
+            $Tracker | Add-Member -NotePropertyName RestoreChecked -NotePropertyValue $true -Force
+            $null = [RejoinWindows]::RestoreMinimized([int]$Tracker.Pid)
+        }
+        return
+    }
+    if ($Tracker.UserOpen) { return }
 
     $open = @([RejoinWindows]::OpenWindows($Tracker.Pid))
     $wasOpen = $Tracker.SeenOpen
@@ -3998,7 +4030,17 @@ function Set-EngineConfig($Config) {
     $game = [string](Get-ConfigValue $Config 'gamePlaceId' '')
     $script:DefaultPlace = if ($game -match '^\d{4,20}$') { $game } else { '1537690962' }
     $script:DefaultGameName = if ($script:DefaultPlace -eq '1537690962') { 'Bee Swarm Simulator' } else { $name = [string](Get-ConfigValue $Config 'gameName' ''); if ($name) { $name } else { "игра $($script:DefaultPlace)" } }
-    $script:NoMinimize = -not (Get-ConfigFlag $Config 'minimizeWindows' $true)
+    $wasMinimizing = -not $script:NoMinimize
+    $script:NoMinimize = -not (Get-ConfigFlag $Config 'minimizeWindows' $false)
+    # Сворачивание выключили (или обновились на 3.8.3) — уже свёрнутые окна хелперов возвращаем на экран.
+    if ($wasMinimizing -and $script:NoMinimize -and $script:Trackers) {
+        $restored = 0
+        foreach ($tracker in @($script:Trackers.Values)) {
+            if (-not $tracker.Alive) { continue }
+            $restored += [RejoinWindows]::RestoreMinimized([int]$tracker.Pid)
+        }
+        if ($restored) { Write-Status "Окна хелперов больше не сворачиваю — вернул на экран: $restored." Cyan }
+    }
     $script:WindowWidth = [int](Get-ConfigNumber $Config 'windowWidth' 800 320 3840)
     $script:WindowHeight = [int](Get-ConfigNumber $Config 'windowHeight' 600 240 2160)
     $script:NoMainFullscreen = -not (Get-ConfigFlag $Config 'mainFullscreen' $false)
