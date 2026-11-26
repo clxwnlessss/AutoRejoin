@@ -62,6 +62,11 @@ class MainActivity : Activity() {
     private lateinit var hookBox: EditText
     private lateinit var graceBox: EditText
     private lateinit var joinBox: EditText
+    private lateinit var freezeBox: EditText
+    private lateinit var reportBox: EditText
+    private lateinit var shotSwitch: Switch
+    private lateinit var execSwitch: Switch
+    private lateinit var execStatus: TextView
     private val rows = ArrayList<Triple<Account, EditText, EditText>>()
     private val switches = HashMap<String, Switch>()
     private val ui = Handler(Looper.getMainLooper())
@@ -183,11 +188,7 @@ class MainActivity : Activity() {
             names.addView(text(acc.username.ifBlank { if (pkg == "com.roblox.client") "Main" else "Clone ${i}" }, 15f, text1, bold = true))
             names.addView(text(pkg, 11.5f, text3))
             head.addView(names)
-            val sw = Switch(this).apply {
-                isChecked = acc.enabled
-                thumbTintList = ColorStateList(arrayOf(intArrayOf(android.R.attr.state_checked), intArrayOf()), intArrayOf(Color.WHITE, Color.parseColor("#9A9AA5")))
-                trackTintList = ColorStateList(arrayOf(intArrayOf(android.R.attr.state_checked), intArrayOf()), intArrayOf(accent, Color.parseColor("#33333D")))
-            }
+            val sw = switch(acc.enabled)
             switches[pkg] = sw
             head.addView(sw)
             accCard.addView(head)
@@ -209,7 +210,24 @@ class MainActivity : Activity() {
         speedRow.addView(labeled("Wait for a launch, s", joinBox, rightGap = false))
         speedCard.addView(speedRow)
         speedCard.addView(hint("Teleports into matches take ~10–20 s, so keep the first one above that."))
+        freezeBox = field(Store.get(this, "freeze", "120"), "120").apply { inputType = InputType.TYPE_CLASS_NUMBER }
+        speedCard.addView(labeled("Game frozen after no heartbeat, s (root + executor)", freezeBox, rightGap = false).apply {
+            layoutParams = LinearLayout.LayoutParams(-1, -2).apply { topMargin = dp(12) }
+        })
         root.addView(speedCard)
+
+        // executor
+        section("EXECUTOR")
+        val execCard = card()
+        val execRow = LinearLayout(this).apply { orientation = LinearLayout.HORIZONTAL; gravity = Gravity.CENTER_VERTICAL }
+        execRow.addView(text("Watcher script in autoexec", 15f, text1, bold = true).apply { layoutParams = LinearLayout.LayoutParams(0, -2, 1f) })
+        execSwitch = switch(Store.get(this, "execScript", "1") == "1")
+        execRow.addView(execSwitch)
+        execCard.addView(execRow)
+        execCard.addView(hint("Root: AutoRejoin puts a small script into the autoexec of Delta, Arceus X, Codex and others. It reports a frozen game and the Disconnected prompt the moment they happen."))
+        execStatus = hint("Looking for executors…").apply { setTextColor(text3) }
+        execCard.addView(execStatus)
+        root.addView(execCard)
 
         // alerts
         section("DISCORD ALERTS")
@@ -217,6 +235,18 @@ class MainActivity : Activity() {
         hookCard.addView(hint("Webhook URL — drop and back-in-game messages. Optional."))
         hookBox = field(Store.get(this, "webhook"), "https://discord.com/api/webhooks/…")
         hookCard.addView(hookBox)
+        reportBox = field(Store.get(this, "reportMin", "0"), "0").apply { inputType = InputType.TYPE_CLASS_NUMBER }
+        hookCard.addView(labeled("Status report every N minutes (0 = off)", reportBox, rightGap = false).apply {
+            layoutParams = LinearLayout.LayoutParams(-1, -2).apply { topMargin = dp(12) }
+        })
+        val shotRow = LinearLayout(this).apply {
+            orientation = LinearLayout.HORIZONTAL; gravity = Gravity.CENTER_VERTICAL
+            layoutParams = LinearLayout.LayoutParams(-1, -2).apply { topMargin = dp(12) }
+        }
+        shotRow.addView(text("Screenshot with drop alerts (root)", 14f, text1).apply { layoutParams = LinearLayout.LayoutParams(0, -2, 1f) })
+        shotSwitch = switch(Store.get(this, "shots", "1") == "1")
+        shotRow.addView(shotSwitch)
+        hookCard.addView(shotRow)
         root.addView(hookCard)
 
         // log
@@ -274,6 +304,10 @@ class MainActivity : Activity() {
         Store.put(this, "webhook", hookBox.text.toString().trim())
         Store.put(this, "grace", (graceBox.text.toString().toIntOrNull() ?: 20).coerceIn(5, 600).toString())
         Store.put(this, "joinTimeout", (joinBox.text.toString().toIntOrNull() ?: 60).coerceIn(20, 600).toString())
+        Store.put(this, "freeze", (freezeBox.text.toString().toIntOrNull() ?: 120).coerceIn(30, 1800).toString())
+        Store.put(this, "reportMin", (reportBox.text.toString().toIntOrNull() ?: 0).coerceIn(0, 1440).toString())
+        Store.put(this, "shots", if (shotSwitch.isChecked) "1" else "0")
+        Store.put(this, "execScript", if (execSwitch.isChecked) "1" else "0")
         Store.saveAccounts(this, list)
         val intent = Intent(this, RejoinService::class.java)
         if (Build.VERSION.SDK_INT >= 26) startForegroundService(intent) else startService(intent)
@@ -299,7 +333,14 @@ class MainActivity : Activity() {
             val overlay = Build.VERSION.SDK_INT < 23 || Settings.canDrawOverlays(this)
             val battery = (getSystemService(POWER_SERVICE) as PowerManager).isIgnoringBatteryOptimizations(packageName)
             val installs = Build.VERSION.SDK_INT < 26 || packageManager.canRequestPackageInstalls()
+            val execs = if (r) Executors.autoexecDirs() else emptyList()
             runOnUiThread {
+                execStatus.text = when {
+                    !r -> "Needs root."
+                    execs.isEmpty() -> "No executor autoexec folder found yet — open your executor once."
+                    else -> "Found: " + execs.joinToString(" · ") { Executors.executorName(it) }
+                }
+                execStatus.setTextColor(if (r && execs.isNotEmpty()) green else text3)
                 modePill.text = if (r) "ROOT" else "NO ROOT"
                 modePill.setTextColor(if (r) green else amber)
                 modePill.background = rounded(if (r) Color.parseColor("#0F2119") else Color.parseColor("#241C0C"), null, 99)
@@ -422,6 +463,12 @@ class MainActivity : Activity() {
         layoutParams = LinearLayout.LayoutParams(0, -2, 1f).apply { if (rightGap) rightMargin = dp(10) }
         addView(text(label, 12f, text2))
         addView(box)
+    }
+
+    private fun switch(on: Boolean) = Switch(this).apply {
+        isChecked = on
+        thumbTintList = ColorStateList(arrayOf(intArrayOf(android.R.attr.state_checked), intArrayOf()), intArrayOf(Color.WHITE, Color.parseColor("#9A9AA5")))
+        trackTintList = ColorStateList(arrayOf(intArrayOf(android.R.attr.state_checked), intArrayOf()), intArrayOf(accent, Color.parseColor("#33333D")))
     }
 
     private fun toast(t: String) = Toast.makeText(this, t, Toast.LENGTH_LONG).show()

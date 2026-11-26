@@ -131,6 +131,16 @@ object Root {
 
     fun recheck() { checked = null }
 
+    /** Binary output of a root command (screenshots). */
+    fun bytes(cmd: String): ByteArray = try {
+        val p = ProcessBuilder("su", "-c", cmd).start()
+        val out = p.inputStream.readBytes()
+        p.waitFor()
+        out
+    } catch (e: Exception) {
+        ByteArray(0)
+    }
+
     fun run(cmd: String): String = try {
         val p = ProcessBuilder("su", "-c", cmd).redirectErrorStream(true).start()
         val out = p.inputStream.bufferedReader().readText()
