@@ -15,6 +15,26 @@ import java.net.URL
  */
 object Executors {
     const val SCRIPT_NAME = "autorejoin_watch.lua"
+    const val FARM_NAME = "autorejoin_farm.lua"
+    const val BSS_UNIVERSE = 601130232L
+    const val ATLAS = "loadstring(game:HttpGet(\"https://cdn.jsdelivr.net/gh/Chris12089/atlasbss@main/script.lua\"))()"
+
+    /** The farm script for Bee Swarm, wrapped so it runs only in Bee Swarm (lobby and every server). */
+    private fun farmScript(body: String): String {
+        val head = """-- AutoRejoin Mobile: farm script for Bee Swarm Simulator, set in the AutoRejoin app. Runs only in Bee Swarm.
+if game.GameId == ${BSS_UNIVERSE} then
+	task.spawn(function()
+		if not game:IsLoaded() then game.Loaded:Wait() end
+		local ok, err = pcall(function()
+"""
+        val tail = """
+		end)
+		if not ok then warn("[AutoRejoin] farm script: " .. tostring(err)) end
+	end)
+end
+"""
+        return head + body.trim() + tail
+    }
 
     private val SCRIPT = """
 -- AutoRejoin Mobile: heartbeat and disconnect watcher. Installed and updated by the AutoRejoin app.
@@ -90,6 +110,20 @@ end)
             val target = "$d/$SCRIPT_NAME"
             val same = Root.run("cat '$target' 2>/dev/null") == SCRIPT
             if (!same) Root.run("cp '${tmp.absolutePath}' '$target' && chmod 666 '$target'")
+        }
+        // farm script for Bee Swarm (Atlas by default): put it in, or take our copy out when it's turned off
+        val farmOn = Store.get(ctx, "farmOn", "1") == "1"
+        val body = Store.get(ctx, "farmScript", ATLAS).ifBlank { ATLAS }
+        val farm = farmScript(body)
+        val farmTmp = File(ctx.cacheDir, FARM_NAME)
+        farmTmp.writeText(farm)
+        for (d in dirs) {
+            val target = "$d/$FARM_NAME"
+            if (farmOn) {
+                if (Root.run("cat '$target' 2>/dev/null") != farm) Root.run("cp '${farmTmp.absolutePath}' '$target' && chmod 666 '$target'")
+            } else if (Root.run("head -c 40 '$target' 2>/dev/null").startsWith("-- AutoRejoin")) {
+                Root.run("rm -f '$target'")
+            }
         }
         return dirs
     }

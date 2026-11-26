@@ -67,6 +67,8 @@ class MainActivity : Activity() {
     private lateinit var shotSwitch: Switch
     private lateinit var execSwitch: Switch
     private lateinit var execStatus: TextView
+    private lateinit var farmSwitch: Switch
+    private lateinit var farmBox: EditText
     private val rows = ArrayList<Triple<Account, EditText, EditText>>()
     private val switches = HashMap<String, Switch>()
     private val ui = Handler(Looper.getMainLooper())
@@ -227,6 +229,19 @@ class MainActivity : Activity() {
         execCard.addView(hint("Root: AutoRejoin puts a small script into the autoexec of Delta, Arceus X, Codex and others. It reports a frozen game and the Disconnected prompt the moment they happen."))
         execStatus = hint("Looking for executors…").apply { setTextColor(text3) }
         execCard.addView(execStatus)
+        val farmRow = LinearLayout(this).apply {
+            orientation = LinearLayout.HORIZONTAL; gravity = Gravity.CENTER_VERTICAL
+            layoutParams = LinearLayout.LayoutParams(-1, -2).apply { topMargin = dp(16) }
+        }
+        farmRow.addView(text("Bee Swarm farm script", 15f, text1, bold = true).apply { layoutParams = LinearLayout.LayoutParams(0, -2, 1f) })
+        farmSwitch = switch(Store.get(this, "farmOn", "1") == "1")
+        farmRow.addView(farmSwitch)
+        execCard.addView(farmRow)
+        execCard.addView(hint("Put into autoexec, runs only in Bee Swarm. Atlas by default — paste your own loadstring to change it."))
+        farmBox = field(Store.get(this, "farmScript", Executors.ATLAS), Executors.ATLAS).apply {
+            typeface = Typeface.MONOSPACE; textSize = 12f
+        }
+        execCard.addView(farmBox)
         root.addView(execCard)
 
         // alerts
@@ -308,6 +323,8 @@ class MainActivity : Activity() {
         Store.put(this, "reportMin", (reportBox.text.toString().toIntOrNull() ?: 0).coerceIn(0, 1440).toString())
         Store.put(this, "shots", if (shotSwitch.isChecked) "1" else "0")
         Store.put(this, "execScript", if (execSwitch.isChecked) "1" else "0")
+        Store.put(this, "farmOn", if (farmSwitch.isChecked) "1" else "0")
+        Store.put(this, "farmScript", farmBox.text.toString().trim().ifEmpty { Executors.ATLAS })
         Store.saveAccounts(this, list)
         val intent = Intent(this, RejoinService::class.java)
         if (Build.VERSION.SDK_INT >= 26) startForegroundService(intent) else startService(intent)
