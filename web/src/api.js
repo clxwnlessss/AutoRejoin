@@ -41,6 +41,11 @@ export async function releases() {
   return data;
 }
 
+// PC releases are tagged vX.Y.Z (AutoRejoin.zip), Android ones mobile-vX.Y (AutoRejoin-Mobile.apk).
+export const isMobileRelease = (r) => /^mobile-v/i.test(r.tag_name || '');
+export async function pcReleases() { return (await releases()).filter((r) => !isMobileRelease(r)); }
+export async function mobileReleases() { return (await releases()).filter(isMobileRelease); }
+
 export function formatHours(seconds) {
   const h = Math.floor(seconds / 3600);
   const m = Math.floor((seconds % 3600) / 60);

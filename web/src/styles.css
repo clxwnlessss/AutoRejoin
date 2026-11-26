@@ -81,6 +81,12 @@ kbd, code { background: #ffffff10; border: 1px solid var(--line); border-radius:
 /* release box */
 .release { display: flex; align-items: center; justify-content: space-between; gap: 20px; flex-wrap: wrap; background: linear-gradient(135deg, #8B5CF61f, #22D3EE14); border: 1px solid #8B5CF655; }
 .release .ver { font-size: 28px; font-weight: 900; letter-spacing: -.5px; }
+.dl-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(290px, 1fr)); gap: 16px; }
+.release.platform { flex-direction: column; align-items: stretch; justify-content: flex-start; gap: 16px; }
+.release.platform .btn { text-align: center; justify-content: center; }
+.platform-head { display: flex; align-items: center; gap: 14px; }
+.platform-head h3 { margin: 0; font-size: 20px; }
+.platform-ico { width: 48px; height: 48px; border-radius: 14px; display: grid; place-items: center; font-size: 24px; background: #8B5CF626; border: 1px solid #8B5CF655; }
 
 /* table */
 .table { width: 100%; border-collapse: collapse; }
