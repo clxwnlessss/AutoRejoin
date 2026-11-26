@@ -911,3 +911,20 @@ VIP-ссылка, ссылка на игру или ID плейса. Пусто 
 Ничего не нашлось по запросу «	Nothing found for "
 ». Попробуй другое слово.	". Try another word.
 ~^вышел в меню Роблокса и за (\d+) сек не вернулся на сервер$	left to the Roblox menu and didn't come back to a server in $1 s
+VIP-серверы по играм	VIP servers per game
+Своя VIP-ссылка для игры: аккаунты, которые заходят в эту игру без своей ссылки, идут на неё. Например, VIP Bee Swarm для аккаунтов с игрой Bee Swarm, а остальные игры — на публичные сервера.	A VIP link for a game: accounts that go to this game without their own link join it. For example, a Bee Swarm VIP for accounts set to Bee Swarm, while other games stay on public servers.
+Добавить VIP для игры…	Add a VIP for a game…
+VIP для\s	VIP for\s
+\sубран.	\sremoved.
+\sсохранён — применится при следующих перезаходах.	\ssaved — applies on the next rejoins.
+Скрипты по играм	Scripts per game
+Свой скрипт для каждой игры: AutoRejoin запускает его через автоэкзекут только в этой игре — в лобби и в матчах. Например, Atlas для Bee Swarm и свой скрипт для Anime Adventures. То, что лежит прямо в папке autoexec, по-прежнему запускается во всех играх.	A script for each game: AutoRejoin runs it through the executor's auto-execute only in that game — in the lobby and in matches. For example, Atlas for Bee Swarm and your own script for Anime Adventures. Whatever sits directly in the autoexec folder still runs in every game.
+Добавить скрипт для игры…	Add a script for a game…
+Изменить…	Edit…
+скрипт пустой	script is empty
+\sстр. ·\s	\slines ·\s
+Скрипт для\s	Script for\s
+\sсохранён — запустится в новых окнах этой игры.	\ssaved — runs in new windows of this game.
+Запускается через автоэкзекут экзекьютора только в этой игре — в лобби и в матчах. Вставь скрипт целиком, например loadstring(game:HttpGet("…"))().	Runs through the executor's auto-execute only in this game — in the lobby and in matches. Paste the whole script, e.g. loadstring(game:HttpGet("…"))().
+скрипты по играм	scripts per game
+~^VIP-сервер (.+) из настроек$	VIP server $1 from settings

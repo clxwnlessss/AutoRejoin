@@ -74,6 +74,16 @@ internal static class Screenshots
 				await Task.Delay(4000);
 				Save((FrameworkElement)editWindow.Content, Path.Combine(dir, "dialog_account_game.png"));
 				editWindow.Close();
+				ScriptEditor scriptEditor = new ScriptEditor("Bee Swarm Simulator", "loadstring(game:HttpGet(\"https://example.com/atlas.lua\"))()");
+				Window scriptWindow = scriptEditor.WindowForTest;
+				scriptWindow.WindowStartupLocation = WindowStartupLocation.Manual;
+				scriptWindow.Left = -20000.0;
+				scriptWindow.Top = -20000.0;
+				scriptWindow.ShowActivated = false;
+				scriptWindow.Show();
+				await Task.Delay(500);
+				Save((FrameworkElement)scriptWindow.Content, Path.Combine(dir, "dialog_script.png"));
+				scriptWindow.Close();
 				GamePicker picker = new GamePicker("2753915549", null);
 				Window pickerWindow = picker.WindowForTest;
 				pickerWindow.WindowStartupLocation = WindowStartupLocation.Manual;

@@ -59,6 +59,7 @@ $LinkFile        = ''    # файл, из которого брать ссылк
 $DefaultPlace    = '1537690962'   # ссылки нет вовсе — публичный сервер выбранной игры (по умолчанию Bee Swarm Simulator)
 $DefaultGameName = 'Bee Swarm Simulator'
 $script:GameNames = @{}       # своя игра аккаунта: ID плейса -> название (для журнала)
+$script:VipByPlace = @{}      # VIP-сервер игры из настроек: ID плейса игры -> ссылка
 
 $CheckInterval   = 1     # как часто проверять окна, сек (движок при этом занимает ~2–3% одного ядра)
 $LaunchTimeout   = 120   # сколько ждать, пока откроется окно (с учётом обновления Роблокса)
@@ -1097,6 +1098,7 @@ function Get-DefaultLink {
         } catch {}
     }
     if ($Link -and $Link.Trim()) { return $Link.Trim() }
+    if ($script:VipByPlace.ContainsKey($DefaultPlace)) { return $script:VipByPlace[$DefaultPlace] }
     return $DefaultPlace
 }
 
@@ -1125,12 +1127,20 @@ function Get-EntryOwnLink($Entry) {
     if ($game -notmatch '^\d{4,20}$') { return '' }
     $name = if ($Entry.PSObject.Properties['gameName']) { [string]$Entry.gameName } else { '' }
     if ($name) { $script:GameNames[$game] = $name }
+    # VIP-сервер этой игры из настроек (Настройки -> Сервер -> VIP-серверы по играм) — важнее публичных серверов.
+    if ($script:VipByPlace.ContainsKey($game)) { return $script:VipByPlace[$game] }
     return $game
 }
 
 # Ссылка для журнала: код приватного сервера скрыт (журнал виден в окне приложения — его могут заскринить и отправить).
 function Get-LinkForLog([string]$Url) {
     if ($Url -eq $DefaultPlace) { return "публичный сервер $DefaultGameName (ссылка не задана)" }
+    foreach ($vip in $script:VipByPlace.GetEnumerator()) {
+        if ($vip.Value -eq $Url) {
+            $vipName = if ($script:GameNames.ContainsKey($vip.Key)) { $script:GameNames[$vip.Key] } else { "игра $($vip.Key)" }
+            return "VIP-сервер $vipName из настроек"
+        }
+    }
     if ($Url -match '^\d{4,20}$' -and $script:GameNames.ContainsKey($Url)) { return "публичный сервер $($script:GameNames[$Url])" }
     return [regex]::Replace($Url, '((?:code|linkCode|privateServerLinkCode)=)([^&#\s]+)', {
         param($match)
@@ -2125,7 +2135,8 @@ function Install-RealInjectMarker {
 -- AutoRejoin: inject marker and disconnect watcher. When the executor injects, this writes autorejoin_inject_<UserId>.txt
 -- to the workspace, so AutoRejoin knows the window got the executor. When Roblox shows the "Disconnected" prompt (kick,
 -- idle, lost connection, error 256...), it writes autorejoin_disconnect_<UserId>.txt, so AutoRejoin rejoins right away.
--- Installed and updated by AutoRejoin; it only reads the game and changes nothing in it.
+-- It also runs the script you set for this game in AutoRejoin (Settings -> Executor -> Scripts per game).
+-- Installed and updated by AutoRejoin.
 task.spawn(function()
 	pcall(function()
 		local Players = game:GetService("Players")
@@ -2133,6 +2144,16 @@ task.spawn(function()
 		while not player do task.wait(0.5); player = Players.LocalPlayer end
 		local uid = tostring(player.UserId)
 		writefile("autorejoin_inject_" .. uid .. ".txt", tostring(os.time()) .. " " .. tostring(game.PlaceId))
+		-- Script for this game from AutoRejoin (Settings -> Executor -> Scripts per game): workspace/autorejoin_scripts/<GameId>.lua.
+		-- GameId is the experience, so it runs in the lobby and in matches (other places of the same game) alike.
+		task.spawn(function()
+			local okRead, source = pcall(readfile, "autorejoin_scripts/" .. tostring(game.GameId) .. ".lua")
+			if not okRead or type(source) ~= "string" or #source == 0 then return end
+			local fn, err = loadstring(source)
+			if not fn then warn("[AutoRejoin] game script: " .. tostring(err)); return end
+			local okRun, runErr = pcall(fn)
+			if not okRun then warn("[AutoRejoin] game script: " .. tostring(runErr)) end
+		end)
 		local GuiService = game:GetService("GuiService")
 		local sent = false
 		local function check(title)
@@ -4030,6 +4051,24 @@ function Set-EngineConfig($Config) {
     $game = [string](Get-ConfigValue $Config 'gamePlaceId' '')
     $script:DefaultPlace = if ($game -match '^\d{4,20}$') { $game } else { '1537690962' }
     $script:DefaultGameName = if ($script:DefaultPlace -eq '1537690962') { 'Bee Swarm Simulator' } else { $name = [string](Get-ConfigValue $Config 'gameName' ''); if ($name) { $name } else { "игра $($script:DefaultPlace)" } }
+    # VIP-серверы по играм: аккаунт, который заходит в эту игру без своей ссылки, идёт на её VIP.
+    $vips = @{}
+    foreach ($item in @(Get-ConfigValue $Config 'vipLinks' @())) {
+        if (-not $item) { continue }
+        $vipPlace = [string]$item.placeId
+        $vipLink = ([string]$item.link).Trim()
+        if ($vipPlace -notmatch '^\d{4,20}$' -or -not $vipLink) { continue }
+        try { $null = Get-LaunchTarget $vipLink } catch { continue }
+        $vips[$vipPlace] = $vipLink
+        if ($item.gameName) { $script:GameNames[$vipPlace] = [string]$item.gameName }
+    }
+    $vipKey = (@($vips.GetEnumerator() | Sort-Object Key | ForEach-Object { "$($_.Key)=$($_.Value)" }) -join '|')
+    $oldVipKey = (@($script:VipByPlace.GetEnumerator() | Sort-Object Key | ForEach-Object { "$($_.Key)=$($_.Value)" }) -join '|')
+    $script:VipByPlace = $vips
+    if ($vipKey -ne $oldVipKey) {
+        $script:VaultStamp = $null                         # аккаунты перечитаются: Update-AccountEntry возьмёт новую ссылку
+        $script:DefaultLinkCheckedAt = [datetime]::MinValue  # и общая ссылка тоже (Update-DefaultLink)
+    }
     $wasMinimizing = -not $script:NoMinimize
     $script:NoMinimize = -not (Get-ConfigFlag $Config 'minimizeWindows' $false)
     # Сворачивание выключили (или обновились на 3.8.3) — уже свёрнутые окна хелперов возвращаем на экран.

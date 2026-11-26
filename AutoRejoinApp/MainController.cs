@@ -550,9 +550,11 @@ public class MainController
 		Recorder.Enabled = config.dropStoryboard;
 		HoneyStats.Executor = config.executor ?? "potassium";
 		bool honey = config.honeyStats;
+		List<GameScript> scripts = config.gameScripts.Select((GameScript g) => new GameScript { placeId = g.placeId, gameName = g.gameName, universeId = g.universeId, enabled = g.enabled, script = g.script }).ToList();
 		System.Threading.Tasks.Task.Run(delegate
 		{
 			HoneyStats.Apply(honey);
+			GameScripts.Sync(scripts);
 		});
 	}
 

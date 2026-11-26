@@ -34,7 +34,9 @@ public static class HoneyStats
 
 	private static string Local => Environment.GetFolderPath(Environment.SpecialFolder.LocalApplicationData);
 
-	private static string PotassiumDir => Executor == "potassium" ? Path.Combine(Local, "Potassium") : (Executor == "real" ? Path.Combine(Local, "Real") : (ExternalDir ?? Path.Combine(Local, "AutoRejoin-none")));
+	private static string PotassiumDir => ExecDir;
+
+	internal static string ExecDir => Executor == "potassium" ? Path.Combine(Local, "Potassium") : (Executor == "real" ? Path.Combine(Local, "Real") : (ExternalDir ?? Path.Combine(Local, "AutoRejoin-none")));
 
 	private static string OtherDir => Executor == "potassium" ? Path.Combine(Local, "Real") : Path.Combine(Local, "Potassium");
 

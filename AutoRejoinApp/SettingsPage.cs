@@ -798,6 +798,252 @@ public class SettingsPage
 			stackPanel.Children.Add(textBlock);
 		}
 		AddStacked(section, L.T("Ссылка на сервер"), L.T("VIP-ссылка, ссылка на игру или ID плейса. Пусто — публичный сервер выбранной игры."), stackPanel);
+		BuildVipLinks(section);
+	}
+
+	// Small game icon, loaded live from Roblox.
+	private Border GameIconTile(string placeId, long universeId, double size)
+	{
+		Border icon = new Border
+		{
+			Width = size,
+			Height = size,
+			CornerRadius = new CornerRadius(size / 4.4),
+			Margin = new Thickness(0.0, 0.0, 10.0, 0.0),
+			VerticalAlignment = VerticalAlignment.Center
+		};
+		icon.SetResourceReference(Border.BackgroundProperty, "FieldBg");
+		LoadGameIcon(icon, placeId, universeId, size);
+		return icon;
+	}
+
+	private async void LoadGameIcon(Border icon, string placeId, long universeId, double size)
+	{
+		try
+		{
+			GameCatalog.Game g = GameCatalog.Find(placeId) ?? new GameCatalog.Game
+			{
+				PlaceId = placeId,
+				UniverseId = universeId,
+				Name = placeId
+			};
+			if (g.IconUrl == null && g.UniverseId > 0)
+			{
+				await GameCatalog.LoadLiveAsync(new List<GameCatalog.Game> { g });
+			}
+			if (!string.IsNullOrEmpty(g.IconUrl))
+			{
+				BitmapImage img = new BitmapImage();
+				img.BeginInit();
+				img.UriSource = new Uri(g.IconUrl);
+				img.DecodePixelWidth = (int)(size * 2.0);
+				img.EndInit();
+				icon.Background = new ImageBrush(img) { Stretch = Stretch.UniformToFill };
+			}
+		}
+		catch
+		{
+		}
+	}
+
+	private TextBlock GameNameText(string name)
+	{
+		return new TextBlock
+		{
+			Text = name,
+			FontSize = 13.5,
+			FontWeight = FontWeights.SemiBold,
+			TextTrimming = TextTrimming.CharacterEllipsis,
+			VerticalAlignment = VerticalAlignment.Center
+		};
+	}
+
+	// VIP server per game: an account that goes to this game without its own server link joins this VIP.
+	private void BuildVipLinks(StackPanel section)
+	{
+		StackPanel list = new StackPanel();
+		Action render = null;
+		render = delegate
+		{
+			list.Children.Clear();
+			foreach (VipLink vip in Cfg.vipLinks.ToList())
+			{
+				VipLink v = vip;
+				Grid row = new Grid { Margin = new Thickness(0.0, 0.0, 0.0, 10.0) };
+				row.ColumnDefinitions.Add(new ColumnDefinition { Width = GridLength.Auto });
+				row.ColumnDefinitions.Add(new ColumnDefinition { Width = new GridLength(170.0) });
+				row.ColumnDefinitions.Add(new ColumnDefinition { Width = new GridLength(1.0, GridUnitType.Star) });
+				row.ColumnDefinitions.Add(new ColumnDefinition { Width = GridLength.Auto });
+				Border icon = GameIconTile(v.placeId, v.universeId, 34.0);
+				row.Children.Add(icon);
+				TextBlock name = GameNameText(v.gameName);
+				name.Margin = new Thickness(0.0, 0.0, 12.0, 0.0);
+				Grid.SetColumn(name, 1);
+				row.Children.Add(name);
+				TextBox box = Field("https://www.roblox.com/share?code=…&type=Server", v.link);
+				TextBlock error = HintBlock("");
+				error.Foreground = Palette.Red;
+				error.Visibility = Visibility.Collapsed;
+				error.Margin = new Thickness(0.0, 4.0, 0.0, 0.0);
+				StackPanel fieldPanel = new StackPanel { VerticalAlignment = VerticalAlignment.Center };
+				fieldPanel.Children.Add(box);
+				fieldPanel.Children.Add(error);
+				Grid.SetColumn(fieldPanel, 2);
+				row.Children.Add(fieldPanel);
+				box.LostKeyboardFocus += delegate
+				{
+					string text = (box.Text ?? "").Trim();
+					if (!RobloxApi.IsValidLink(text, out var problem))
+					{
+						error.Text = problem;
+						error.Visibility = Visibility.Visible;
+						return;
+					}
+					error.Visibility = Visibility.Collapsed;
+					if (text != v.link)
+					{
+						v.link = text;
+						main.ConfigChanged();
+						main.AppLog(null, (text.Length == 0) ? (L.T("VIP для ") + v.gameName + L.T(" убран.")) : (L.T("VIP для ") + v.gameName + L.T(" сохранён — применится при следующих перезаходах.")), "Cyan");
+					}
+				};
+				Button remove = Button(L.T("Убрать"), delegate
+				{
+					Cfg.vipLinks.Remove(v);
+					main.ConfigChanged();
+					render();
+				});
+				remove.MinWidth = 90.0;
+				remove.Margin = new Thickness(10.0, 0.0, 0.0, 0.0);
+				remove.VerticalAlignment = VerticalAlignment.Top;
+				Grid.SetColumn(remove, 3);
+				row.Children.Add(remove);
+				list.Children.Add(row);
+			}
+			Button add = Button(L.T("Добавить VIP для игры…"), delegate
+			{
+				GameCatalog.Game chosen = new GamePicker(Cfg.gamePlaceId, null).ShowDialog(main.Window);
+				if (chosen == null)
+				{
+					return;
+				}
+				if (!Cfg.vipLinks.Any((VipLink x) => x.placeId == chosen.PlaceId))
+				{
+					Cfg.vipLinks.Add(new VipLink
+					{
+						placeId = chosen.PlaceId,
+						gameName = chosen.Name,
+						universeId = chosen.UniverseId,
+						link = ""
+					});
+					main.ConfigChanged();
+				}
+				render();
+			});
+			add.HorizontalAlignment = HorizontalAlignment.Left;
+			list.Children.Add(add);
+		};
+		render();
+		AddStacked(section, L.T("VIP-серверы по играм"), L.T("Своя VIP-ссылка для игры: аккаунты, которые заходят в эту игру без своей ссылки, идут на неё. Например, VIP Bee Swarm для аккаунтов с игрой Bee Swarm, а остальные игры — на публичные сервера."), list);
+	}
+
+	// Script per game: our autoexec marker runs it through the executor only in that game (lobby and matches).
+	private void BuildGameScripts(StackPanel section)
+	{
+		StackPanel list = new StackPanel();
+		Action render = null;
+		Action<GameScript, bool> edit = null;
+		edit = delegate(GameScript g, bool isNew)
+		{
+			string text = new ScriptEditor(g.gameName, g.script).ShowDialog(main.Window);
+			if (text == null)
+			{
+				return;
+			}
+			g.script = text;
+			if (isNew && !Cfg.gameScripts.Contains(g))
+			{
+				Cfg.gameScripts.Add(g);
+			}
+			main.ConfigChanged();
+			main.AppLog(null, L.T("Скрипт для ") + g.gameName + L.T(" сохранён — запустится в новых окнах этой игры."), "Cyan");
+			render();
+		};
+		render = delegate
+		{
+			list.Children.Clear();
+			foreach (GameScript item in Cfg.gameScripts.ToList())
+			{
+				GameScript g = item;
+				Grid row = new Grid { Margin = new Thickness(0.0, 0.0, 0.0, 10.0) };
+				row.ColumnDefinitions.Add(new ColumnDefinition { Width = GridLength.Auto });
+				row.ColumnDefinitions.Add(new ColumnDefinition { Width = new GridLength(1.0, GridUnitType.Star) });
+				row.ColumnDefinitions.Add(new ColumnDefinition { Width = GridLength.Auto });
+				row.ColumnDefinitions.Add(new ColumnDefinition { Width = GridLength.Auto });
+				row.ColumnDefinitions.Add(new ColumnDefinition { Width = GridLength.Auto });
+				row.Children.Add(GameIconTile(g.placeId, g.universeId, 34.0));
+				StackPanel info = new StackPanel { VerticalAlignment = VerticalAlignment.Center, Margin = new Thickness(0.0, 0.0, 12.0, 0.0) };
+				info.Children.Add(GameNameText(g.gameName));
+				int lines = string.IsNullOrWhiteSpace(g.script) ? 0 : g.script.Split('\n').Length;
+				TextBlock state = HintBlock((lines == 0) ? L.T("скрипт пустой") : (lines + L.T(" стр. · ") + (g.enabled ? L.T("запускается") : L.T("выключен"))));
+				info.Children.Add(state);
+				Grid.SetColumn(info, 1);
+				row.Children.Add(info);
+				CheckBox sw = Switch(g.enabled, delegate(bool on)
+				{
+					g.enabled = on;
+					main.ConfigChanged();
+					render();
+				});
+				sw.VerticalAlignment = VerticalAlignment.Center;
+				sw.Margin = new Thickness(0.0, 0.0, 12.0, 0.0);
+				Grid.SetColumn(sw, 2);
+				row.Children.Add(sw);
+				Button change = Button(L.T("Изменить…"), delegate
+				{
+					edit(g, arg2: false);
+				});
+				Grid.SetColumn(change, 3);
+				row.Children.Add(change);
+				Button remove = Button(L.T("Убрать"), delegate
+				{
+					Cfg.gameScripts.Remove(g);
+					main.ConfigChanged();
+					render();
+				});
+				remove.MinWidth = 90.0;
+				remove.Margin = new Thickness(10.0, 0.0, 0.0, 0.0);
+				Grid.SetColumn(remove, 4);
+				row.Children.Add(remove);
+				list.Children.Add(row);
+			}
+			Button add = Button(L.T("Добавить скрипт для игры…"), delegate
+			{
+				GameCatalog.Game chosen = new GamePicker(Cfg.gamePlaceId, null).ShowDialog(main.Window);
+				if (chosen == null)
+				{
+					return;
+				}
+				GameScript existing = Cfg.gameScripts.FirstOrDefault((GameScript x) => x.placeId == chosen.PlaceId);
+				if (existing != null)
+				{
+					edit(existing, arg2: false);
+					return;
+				}
+				edit(new GameScript
+				{
+					placeId = chosen.PlaceId,
+					gameName = chosen.Name,
+					universeId = chosen.UniverseId,
+					enabled = true,
+					script = ""
+				}, arg2: true);
+			});
+			add.HorizontalAlignment = HorizontalAlignment.Left;
+			list.Children.Add(add);
+		};
+		render();
+		AddStacked(section, L.T("Скрипты по играм"), L.T("Свой скрипт для каждой игры: AutoRejoin запускает его через автоэкзекут только в этой игре — в лобби и в матчах. Например, Atlas для Bee Swarm и свой скрипт для Anime Adventures. То, что лежит прямо в папке autoexec, по-прежнему запускается во всех играх."), list);
 	}
 
 	private void BuildWindows()
@@ -1219,6 +1465,7 @@ public class SettingsPage
 			Cfg.balloonQuietMinutes = (int)v;
 			main.ConfigChanged();
 		}), L.T("мин"))));
+		BuildGameScripts(section);
 		refresh();
 	}
 

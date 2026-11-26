@@ -19,6 +19,11 @@ public class AppConfig
 
 	public long gameUniverseId { get; set; }
 
+	// VIP server per game and script per game (see GameSetup.cs).
+	public System.Collections.Generic.List<VipLink> vipLinks { get; set; }
+
+	public System.Collections.Generic.List<GameScript> gameScripts { get; set; }
+
 	public bool autoStartEngine { get; set; }
 
 	public int startupDelay { get; set; }
@@ -151,6 +156,8 @@ public class AppConfig
 		gamePlaceId = "1537690962";
 		gameName = "Bee Swarm Simulator";
 		gameUniverseId = 601130232L;
+		vipLinks = new System.Collections.Generic.List<VipLink>();
+		gameScripts = new System.Collections.Generic.List<GameScript>();
 		autoStartEngine = true;
 		startupDelay = 0;
 		minimizeWindows = false;
@@ -219,6 +226,16 @@ public class AppConfig
 			version = 2;
 			Migrated = true;
 		}
+		if (vipLinks == null)
+		{
+			vipLinks = new System.Collections.Generic.List<VipLink>();
+		}
+		vipLinks.RemoveAll((VipLink v) => v == null || string.IsNullOrEmpty(v.placeId));
+		if (gameScripts == null)
+		{
+			gameScripts = new System.Collections.Generic.List<GameScript>();
+		}
+		gameScripts.RemoveAll((GameScript g) => g == null || string.IsNullOrEmpty(g.placeId));
 		if (discordMentions == null)
 		{
 			discordMentions = "";
