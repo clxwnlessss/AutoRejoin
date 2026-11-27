@@ -1,6 +1,6 @@
 # AutoRejoin
 
-**Owner & developer — [clxwnlesss](https://discord.com/users/1505693601932382241) (Daniil Arzamasov).**
+**Owner & developer — [clxwnlessss](https://github.com/clxwnlessss), [wwesse2](https://github.com/wwesse2).**
 Contact: Discord **overdosedclxwn** · Community server: **https://discord.gg/bZFB8dwBdw**
 
 Keeps your Roblox **Bee Swarm Simulator** accounts in game 24/7 and rejoins on its own when something goes wrong:
