@@ -76,41 +76,50 @@ function createTelegram(pool, { token, farm, discord, now = () => new Date(), ap
   const send = (chatId, text, extra = {}) => api('sendMessage', { chat_id: chatId, text, parse_mode: 'HTML', disable_web_page_preview: true, ...extra });
 
   // ---------- status ----------
+  // Which devices the chat looks at: 'all', 'pc' or 'phone' (buttons under /status). Kept in memory.
+  const kindOf = (link) => link.kind || 'all';
+  const KIND_TITLE = { all: 'ПК и телефоны', pc: '🖥 ПК', phone: '📱 Телефоны' };
+  const offlineText = (kind) => kind === 'phone'
+    ? '⚫ Телефоны не на связи. В AutoRejoin Mobile: <b>Settings → Top AFK &amp; bots</b> → войди в аккаунт и нажми <b>Start</b>.'
+    : kind === 'pc' ? '⚫ ПК не на связи. Открой AutoRejoin на ПК и войди в аккаунт Топа АФК.'
+      : '⚫ Программа не на связи. Открой AutoRejoin на ПК или AutoRejoin Mobile на телефоне и войди в аккаунт Топа АФК.';
   function statusText(link) {
-    const ru = true;
-    const pcs = farm.view(link.userId);
+    const kind = kindOf(link);
+    const pcs = farm.view(link.userId, kind);
     const online = pcs.filter((p) => p.online);
-    const all = farm.accounts(link.userId).filter((a) => a.enabled);
+    const all = farm.accounts(link.userId, true, kind).filter((a) => a.enabled);
     const inGame = all.filter((a) => a.state === 'ingame' || a.state === 'script').length;
     const running = online.some((p) => p.state && p.state.running);
     let head;
-    if (!online.length) head = '⚫ Программа не на связи. Открой AutoRejoin на ПК и войди в аккаунт Топа АФК.';
+    if (!online.length) head = offlineText(kind);
     else if (!running) head = '⏸ AutoRejoin остановлен';
-    else head = `🟢 Работает · в игре <b>${inGame} из ${all.length}</b>${pcs.length > 1 ? ` · ПК: ${online.length}` : ''}`;
-    const lines = [`<b>AutoRejoin · ${esc(link.nickname)}</b>`, head, ''];
-    const multi = pcs.length > 1;
+    else head = `🟢 Работает · в игре <b>${inGame} из ${all.length}</b>${pcs.length > 1 ? ` · устройств: ${online.length}` : ''}`;
+    const lines = [`<b>AutoRejoin · ${esc(link.nickname)}</b> · ${KIND_TITLE[kind]}`, head, ''];
+    const multi = pcs.length > 1 || kind === 'all';
     for (const pc of (multi ? pcs : online)) {
-      if (multi) lines.push(`🖥 <b>${esc(pc.name)}</b> — ${!pc.online ? 'не на связи' : pc.state.running ? 'работает' : 'остановлен'}`);
+      if (multi) lines.push(`${pc.kind === 'phone' ? '📱' : '🖥'} <b>${esc(pc.name)}</b> — ${!pc.online ? 'не на связи' : pc.state.running ? 'работает' : 'остановлен'}`);
       for (const a of (pc.online && pc.state ? pc.state.accounts.filter((x) => x.enabled) : []).slice(0, 25)) {
         const ok = a.state === 'ingame' || a.state === 'script';
         lines.push(`${ok ? '🟢' : ['joining', 'launching', 'loading'].includes(a.state) ? '🟡' : '🔴'} <b>${esc(a.name)}</b>${a.main ? ' ⭐' : ''} — ${esc(a.text || a.state)}${ok && a.uptime ? ` · ${esc(a.uptime)}` : ''}`);
       }
     }
-    void ru;
     return lines.join('\n').slice(0, 4000);
   }
   function statusKeyboard(link) {
-    const online = farm.view(link.userId).filter((p) => p.online);
+    const kind = kindOf(link);
+    const online = farm.view(link.userId, kind).filter((p) => p.online);
     const running = online.some((p) => p.state && p.state.running);
     const rows = [[{ text: '🔄 Обновить', callback_data: 'st' }, { text: '📸 Скриншот', callback_data: 'sp' }]];
     if (online.length) rows.push(running
       ? [{ text: '⏹ Остановить', callback_data: 'stop' }, { text: '🔁 Перезайти всеми', callback_data: 'ra' }]
       : [{ text: '▶️ Запустить', callback_data: 'start' }]);
     rows.push([{ text: '📊 Отчёт за сутки', callback_data: 'rep' }]);
+    const mark = (k, label) => ({ text: (kind === k ? '✅ ' : '') + label, callback_data: 'k:' + k });
+    rows.push([mark('pc', '🖥 ПК'), mark('phone', '📱 Телефоны'), mark('all', 'Все')]);
     return { inline_keyboard: rows };
   }
   function screenKeyboard(link) {
-    const accs = farm.accounts(link.userId).filter((a) => a.enabled);
+    const accs = farm.accounts(link.userId, true, kindOf(link)).filter((a) => a.enabled);
     const multi = new Set(accs.map((a) => a.pcId)).size > 1;
     const rows = [];
     for (let k = 0; k < Math.min(accs.length, 24); k += 2) {
@@ -148,7 +157,7 @@ function createTelegram(pool, { token, farm, discord, now = () => new Date(), ap
     return lines.join('\n');
   }
 
-  const HELP = '🐝 <b>AutoRejoin</b>\n\n<b>Команды:</b>\n/status — аккаунты и кнопки управления\n/screen — скриншот окна аккаунта\n/report — отчёт за сутки\n/notify — включить/выключить уведомления\n/unlink — отвязать Telegram\n\nУведомления приходят сами: вылеты (с раскадровкой), возвраты в игру, ошибки и «не может перезайти».';
+  const HELP = '🐝 <b>AutoRejoin</b>\n\n<b>Команды:</b>\n/status — аккаунты и кнопки управления (снизу выбор: 🖥 ПК / 📱 Телефоны / Все)\n/screen — скриншот окна аккаунта\n/report — отчёт за сутки\n/notify — включить/выключить уведомления\n/unlink — отвязать Telegram\n\nУведомления приходят сами: вылеты (с раскадровкой), возвраты в игру, ошибки и «не может перезайти».';
 
   async function tryLink(chatId, from, code) {
     const userId = discord.consumeCode(code);
@@ -175,13 +184,13 @@ function createTelegram(pool, { token, farm, discord, now = () => new Date(), ap
     if (cmd === '/start' && /^\d{6}$/.test(arg)) return tryLink(chatId, m.from || {}, arg);
     const link = await linkOf(chatId);
     if (cmd === '/start' || cmd === '/help') {
-      return send(chatId, link ? HELP : '🐝 <b>AutoRejoin</b>\n\nЧтобы привязать бота:\n1. В программе: <b>Настройки → Привязать бота</b> — появится 6-значный код.\n2. Пришли этот код сюда.\n\nКод одноразовый и живёт 10 минут. Тот же код подходит и для Discord-бота.');
+      return send(chatId, link ? HELP : '🐝 <b>AutoRejoin</b>\n\nЧтобы привязать бота:\n1. На ПК: <b>Настройки → Привязать бота</b>, на телефоне: <b>Settings → Top AFK &amp; bots → Link bot</b> — появится 6-значный код.\n2. Пришли этот код сюда.\n\nКод одноразовый и живёт 10 минут. Тот же код подходит и для Discord-бота.');
     }
     if (!link) return send(chatId, '🔗 Сначала привяжи аккаунт: в AutoRejoin открой <b>Настройки → Привязать бота</b> и пришли сюда 6 цифр кода.');
     if (cmd === '/status') return send(chatId, statusText(link), { reply_markup: statusKeyboard(link) });
     if (cmd === '/screen') {
       const kb = screenKeyboard(link);
-      return kb ? send(chatId, '📸 <b>Скриншот какого аккаунта?</b>', { reply_markup: kb }) : send(chatId, '⚫ Нет аккаунтов на связи. Открой AutoRejoin на ПК.');
+      return kb ? send(chatId, '📸 <b>Скриншот какого аккаунта?</b>', { reply_markup: kb }) : send(chatId, '⚫ Нет аккаунтов на связи. Открой AutoRejoin на ПК или телефоне.');
     }
     if (cmd === '/report') return send(chatId, await reportText(link));
     if (cmd === '/notify') {
@@ -203,6 +212,12 @@ function createTelegram(pool, { token, farm, discord, now = () => new Date(), ap
     if (!link) { await answer('Сначала привяжи аккаунт'); return; }
     const edit = (text, markup) => api('editMessageText', { chat_id: chatId, message_id: msgId, text, parse_mode: 'HTML', disable_web_page_preview: true, ...(markup ? { reply_markup: markup } : {}) }).catch(() => {});
     if (data === 'st') { await answer(); return edit(statusText(link), statusKeyboard(link)); }
+    if (data.startsWith('k:')) {
+      const k = data.slice(2);
+      link.kind = ['pc', 'phone'].includes(k) ? k : 'all';
+      await answer(KIND_TITLE[link.kind]);
+      return edit(statusText(link), statusKeyboard(link));
+    }
     if (data === 'sp') {
       await answer();
       const kb = screenKeyboard(link);
@@ -212,7 +227,7 @@ function createTelegram(pool, { token, farm, discord, now = () => new Date(), ap
     if (data === 'rep') { await answer(); return send(chatId, await reportText(link)); }
     const cmds = { start: ['start', '▶️ Запуск отправлен'], stop: ['stop', '⏹ Остановка отправлена'], ra: ['rejoin-all', '🔁 Перезаход всеми отправлен'] };
     if (cmds[data]) {
-      farm.enqueue(link.userId, cmds[data][0]);
+      farm.enqueue(link.userId, cmds[data][0], undefined, null, kindOf(link));
       await answer(cmds[data][1] + ' — выполнится за ~10 сек');
       return edit(statusText(link), statusKeyboard(link));
     }

@@ -97,6 +97,7 @@ class MainActivity : Activity() {
                       val status: TextView, val dot: View, val name: TextView)
     private val rows = ArrayList<Row>()
     private lateinit var accountsBox: LinearLayout
+    private lateinit var cloudBox: LinearLayout
 
     private val ui = Handler(Looper.getMainLooper())
     private val tick = object : Runnable {
@@ -401,6 +402,11 @@ class MainActivity : Activity() {
 
     // ================================================================ Settings
     private fun settingsPage(col: LinearLayout) {
+        section(col, "TOP AFK & BOTS")
+        cloudBox = LinearLayout(this).apply { orientation = LinearLayout.VERTICAL }
+        col.addView(cloudBox)
+        renderCloud()
+
         section(col, "GAME")
         val game = card()
         game.addView(text("Game for all accounts", 15f, text1, bold = true))
@@ -548,6 +554,139 @@ class MainActivity : Activity() {
         col.addView(text("AutoRejoin · free · updates itself", 11.5f, text3).apply { gravity = Gravity.CENTER; setPadding(0, dp(18), 0, 0) })
     }
 
+    // ================================================================ Top AFK account & Telegram / Discord bots
+    private fun renderCloud() {
+        cloudBox.removeAllViews()
+        val c = card()
+        if (!Cloud.signedIn(this)) {
+            c.addView(text("Control this phone from Telegram & Discord", 15f, text1, bold = true))
+            c.addView(hint("Sign in with your AutoRejoin account — the same as on PC and the site. Then the bots show this phone's accounts and can start, stop, rejoin and take screenshots; drops come to Telegram."))
+            val row = LinearLayout(this).apply { orientation = LinearLayout.HORIZONTAL; layoutParams = LinearLayout.LayoutParams(-1, -2).apply { topMargin = dp(14) } }
+            row.addView(bigButton().apply {
+                text = "Sign in"; setTextColor(Color.BLACK); background = rounded(Color.WHITE, null, 14)
+                layoutParams = LinearLayout.LayoutParams(0, dp(46), 1f).apply { rightMargin = dp(10) }
+                setOnClickListener { signInDialog() }
+            })
+            row.addView(bigButton().apply {
+                text = "Create account"; setTextColor(text1); background = rounded(Color.parseColor("#1F1F27"), stroke, 14)
+                layoutParams = LinearLayout.LayoutParams(0, dp(46), 1f)
+                setOnClickListener { registerDialog() }
+            })
+            c.addView(row)
+            c.addView(text("Forgot password?", 12.5f, accent).apply { setPadding(0, dp(12), 0, 0); setOnClickListener { open(Cloud.SITE + "forgot") } })
+        } else {
+            c.addView(text("Signed in as " + Cloud.nickname(this).ifBlank { "?" }, 15f, text1, bold = true))
+            val bots = hint("Checking the bots…")
+            c.addView(bots)
+            c.addView(hint("In the bots this phone is \"${Cloud.deviceName(this)}\" — press 📱 Phones there to see only phones. Control works while AutoRejoin is started here."))
+            val row = LinearLayout(this).apply { orientation = LinearLayout.HORIZONTAL; layoutParams = LinearLayout.LayoutParams(-1, -2).apply { topMargin = dp(14) } }
+            row.addView(bigButton().apply {
+                text = "🔗  Link bot"; setTextColor(Color.WHITE); background = rounded(accent, null, 14)
+                layoutParams = LinearLayout.LayoutParams(0, dp(46), 1.3f).apply { rightMargin = dp(10) }
+                setOnClickListener { linkBotDialog() }
+            })
+            row.addView(bigButton().apply {
+                text = "Sign out"; setTextColor(text1); background = rounded(Color.parseColor("#1F1F27"), stroke, 14)
+                layoutParams = LinearLayout.LayoutParams(0, dp(46), 1f)
+                setOnClickListener {
+                    AlertDialog.Builder(this@MainActivity, AlertDialog.THEME_DEVICE_DEFAULT_DARK)
+                        .setTitle("Sign out?").setMessage("The bots stop seeing this phone.")
+                        .setPositiveButton("Sign out") { _, _ -> Cloud.logout(this@MainActivity); renderCloud() }
+                        .setNegativeButton("Cancel", null).show()
+                }
+            })
+            c.addView(row)
+            Thread {
+                val text = try {
+                    val s = Cloud.linkState(this)
+                    "Telegram: " + (if (s.telegram) "✅ linked" + (s.telegramName?.let { " ($it)" } ?: "") else "not linked") +
+                        "   ·   Discord: " + (if (s.discord) "✅ linked" + (s.discordName?.let { " ($it)" } ?: "") else "not linked")
+                } catch (e: Cloud.ApiError) {
+                    if (e.code == 401) { Store.put(this, "cloudToken", ""); runOnUiThread { toast("Session expired — sign in again."); renderCloud() }; return@Thread }
+                    "Can't check the bots: ${e.message}"
+                } catch (e: Exception) { "Can't reach the server — check the internet." }
+                runOnUiThread { bots.text = text }
+            }.start()
+        }
+        cloudBox.addView(c)
+    }
+
+    /** A dialog with fields; OK runs [work] off the UI thread and closes the dialog only when it worked. */
+    private fun formDialog(title: String, message: String?, fields: List<EditText>, ok: String, work: () -> Unit, done: () -> Unit) {
+        val box = LinearLayout(this).apply { orientation = LinearLayout.VERTICAL; setPadding(dp(20), dp(4), dp(20), 0) }
+        if (message != null) box.addView(text(message, 13f, text2).apply { setPadding(dp(2), 0, 0, dp(4)) })
+        fields.forEach { box.addView(it) }
+        val d = AlertDialog.Builder(this, AlertDialog.THEME_DEVICE_DEFAULT_DARK)
+            .setTitle(title).setView(box).setPositiveButton(ok, null).setNegativeButton("Cancel", null).show()
+        val button = d.getButton(AlertDialog.BUTTON_POSITIVE)
+        button.setOnClickListener {
+            button.isEnabled = false
+            Thread {
+                try {
+                    work()
+                    runOnUiThread { d.dismiss(); done() }
+                } catch (e: Exception) {
+                    runOnUiThread { button.isEnabled = true; toast(if (e is Cloud.ApiError) e.message ?: "Error" else "Can't reach the server — check the internet.") }
+                }
+            }.start()
+        }
+    }
+
+    private fun password(hintText: String) = field("", hintText).apply { inputType = InputType.TYPE_CLASS_TEXT or InputType.TYPE_TEXT_VARIATION_PASSWORD }
+
+    private fun signInDialog() {
+        val nick = field("", "Nickname or email")
+        val pass = password("Password")
+        formDialog("Sign in to AutoRejoin", "The same account as on PC and the site.", listOf(nick, pass), "Sign in",
+            { Cloud.login(this, nick.text.toString().trim(), pass.text.toString()) },
+            { toast("Signed in as ${Cloud.nickname(this)}."); renderCloud() })
+    }
+
+    private fun registerDialog() {
+        val nick = field("", "Nickname (3–20: a-z, 0-9, _)")
+        val email = field("", "Email").apply { inputType = InputType.TYPE_CLASS_TEXT or InputType.TYPE_TEXT_VARIATION_EMAIL_ADDRESS }
+        val pass = password("Password (6+ characters)")
+        var sentTo = ""
+        formDialog("Create an account", "A 6-digit code will come to your email.", listOf(nick, email, pass), "Get code",
+            { sentTo = Cloud.registerStart(nick.text.toString().trim(), email.text.toString().trim(), pass.text.toString()) },
+            { codeDialog(sentTo) })
+    }
+
+    private fun codeDialog(email: String) {
+        val code = field("", "6-digit code").apply { inputType = InputType.TYPE_CLASS_NUMBER }
+        formDialog("Confirm your email", "We sent a code to $email (check spam too). It works for 15 minutes.", listOf(code), "Create account",
+            { Cloud.registerConfirm(this, email, code.text.toString().trim()) },
+            { toast("Account ${Cloud.nickname(this)} created."); renderCloud(); linkBotDialog() })
+    }
+
+    private fun linkBotDialog() {
+        Thread {
+            try {
+                val lc = Cloud.linkCode(this)
+                runOnUiThread { showLinkCode(lc) }
+            } catch (e: Exception) {
+                runOnUiThread { toast(if (e is Cloud.ApiError) e.message ?: "Error" else "Can't reach the server — check the internet.") }
+            }
+        }.start()
+    }
+
+    private fun showLinkCode(lc: Cloud.LinkCode) {
+        val box = LinearLayout(this).apply { orientation = LinearLayout.VERTICAL; setPadding(dp(22), dp(6), dp(22), 0) }
+        box.addView(text(lc.code.chunked(3).joinToString(" "), 34f, text1, bold = true).apply { gravity = Gravity.CENTER; letterSpacing = 0.1f; setPadding(0, dp(6), 0, dp(10)) })
+        box.addView(text("Telegram: tap Telegram below and press Start — the code goes by itself (or send the 6 digits to the bot).\n\n" +
+            "Discord: on our server press «Link account» on the AutoRejoin panel (or type /panel) and enter the code.\n\n" +
+            "The code works once, for 10 minutes. One code fits both bots — get a new one for the second.", 13f, text2))
+        val b = AlertDialog.Builder(this, AlertDialog.THEME_DEVICE_DEFAULT_DARK).setTitle("Link a bot").setView(box)
+        if (lc.telegram != null) b.setPositiveButton("Telegram") { _, _ -> open(lc.telegram + "?start=" + lc.code) }
+        b.setNeutralButton("Discord") { _, _ -> open(DISCORD_URL) }
+        b.setNegativeButton("Copy code") { _, _ ->
+            (getSystemService(CLIPBOARD_SERVICE) as ClipboardManager).setPrimaryClip(ClipData.newPlainText("code", lc.code))
+            toast("Code copied.")
+        }
+        b.setOnDismissListener { renderCloud() }
+        b.show()
+    }
+
     // ================================================================ actions
     private fun saveAll(): Boolean {
         val link = linkBox.text.toString().trim().ifEmpty { Roblox.BEE_SWARM }
@@ -612,6 +751,7 @@ class MainActivity : Activity() {
         statusDot.background = GradientDrawable().apply { shape = GradientDrawable.OVAL; setColor(if (running) green else text3) }
         statusTitle.text = if (running) "Running" else "Stopped"
         statusSub.text = when {
+            running && RejoinService.paused -> "Stopped from a bot — press Start there to rejoin again."
             running && RejoinService.total > 0 -> "${RejoinService.inGame} of ${RejoinService.total} in game · ${RejoinService.rejoinsTotal} rejoins"
             running -> "Starting…"
             else -> "Press Start — AutoRejoin keeps your accounts in game."

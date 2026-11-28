@@ -75,6 +75,7 @@ function createFarm(pool, options = {}) {
       pcs.delete(oldest[0]);
     }
     const agent = pcs.get(pcId) || { queue: [] };
+    agent.kind = pc.kind === 'phone' ? 'phone' : 'pc';   // AutoRejoin Mobile reports kind: 'phone'
     const state = sanitizeState(body || {});
     sample(userId, agent, state, clip(pc.name, 40) || 'PC', t);
     agent.state = state;
@@ -149,20 +150,22 @@ function createFarm(pool, options = {}) {
   }
 
   // ---------- views ----------
-  function view(userId) {
+  // kind: 'pc' / 'phone' — only devices of that kind; anything else — all of them.
+  const ofKind = (kind) => (p) => !(kind === 'pc' || kind === 'phone') || p.kind === kind;
+  function view(userId, kind) {
     const t = now().getTime();
     const pcs = [...pcsOf(userId).entries()].map(([id, a]) => ({
-      id, name: a.name || 'PC', online: !!(a.at && t - a.at <= STATE_STALE), lastSeen: a.at ? new Date(a.at).toISOString() : null,
+      id, name: a.name || 'PC', kind: a.kind || 'pc', online: !!(a.at && t - a.at <= STATE_STALE), lastSeen: a.at ? new Date(a.at).toISOString() : null,
       state: a.state || null
-    })).sort((a, b) => (b.online - a.online) || a.name.localeCompare(b.name));
+    })).filter(ofKind(kind)).sort((a, b) => (b.online - a.online) || a.name.localeCompare(b.name));
     return pcs;
   }
-  // Every account of every online PC, with its PC.
-  function accounts(userId, onlyOnline = true) {
+  // Every account of every online device, with its device.
+  function accounts(userId, onlyOnline = true, kind) {
     const out = [];
-    for (const pc of view(userId)) {
+    for (const pc of view(userId, kind)) {
       if (onlyOnline && !pc.online) continue;
-      for (const a of (pc.state ? pc.state.accounts : [])) out.push({ ...a, pcId: pc.id, pcName: pc.name, running: pc.state.running, phase: pc.state.phase });
+      for (const a of (pc.state ? pc.state.accounts : [])) out.push({ ...a, pcId: pc.id, pcName: pc.name, kind: pc.kind, running: pc.state.running, phase: pc.state.phase });
     }
     return out;
   }
@@ -171,8 +174,9 @@ function createFarm(pool, options = {}) {
   }
 
   // ---------- commands ----------
-  // pcId: one PC; null: start/stop/rejoin-all go to every online PC; rejoin/screen go to the PC with that account.
-  function enqueue(userId, cmd, arg, pcId) {
+  // pcId: one device; null: start/stop/rejoin-all go to every online device (of `kind`, when given);
+  // rejoin/screen go to the device with that account.
+  function enqueue(userId, cmd, arg, pcId, kind) {
     const pcs = pcsOf(userId);
     let targets;
     if (pcId) targets = [pcId];
@@ -180,8 +184,8 @@ function createFarm(pool, options = {}) {
       const accountId = cmd === 'screen' ? String(arg).split(':').slice(1).join(':') : arg;
       const acc = findAccount(userId, accountId);
       targets = acc ? [acc.pcId] : [];
-    } else targets = view(userId).filter((p) => p.online).map((p) => p.id);
-    if (!targets.length && pcs.size === 1) targets = [...pcs.keys()];
+    } else targets = view(userId, kind).filter((p) => p.online).map((p) => p.id);
+    if (!targets.length && pcs.size === 1 && view(userId, kind).length === 1) targets = [...pcs.keys()];
     for (const id of targets) {
       const agent = pcs.get(id) || { queue: [] };
       agent.queue = agent.queue.slice(-9);

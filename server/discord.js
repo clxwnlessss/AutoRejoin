@@ -27,7 +27,7 @@ const COMMANDS = [
     description_localizations: { ru: 'Отправить панель AutoRejoin с кнопкой «Привязать аккаунт»', uk: 'Надіслати панель AutoRejoin з кнопкою «Прив’язати акаунт»' }, ...CTX },
   { name: 'status', description: 'Show your accounts and control AutoRejoin',
     description_localizations: { ru: 'Показать аккаунты и управлять AutoRejoin', uk: 'Показати акаунти й керувати AutoRejoin' }, ...CTX },
-  { name: 'start', description: 'Start AutoRejoin on your PC', description_localizations: { ru: 'Запустить AutoRejoin на ПК', uk: 'Запустити AutoRejoin на ПК' }, ...CTX },
+  { name: 'start', description: 'Start AutoRejoin on your PC or phone', description_localizations: { ru: 'Запустить AutoRejoin на ПК или телефоне', uk: 'Запустити AutoRejoin на ПК або телефоні' }, ...CTX },
   { name: 'stop', description: 'Stop AutoRejoin and close Roblox windows', description_localizations: { ru: 'Остановить AutoRejoin и закрыть окна Роблокса', uk: 'Зупинити AutoRejoin і закрити вікна Роблокса' }, ...CTX },
   { name: 'rejoin', description: 'Rejoin one account or all of them',
     description_localizations: { ru: 'Перезайти одним аккаунтом или всеми', uk: 'Перезайти одним акаунтом або всіма' },
@@ -127,27 +127,35 @@ function createDiscord(pool, options = {}) {
       lastSeen: pcs[0] && pcs[0].lastSeen, state: online ? online.state : null, pcs };
   }
 
-  function enqueue(userId, cmd, arg, pcId) { return farm.enqueue(userId, cmd, arg, pcId); }
+  function enqueue(userId, cmd, arg, pcId, kind) { return farm.enqueue(userId, cmd, arg, pcId, kind); }
 
   // ---------- Discord side ----------
+  // Which devices the user looks at: 'all', 'pc' or 'phone' (buttons under /status). Kept in memory on the link.
+  const kindOf = (link) => link.kind || 'all';
+  function offlineHead(kind, ru, last, t) {
+    const seen = last ? (ru ? ` (была ${ago(t - last, true)})` : ` (last seen ${ago(t - last, false)})`) : '';
+    if (kind === 'phone') return ru ? `⚫ Телефоны не на связи${seen}. В AutoRejoin Mobile: **Settings → Top AFK & bots** → войди и нажми **Start**.`
+      : `⚫ No phones online${seen}. In AutoRejoin Mobile: **Settings → Top AFK & bots** → sign in and press **Start**.`;
+    if (kind === 'pc') return ru ? `⚫ ПК не на связи${seen}. Открой AutoRejoin на ПК и войди в аккаунт Топа АФК.` : `⚫ No PCs online${seen}. Open AutoRejoin on your PC and sign in to Top AFK.`;
+    return ru ? `⚫ Программа не на связи${seen}. Открой AutoRejoin на ПК или телефоне и войди в аккаунт Топа АФК.` : `⚫ The app is offline${seen}. Open AutoRejoin on your PC or phone and sign in to Top AFK.`;
+  }
   function statusMessage(link, ru, note) {
     const t = now().getTime();
-    const pcs = farm.view(link.userId);
+    const kind = kindOf(link);
+    const pcs = farm.view(link.userId, kind);
     const online = pcs.filter((p) => p.online);
-    const multi = pcs.length > 1;
+    const multi = pcs.length > 1 || kind === 'all';
     let color = 0x6E6D85, head;
-    const all = farm.accounts(link.userId).filter((a) => a.enabled);
+    const all = farm.accounts(link.userId, true, kind).filter((a) => a.enabled);
     const inGame = all.filter((a) => a.state === 'ingame' || a.state === 'script').length;
     const running = online.some((p) => p.state && p.state.running);
     if (!online.length) {
       const last = pcs[0] && pcs[0].lastSeen ? Date.parse(pcs[0].lastSeen) : null;
-      head = last
-        ? (ru ? `⚫ Программа не на связи (была ${ago(t - last, true)}). Открой AutoRejoin на ПК.` : `⚫ The app is offline (last seen ${ago(t - last, false)}). Open AutoRejoin on your PC.`)
-        : (ru ? '⚫ Программа не на связи. Открой AutoRejoin на ПК и войди в аккаунт Топа АФК.' : '⚫ The app is offline. Open AutoRejoin on your PC and sign in to Top AFK.');
+      head = offlineHead(kind, ru, last, t);
     } else if (!running) {
       head = ru ? '⏸️ AutoRejoin остановлен' : '⏸️ AutoRejoin is stopped'; color = 0xE5484D;
     } else {
-      head = ru ? `🟢 Работает · в игре **${inGame} из ${all.length}**${multi ? ` · ПК: ${online.length}` : ''}` : `🟢 Running · in game **${inGame} of ${all.length}**${multi ? ` · PCs: ${online.length}` : ''}`;
+      head = ru ? `🟢 Работает · в игре **${inGame} из ${all.length}**${pcs.length > 1 ? ` · устройств: ${online.length}` : ''}` : `🟢 Running · in game **${inGame} of ${all.length}**${pcs.length > 1 ? ` · devices: ${online.length}` : ''}`;
       color = inGame === all.length && all.length ? 0x30A46C : 0xF5A524;
     }
     const lines = [];
@@ -155,7 +163,7 @@ function createDiscord(pool, options = {}) {
       const accs = pc.online && pc.state ? pc.state.accounts.filter((a) => a.enabled) : [];
       if (multi) {
         const pcHead = !pc.online ? (ru ? 'не на связи' : 'offline') : !pc.state.running ? (ru ? 'остановлен' : 'stopped') : (ru ? 'работает' : 'running');
-        lines.push(`🖥️ **${esc(pc.name)}** — ${pcHead}`);
+        lines.push(`${pc.kind === 'phone' ? '📱' : '🖥️'} **${esc(pc.name)}** — ${pcHead}`);
       }
       for (const a of accs.slice(0, 20)) {
         const ok = a.state === 'ingame' || a.state === 'script';
@@ -163,8 +171,9 @@ function createDiscord(pool, options = {}) {
       }
       if (pc.online && !accs.length) lines.push(ru ? '_Нет включённых аккаунтов._' : '_No enabled accounts._');
     }
+    const kindTitle = { all: ru ? 'ПК и телефоны' : 'PCs & phones', pc: ru ? '🖥️ ПК' : '🖥️ PCs', phone: ru ? '📱 Телефоны' : '📱 Phones' }[kind];
     const embed = {
-      title: `AutoRejoin · ${link.nickname}`,
+      title: `AutoRejoin · ${link.nickname} · ${kindTitle}`,
       description: [head, '', ...lines].join('\n').slice(0, 4000),
       color,
       footer: { text: note || (ru ? 'Команды выполняются в течение ~10 сек' : 'Commands run within ~10 s') },
@@ -183,13 +192,18 @@ function createDiscord(pool, options = {}) {
       components.push({ type: 1, components: [{ type: 3, custom_id: 'ar:rejoin', placeholder: ru ? 'Перезайти одним аккаунтом…' : 'Rejoin one account…',
         options: all.slice(0, 25).map((a) => ({ label: clip(a.name + (multi ? ` · ${a.pcName}` : ''), 100), value: a.id, description: clip(a.text || a.state, 100) || undefined })) }] });
     }
+    // device choice: PCs / phones / everything
+    const kindBtn = (k, emoji, label) => ({ type: 2, style: kind === k ? 1 : 2, custom_id: 'ar:kind:' + k, emoji: { name: emoji }, label });
+    components.push({ type: 1, components: [
+      kindBtn('pc', '🖥️', ru ? 'ПК' : 'PCs'), kindBtn('phone', '📱', ru ? 'Телефоны' : 'Phones'), kindBtn('all', '🌐', ru ? 'Все' : 'All')
+    ] });
     return { embeds: [embed], components, flags: 64 };
   }
 
   // /screen: pick an account → the app captures its window → the picture replaces the "taking a screenshot…" message.
   function screenPicker(link, ru) {
-    const accs = farm.accounts(link.userId).filter((a) => a.enabled);
-    if (!accs.length) return { content: ru ? '⚫ Нет аккаунтов на связи. Открой AutoRejoin на ПК.' : '⚫ No accounts online. Open AutoRejoin on your PC.', components: [], flags: 64 };
+    const accs = farm.accounts(link.userId, true, kindOf(link)).filter((a) => a.enabled);
+    if (!accs.length) return { content: ru ? '⚫ Нет аккаунтов на связи. Открой AutoRejoin на ПК или телефоне.' : '⚫ No accounts online. Open AutoRejoin on your PC or phone.', components: [], flags: 64 };
     const multi = new Set(accs.map((a) => a.pcId)).size > 1;
     return {
       content: ru ? '📸 **Скриншот какого аккаунта?**' : '📸 **Screenshot of which account?**', embeds: [], flags: 64,
@@ -296,7 +310,7 @@ function createDiscord(pool, options = {}) {
     if (i.type === 4) {
       const link = await linkOf(user.id);
       const focused = ((i.data.options || []).find((o) => o.focused) || {}).value || '';
-      const accs = link ? farm.accounts(link.userId).filter((a) => a.enabled) : [];
+      const accs = link ? farm.accounts(link.userId, true, kindOf(link)).filter((a) => a.enabled) : [];
       const choices = [{ name: ru ? '🔁 Все аккаунты' : '🔁 All accounts', value: '*' }]
         .concat(accs.map((a) => ({ name: clip(`${a.name}${a.main ? ' ⭐' : ''} — ${a.text || a.state}`, 100), value: a.id })))
         .filter((c) => !focused || c.name.toLowerCase().includes(String(focused).toLowerCase()))
@@ -316,12 +330,12 @@ function createDiscord(pool, options = {}) {
       if (name === 'status') return { type: 4, data: statusMessage(link, ru) };
       if (name === 'screen') return { type: 4, data: screenPicker(link, ru) };
       if (name === 'start' || name === 'stop') {
-        enqueue(link.userId, name);
+        enqueue(link.userId, name, undefined, null, kindOf(link));
         return { type: 4, data: statusMessage(link, ru, queuedNote(ru, name)) };
       }
       if (name === 'rejoin') {
         const value = String(((i.data.options || [])[0] || {}).value || '');
-        if (value === '*' || /^(all|все|усі)$/i.test(value)) { enqueue(link.userId, 'rejoin-all'); return { type: 4, data: statusMessage(link, ru, queuedNote(ru, 'rejoin-all')) }; }
+        if (value === '*' || /^(all|все|усі)$/i.test(value)) { enqueue(link.userId, 'rejoin-all', undefined, null, kindOf(link)); return { type: 4, data: statusMessage(link, ru, queuedNote(ru, 'rejoin-all')) }; }
         const accName = accountName(link.userId, value);
         if (!accName) return ephemeral(ru ? '❌ Такого аккаунта нет. Выбери из списка подсказок.' : '❌ No such account. Pick one from the suggestions.');
         enqueue(link.userId, 'rejoin', value);
@@ -343,10 +357,15 @@ function createDiscord(pool, options = {}) {
       if (!link) return notLinked(ru);
       if (id === 'ar:status') return { type: 4, data: statusMessage(link, ru) };
       if (id === 'ar:refresh') return { type: 7, data: statusMessage(link, ru) };
+      if (id.startsWith('ar:kind:')) {
+        const k = id.slice(8);
+        link.kind = ['pc', 'phone'].includes(k) ? k : 'all';
+        return { type: 7, data: statusMessage(link, ru) };
+      }
       if (id === 'ar:screenpick') return { type: 4, data: screenPicker(link, ru) };
       if (id === 'ar:screen') return { type: 7, data: takeScreen(link, String((i.data.values || [])[0] || ''), i.token, ru) };
-      if (id === 'ar:start' || id === 'ar:stop') { const cmd = id.slice(3); enqueue(link.userId, cmd); return { type: 7, data: statusMessage(link, ru, queuedNote(ru, cmd)) }; }
-      if (id === 'ar:rejoinall') { enqueue(link.userId, 'rejoin-all'); return { type: 7, data: statusMessage(link, ru, queuedNote(ru, 'rejoin-all')) }; }
+      if (id === 'ar:start' || id === 'ar:stop') { const cmd = id.slice(3); enqueue(link.userId, cmd, undefined, null, kindOf(link)); return { type: 7, data: statusMessage(link, ru, queuedNote(ru, cmd)) }; }
+      if (id === 'ar:rejoinall') { enqueue(link.userId, 'rejoin-all', undefined, null, kindOf(link)); return { type: 7, data: statusMessage(link, ru, queuedNote(ru, 'rejoin-all')) }; }
       if (id === 'ar:rejoin') {
         const value = String((i.data.values || [])[0] || '');
         const accName = accountName(link.userId, value);

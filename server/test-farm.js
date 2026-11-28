@@ -148,6 +148,33 @@ const { createApp, initDb } = require('./app');
   ok(/MAIN-PC/.test(r.body.data.embeds[0].description) && /LAPTOP/.test(r.body.data.embeds[0].description)
     && r.body.data.components[0].components.some((b) => b.custom_id === 'ar:screenpick'), 'Discord /status: аккаунты по ПК и кнопка «Скриншот»');
 
+  // ---------- phones: AutoRejoin Mobile, the PCs / Phones choice in both bots ----------
+  await call('POST', '/api/agent/sync', { running: true, phase: 'running', version: 'm1.7', lang: 'en', pc: { id: 'ph1', name: 'Pixel 7', kind: 'phone' },
+    accounts: [acc('ph1/com.roblox.client', 'PhoneMain', 'ingame', null)] }, owner);
+  await syncPc('pc1', 'MAIN-PC', [acc('a1', 'Main', 'ingame', 99000, true), acc('a2', 'Alt1', 'ingame', 200)]);
+  r = await interact({ type: 3, locale: 'ru', member: { user: userD }, data: { custom_id: 'ar:kind:phone' } });
+  const phoneDesc = r.body.data.embeds[0].description;
+  ok(r.body.type === 7 && /Телефоны/.test(r.body.data.embeds[0].title) && /PhoneMain/.test(phoneDesc) && !/MAIN-PC/.test(phoneDesc)
+    && r.body.data.components.at(-1).components.find((b) => b.custom_id === 'ar:kind:phone').style === 1, 'Discord: «Телефоны» — только телефоны, кнопка выбрана');
+  r = await interact({ type: 3, locale: 'ru', member: { user: userD }, data: { custom_id: 'ar:stop' } });
+  let phoneCmds = (await call('POST', '/api/agent/sync', { running: true, phase: 'running', pc: { id: 'ph1', name: 'Pixel 7', kind: 'phone' }, accounts: [] }, owner)).body.commands;
+  let pcCmds = (await syncPc('pc1', 'MAIN-PC', [acc('a1', 'Main', 'ingame', 99000, true)])).body.commands;
+  ok(phoneCmds.some((c) => c.cmd === 'stop') && !pcCmds.some((c) => c.cmd === 'stop'), 'Discord: «Остановить» в режиме телефонов — только на телефон');
+  r = await interact({ type: 3, locale: 'ru', member: { user: userD }, data: { custom_id: 'ar:kind:pc' } });
+  ok(/MAIN-PC/.test(r.body.data.embeds[0].description) && !/Pixel 7/.test(r.body.data.embeds[0].description), 'Discord: «ПК» — только ПК');
+  tgCalls.length = 0;
+  await tgUpdate({ callback_query: { id: 'q9', data: 'k:phone', message: { chat: { id: 555 }, message_id: 8 } } });
+  await settle();
+  await settle();
+  const tgEdit = tgCalls.find((c) => c.method === 'editMessageText');
+  ok(tgEdit && /📱 Телефоны/.test(tgEdit.body.text) && !/MAIN-PC/.test(tgEdit.body.text)
+    && tgEdit.body.reply_markup.inline_keyboard.flat().some((b) => b.callback_data === 'k:phone' && /✅/.test(b.text)), 'Telegram: выбор «Телефоны» — только телефоны');
+  await tgUpdate({ callback_query: { id: 'q10', data: 'start', message: { chat: { id: 555 }, message_id: 8 } } });
+  await settle();
+  phoneCmds = (await call('POST', '/api/agent/sync', { running: true, phase: 'running', pc: { id: 'ph1', name: 'Pixel 7', kind: 'phone' }, accounts: [] }, owner)).body.commands;
+  pcCmds = (await syncPc('pc1', 'MAIN-PC', [acc('a1', 'Main', 'ingame', 99000, true)])).body.commands;
+  ok(phoneCmds.some((c) => c.cmd === 'start') && !pcCmds.some((c) => c.cmd === 'start'), 'Telegram: «Запустить» в режиме телефонов — только на телефон');
+
   // ---------- notify off ----------
   tgCalls.length = 0;
   await tgUpdate({ message: { chat: { id: 555, type: 'private' }, from: {}, text: '/notify off' } });

@@ -76,6 +76,7 @@ class RejoinService : Service() {
         startForegroundCompat("Starting…")
         if (!running) {
             running = true
+            paused = false
             wake = (getSystemService(Context.POWER_SERVICE) as PowerManager).newWakeLock(PowerManager.PARTIAL_WAKE_LOCK, "AutoRejoin:loop").apply { acquire() }
             worker = Thread({ loop() }, "rejoin").apply { start() }
         }
@@ -108,6 +109,7 @@ class RejoinService : Service() {
         val reportEvery = (Store.get(this, "reportMin", "0").toLongOrNull() ?: 0).coerceIn(0, 1440) * 60_000
         states = accounts.map { State(it) }
         log(if (root) "Root mode: watching ${states.size} app(s) — Roblox log + logcat in real time." else "No root: watching ${states.size} account(s) through Roblox presence.")
+        startCloud(root, joinTimeout)
 
         var workspaces = emptyList<String>()
         if (root) {
@@ -156,6 +158,7 @@ class RejoinService : Service() {
                     }
                     val forced = s.force
                     val reason = forced ?: auto ?: continue
+                    if (paused && forced == null) continue   // stopped from a bot: watch, don't rejoin
                     val now = System.currentTimeMillis()
                     if ((forced == null && now < s.nextLaunch) || now - lastLaunch < 4000) continue
                     s.force = null
@@ -259,7 +262,10 @@ class RejoinService : Service() {
         s.inGame = true; s.everJoined = true; s.kick = null; s.fails = 0
         s.joinedAt = System.currentTimeMillis()
         if (place != null) s.place = place
-        if (back) notify("✅ **${name(s)}** is back in game.", shot = false)
+        if (back) {
+            notify("✅ **${name(s)}** is back in game.", shot = false)
+            cloudEvent("back", "🟢 **${name(s)}** is back in game.", s)
+        }
     }
 
     /** One line of the Roblox log (from the file or from logcat). */
@@ -366,6 +372,7 @@ class RejoinService : Service() {
         if (reason != "not running") {
             log("${name(s)}: $reason — rejoining.")
             notify("⚠️ **${name(s)}**: $reason — rejoining.", shot = root && Store.get(this, "shots", "1") == "1")
+            cloudEvent("drop", "🔴 **${name(s)}** dropped: $reason", s)
             s.rejoins++
         }
         log("${name(s)}: opening ${Roblox.hide(link)}…")
@@ -402,9 +409,82 @@ class RejoinService : Service() {
                     s.fails = 0
                     log("${name(s)}: 10 launches in a row didn't get into a game — pausing this account for 10 minutes.")
                     notify("⏸️ **${name(s)}**: 10 failed rejoins in a row — pausing for 10 minutes.", shot = false)
+                    cloudEvent("stuck", "🟠 **${name(s)}**: 10 failed rejoins in a row — pausing for 10 minutes.", s)
                 }
                 s.fails > 1 -> s.nextLaunch = now + minOf(90_000L, 15_000L * (s.fails - 1))
                 else -> s.nextLaunch = 0
+            }
+        }
+    }
+
+    // ================================================================ bots (Telegram / Discord) through the AutoRejoin server
+    private fun cloudEvent(kind: String, text: String, s: State) {
+        if (!Cloud.signedIn(this)) return
+        Thread { Cloud.event(this, kind, text, name(s), Cloud.accountId(this, s.acc.pkg)) }.start()
+    }
+
+    private fun uptime(ms: Long): String {
+        val m = ms / 60_000
+        return if (m >= 60) "${m / 60}h ${m % 60}m" else "${m}m"
+    }
+
+    /** Every 10 s: this phone's accounts to the server, the bots' commands back. Needs sign-in and a linked bot. */
+    private fun startCloud(root: Boolean, joinTimeout: Long) {
+        Thread({
+            var failing = false
+            var linkedNoted = false
+            while (running) {
+                try {
+                    if (Cloud.signedIn(this)) {
+                        val now = System.currentTimeMillis()
+                        val snap = snapshot.associateBy { it.pkg }
+                        val accs = states.mapIndexed { i, s ->
+                            val launching = s.launchedAt > 0 && now - s.launchedAt < joinTimeout
+                            val state = when { s.inGame -> "ingame"; paused -> "stopped"; launching -> "launching"; else -> "out" }
+                            val text = when { s.inGame -> "in game"; paused -> "stopped from a bot"; else -> (snap[s.acc.pkg]?.status ?: "waiting").lowercase() }
+                            Cloud.Acc(Cloud.accountId(this, s.acc.pkg), name(s).take(40), i == 0, state, text, if (s.inGame) uptime(now - s.joinedAt) else "")
+                        }
+                        val cmds = Cloud.sync(this, !paused, accs)
+                        if (failing) log("Bots: connected again.")
+                        failing = false
+                        if (cmds != null && !linkedNoted) { linkedNoted = true; log("Bots: this phone is online in the Telegram / Discord bots.") }
+                        cmds?.forEach { handleCommand(it, root) }
+                    }
+                } catch (e: InterruptedException) {
+                    break
+                } catch (e: Exception) {
+                    if (!failing) log("Bots: can't reach the server (${e.message}) — retrying.")
+                    failing = true
+                }
+                try { Thread.sleep(10_000) } catch (e: InterruptedException) { break }
+            }
+        }, "cloud").apply { isDaemon = true; start() }
+    }
+
+    private fun handleCommand(c: Cloud.Command, root: Boolean) {
+        when (c.cmd) {
+            "start" -> if (paused) {
+                paused = false
+                states.forEach { it.nextLaunch = 0 }
+                log("Bot: start — rejoining again.")
+            }
+            "stop" -> if (!paused) {
+                paused = true
+                log("Bot: stop — not rejoining until Start (in a bot or here).")
+            }
+            "rejoin-all" -> { states.forEach { it.force = "rejoin from a bot"; it.nextLaunch = 0 }; log("Bot: rejoin all.") }
+            "rejoin" -> states.firstOrNull { Cloud.accountId(this, it.acc.pkg) == c.arg }?.let {
+                it.force = "rejoin from a bot"; it.nextLaunch = 0; log("${name(it)}: rejoin (bot).")
+            }
+            "screen" -> {
+                val reqId = c.arg.substringBefore(':')
+                Thread {
+                    if (!root) Cloud.sendScreen(this, reqId, null, "screenshots on a phone need root")
+                    else {
+                        val png = Discord.screenshot()
+                        Cloud.sendScreen(this, reqId, png, if (png == null) "could not capture the screen" else null)
+                    }
+                }.start()
             }
         }
     }
@@ -460,6 +540,7 @@ class RejoinService : Service() {
         private val PREF_USERID = Regex("name=\"[^\"]*[Uu]ser_?[Ii][Dd][^\"]*\"(?:\\s+value=\"(\\d{3,})\"|\\s*>(\\d{3,})<)")
 
         @Volatile var isRunning = false
+        @Volatile var paused = false      // stopped from a Telegram / Discord bot: the service stays up and keeps reporting
         @Volatile var inGame = 0
         @Volatile var total = 0
         @Volatile var rejoinsTotal = 0
