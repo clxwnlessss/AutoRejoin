@@ -2,6 +2,7 @@ package com.autorejoin.mobile
 
 import android.Manifest
 import android.app.Activity
+import android.app.AlertDialog
 import android.content.ClipData
 import android.content.ClipboardManager
 import android.content.Intent
@@ -95,6 +96,7 @@ class MainActivity : Activity() {
     private class Row(val acc: Account, val user: EditText, val link: EditText, val sw: Switch,
                       val status: TextView, val dot: View, val name: TextView)
     private val rows = ArrayList<Row>()
+    private lateinit var accountsBox: LinearLayout
 
     private val ui = Handler(Looper.getMainLooper())
     private val tick = object : Runnable {
@@ -230,15 +232,118 @@ class MainActivity : Activity() {
         hero.addView(chips)
         col.addView(hero)
 
-        section(col, "ACCOUNTS")
-        val saved = Store.accounts(this).associateBy { it.pkg }
-        val apps = Roblox.installedApps(this)
-        if (apps.isEmpty()) col.addView(card().apply { addView(hint("No Roblox apps found — install Roblox first.").apply { setTextColor(red) }) })
-        apps.forEachIndexed { i, pkg -> col.addView(accountCard(saved[pkg] ?: Account(pkg), i)) }
-        col.addView(hint("Every Roblox app (and clone) is one account — already logged in, no cookies. With root, names are found automatically.").apply { setPadding(dp(4), dp(10), dp(4), 0) })
+        // section title with the + Add account button on the right
+        val titleRow = LinearLayout(this).apply {
+            orientation = LinearLayout.HORIZONTAL; gravity = Gravity.CENTER_VERTICAL
+            setPadding(dp(4), dp(22), 0, dp(8))
+        }
+        titleRow.addView(text("ACCOUNTS", 12f, text3, bold = true).apply { letterSpacing = 0.12f; layoutParams = LinearLayout.LayoutParams(0, -2, 1f) })
+        titleRow.addView(pill("＋  Add account", Color.WHITE, accent).apply { setOnClickListener { pickApp() } })
+        col.addView(titleRow)
+        accountsBox = LinearLayout(this).apply { orientation = LinearLayout.VERTICAL }
+        col.addView(accountsBox)
+        col.addView(hint("One account = one Roblox app or clone, already logged in (no cookies). Tap ＋ Add account and pick the app — AutoRejoin opens the game in exactly that app. With root, names are found automatically.").apply { setPadding(dp(4), dp(10), dp(4), 0) })
+        seedAccounts()
+        buildAccounts(Store.accounts(this))
     }
 
-    private fun accountCard(acc: Account, i: Int): View {
+    /** First start of 1.6: accounts used to be every installed Roblox app — keep them so nothing changes for old users. */
+    private fun seedAccounts() {
+        if (Store.get(this, "accountsManaged", "0") == "1") return
+        if (Store.accounts(this).isEmpty()) Store.saveAccounts(this, Roblox.installedApps(this).map { Account(it) })
+        Store.put(this, "accountsManaged", "1")
+    }
+
+    private fun buildAccounts(list: List<Account>, expand: String? = null) {
+        rows.clear()
+        accountsBox.removeAllViews()
+        if (list.isEmpty()) {
+            accountsBox.addView(card().apply {
+                gravity = Gravity.CENTER_HORIZONTAL
+                addView(text("No accounts yet", 15f, text1, bold = true).apply { gravity = Gravity.CENTER })
+                addView(hint(if (Roblox.installedApps(this@MainActivity).isEmpty()) "No Roblox apps found — install Roblox (or a clone) first."
+                    else "Tap ＋ Add account and pick a Roblox app or clone.").apply { gravity = Gravity.CENTER })
+                addView(pill("＋  Add account", Color.WHITE, accent).apply {
+                    layoutParams = LinearLayout.LayoutParams(-2, -2).apply { topMargin = dp(12) }
+                    setOnClickListener { pickApp() }
+                })
+            })
+        }
+        list.forEachIndexed { i, acc -> accountsBox.addView(accountCard(acc, i, acc.pkg == expand)) }
+    }
+
+    /** Accounts as they are on screen now (unsaved edits included). */
+    private fun currentAccounts(): MutableList<Account> = rows.map { r ->
+        val name = r.user.text.toString().trim()
+        Account(r.acc.pkg, name, if (name.equals(r.acc.username, true)) r.acc.userId else 0L, r.link.text.toString().trim(), r.sw.isChecked)
+    }.toMutableList()
+
+    private fun appLabel(pkg: String): String = try {
+        packageManager.getApplicationLabel(packageManager.getApplicationInfo(pkg, 0)).toString()
+    } catch (e: Exception) { pkg }
+
+    private fun installed(pkg: String) = try { packageManager.getApplicationInfo(pkg, 0); true } catch (e: Exception) { false }
+
+    /** + Add account: list of Roblox apps and clones on the phone; the picked one becomes an account. */
+    private fun pickApp() {
+        val current = currentAccounts()
+        val added = current.map { it.pkg }.toSet()
+        val apps = Roblox.installedApps(this)
+        if (apps.isEmpty()) { toast("No Roblox apps found — install Roblox or a Roblox clone first."); return }
+        val list = LinearLayout(this).apply { orientation = LinearLayout.VERTICAL; setPadding(dp(14), dp(6), dp(14), dp(6)) }
+        var dialog: AlertDialog? = null
+        for (pkg in apps) {
+            val taken = pkg in added
+            val row = LinearLayout(this).apply {
+                orientation = LinearLayout.HORIZONTAL; gravity = Gravity.CENTER_VERTICAL
+                background = rounded(surface, stroke, 14)
+                setPadding(dp(12), dp(10), dp(12), dp(10))
+                layoutParams = LinearLayout.LayoutParams(-1, -2).apply { topMargin = dp(8) }
+                alpha = if (taken) 0.45f else 1f
+            }
+            row.addView(ImageView(this).apply {
+                try { setImageDrawable(packageManager.getApplicationIcon(pkg)) } catch (e: Exception) {}
+                layoutParams = LinearLayout.LayoutParams(dp(38), dp(38)).apply { rightMargin = dp(12) }
+            })
+            row.addView(LinearLayout(this).apply {
+                orientation = LinearLayout.VERTICAL
+                layoutParams = LinearLayout.LayoutParams(0, -2, 1f)
+                addView(text(appLabel(pkg), 15f, text1, bold = true))
+                addView(text(pkg, 11.5f, text3))
+            })
+            row.addView(text(if (taken) "Added" else "Add", 13f, if (taken) text3 else accent, bold = true))
+            if (!taken) row.setOnClickListener {
+                dialog?.dismiss()
+                current.add(Account(pkg))
+                Store.saveAccounts(this, current)
+                buildAccounts(current, expand = pkg)
+                toast("${appLabel(pkg)} added. Type the username if you have no root.")
+                if (RejoinService.isRunning) restartService()
+            }
+            list.addView(row)
+        }
+        dialog = AlertDialog.Builder(this, AlertDialog.THEME_DEVICE_DEFAULT_DARK)
+            .setTitle("Pick the Roblox app for this account")
+            .setView(ScrollView(this).apply { addView(list) })
+            .setNegativeButton("Cancel", null)
+            .show()
+    }
+
+    private fun removeAccount(pkg: String) {
+        AlertDialog.Builder(this, AlertDialog.THEME_DEVICE_DEFAULT_DARK)
+            .setTitle("Remove ${appLabel(pkg)}?")
+            .setMessage("AutoRejoin stops opening the game in this app. The app itself is not touched — you can add it again any time.")
+            .setPositiveButton("Remove") { _, _ ->
+                val list = currentAccounts().filter { it.pkg != pkg }
+                Store.saveAccounts(this, list)
+                buildAccounts(list)
+                if (RejoinService.isRunning) restartService()
+            }
+            .setNegativeButton("Cancel", null)
+            .show()
+    }
+
+    private fun accountCard(acc: Account, i: Int, expanded: Boolean = false): View {
         val c = card()
         val head = LinearLayout(this).apply { orientation = LinearLayout.HORIZONTAL; gravity = Gravity.CENTER_VERTICAL }
         head.addView(avatarView(acc, i))
@@ -246,8 +351,12 @@ class MainActivity : Activity() {
             orientation = LinearLayout.VERTICAL; setPadding(dp(12), 0, dp(8), 0)
             layoutParams = LinearLayout.LayoutParams(0, -2, 1f)
         }
-        val name = text(acc.username.ifBlank { if (acc.pkg == "com.roblox.client") "Main" else "Clone $i" }, 15f, text1, bold = true)
+        val name = text(acc.username.ifBlank { appLabel(acc.pkg) }, 15f, text1, bold = true)
         names.addView(name)
+        val ok = installed(acc.pkg)
+        names.addView(text(if (ok) "${appLabel(acc.pkg)} · ${acc.pkg}" else "App not installed · ${acc.pkg}", 11f, if (ok) text3 else red).apply {
+            maxLines = 1; ellipsize = android.text.TextUtils.TruncateAt.END
+        })
         val statusLine = LinearLayout(this).apply { orientation = LinearLayout.HORIZONTAL; gravity = Gravity.CENTER_VERTICAL; setPadding(0, dp(3), 0, 0) }
         val dot = View(this).apply {
             layoutParams = LinearLayout.LayoutParams(dp(7), dp(7)).apply { rightMargin = dp(6) }
@@ -268,13 +377,16 @@ class MainActivity : Activity() {
         head.addView(sw)
         c.addView(head)
 
-        val edit = LinearLayout(this).apply { orientation = LinearLayout.VERTICAL; visibility = View.GONE }
+        val edit = LinearLayout(this).apply { orientation = LinearLayout.VERTICAL; visibility = if (expanded) View.VISIBLE else View.GONE }
         val user = field(acc.username, "Roblox username (needed without root)")
         val link = field(acc.link, "Own game / VIP link — optional")
         edit.addView(user)
         edit.addView(link)
-        edit.addView(text(acc.pkg, 11f, text3).apply { setPadding(dp(2), dp(8), 0, 0) })
-        c.addView(text("Edit ▾", 12.5f, accent).apply {
+        edit.addView(text("Remove account", 13f, red, bold = true).apply {
+            setPadding(dp(2), dp(12), 0, dp(2))
+            setOnClickListener { removeAccount(acc.pkg) }
+        })
+        c.addView(text(if (expanded) "Hide ▴" else "Edit ▾", 12.5f, accent).apply {
             setPadding(0, dp(10), 0, 0)
             setOnClickListener {
                 val show = edit.visibility != View.VISIBLE
@@ -440,13 +552,9 @@ class MainActivity : Activity() {
     private fun saveAll(): Boolean {
         val link = linkBox.text.toString().trim().ifEmpty { Roblox.BEE_SWARM }
         try { Roblox.deepLink(link) } catch (e: Exception) { toast(e.message ?: "Bad link"); showTab(1); return false }
-        val list = ArrayList<Account>()
-        for (r in rows) {
-            val name = r.user.text.toString().trim()
-            val ownLink = r.link.text.toString().trim()
-            if (ownLink.isNotEmpty()) try { Roblox.deepLink(ownLink) } catch (e: Exception) { toast("${r.acc.pkg}: ${e.message}"); showTab(0); return false }
-            val id = if (name.equals(r.acc.username, true)) r.acc.userId else 0L
-            list.add(Account(r.acc.pkg, name, id, ownLink, r.sw.isChecked))
+        val list = currentAccounts()
+        for (a in list) {
+            if (a.link.isNotEmpty()) try { Roblox.deepLink(a.link) } catch (e: Exception) { toast("${appLabel(a.pkg)}: ${e.message}"); showTab(0); return false }
         }
         val at = scheduleBox.text.toString().trim()
         if (scheduleSwitch.isChecked && !Regex("([01]?\\d|2[0-3]):[0-5]\\d").matches(at)) { toast("Schedule time: use HH:MM, e.g. 06:00"); showTab(1); return false }
@@ -476,7 +584,7 @@ class MainActivity : Activity() {
             return
         }
         if (!saveAll()) return
-        if (Store.accounts(this).none { it.enabled }) { toast("Turn on at least one Roblox app."); return }
+        if (Store.accounts(this).none { it.enabled }) { toast("Add an account (＋ Add account) and turn it on."); return }
         startRejoin()
     }
 
