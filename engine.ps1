@@ -72,8 +72,8 @@ $LaunchGap       = 2     # минимальная пауза между запу
 
 $MemoryLimitGB   = 8     # окно съело больше — перезапуск (не раньше 2 мин после старта); 0 — не следить
 $MemoryLimitSkipMain = $false # мейна по $MemoryLimitGB не перезапускать (только хелперов)
-$WindowMemoryGB  = 3.5   # сколько обычно занимает окно: без столько свободной памяти новое окно не открывается; 0 — не ждать
-$MinFreeMemoryGB = 1.5   # свободной памяти (вместе с файлом подкачки) меньше — перезапуск самого большого окна; 0 — не следить
+$WindowMemoryGB  = 1.5   # сколько обычно занимает окно: без столько свободной памяти новое окно не открывается; 0 — не ждать
+$MinFreeMemoryGB = 1.0   # свободной памяти (вместе с файлом подкачки) меньше — перезапуск самого большого окна; 0 — не следить
 $ScriptStartTimeout = 0  # через столько сек после захода в окне должен запуститься скрипт (сообщает загрузчик в автоэкзекуте
                          # Потассиума); не запустился — перезапуск окна. Пока скрипт не запустился, следующее окно ждёт. 0 — не проверять
 $ScriptTimeout   = 0     # столько сек нет пульса скрипта (загрузчик пишет его раз в 10 сек) — перезапуск; 0 — не следить
@@ -1894,7 +1894,7 @@ function Test-MemoryCapacity {
 # Сколько всего нужно памяти (с подкачкой) на $Count окон: обычный размер каждого, запас на одно раздувшееся
 # до $MemoryLimitGB и ~6 ГБ на Windows, Потассиум и браузер.
 function Get-NeededCommitGB([int]$Count) {
-    $window = if ($WindowMemoryGB -gt 0) { $WindowMemoryGB } else { 3.5 }
+    $window = if ($WindowMemoryGB -gt 0) { $WindowMemoryGB } else { 1.5 }
     return $Count * $window + [Math]::Max($MemoryLimitGB - $window, 0) + 6
 }
 
@@ -4089,8 +4089,8 @@ function Set-EngineConfig($Config) {
     $script:MainPriority = if ($priority -in 'Idle', 'BelowNormal', 'Normal', 'AboveNormal', 'High') { $priority } else { '' }
     $script:MemoryLimitGB = if (Get-ConfigFlag $Config 'memoryLimitOn' $true) { Get-ConfigNumber $Config 'memoryLimitGB' 8 1 256 } else { 0 }
     $script:MemoryLimitSkipMain = Get-ConfigFlag $Config 'memoryLimitSkipMain' $false
-    $script:WindowMemoryGB = if (Get-ConfigFlag $Config 'windowMemoryOn' $true) { Get-ConfigNumber $Config 'windowMemoryGB' 3.5 0.5 64 } else { 0 }
-    $script:MinFreeMemoryGB = if (Get-ConfigFlag $Config 'minFreeMemoryOn' $true) { Get-ConfigNumber $Config 'minFreeMemoryGB' 1.5 0.2 64 } else { 0 }
+    $script:WindowMemoryGB = if (Get-ConfigFlag $Config 'windowMemoryOn' $true) { Get-ConfigNumber $Config 'windowMemoryGB' 1.5 0.5 64 } else { 0 }
+    $script:MinFreeMemoryGB = if (Get-ConfigFlag $Config 'minFreeMemoryOn' $true) { Get-ConfigNumber $Config 'minFreeMemoryGB' 1.0 0.2 64 } else { 0 }
     $script:ViaBootstrapper = Get-ConfigFlag $Config 'useBootstrapper' $false
     $script:AutoReboot = Get-ConfigFlag $Config 'autoReboot' $false
     $script:NoPotassium = -not (Get-ConfigFlag $Config 'potassium' $true)

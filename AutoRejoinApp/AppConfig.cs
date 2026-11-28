@@ -150,7 +150,7 @@ public class AppConfig
 
 	public AppConfig()
 	{
-		version = 2;
+		version = 3;
 		link = "";
 		linkFile = "";
 		gamePlaceId = "1537690962";
@@ -170,9 +170,9 @@ public class AppConfig
 		memoryLimitOn = true;
 		memoryLimitGB = 8.0;
 		windowMemoryOn = true;
-		windowMemoryGB = 3.5;
+		windowMemoryGB = 1.5;
 		minFreeMemoryOn = true;
-		minFreeMemoryGB = 1.5;
+		minFreeMemoryGB = 1.0;
 		useBootstrapper = false;
 		autoReboot = false;
 		potassium = true;
@@ -224,6 +224,15 @@ public class AppConfig
 		{
 			minimizeWindows = false;
 			version = 2;
+			Migrated = true;
+		}
+		// v3 (3.9.1): the memory wait asked 3.5 GB + 1.5 GB free for every new window, so on a usual PC only 4-5 windows
+		// opened and the rest waited forever. A window with low FPS and graphics takes about 1.5 GB; old defaults are lowered.
+		if (version < 3)
+		{
+			if (windowMemoryGB == 3.5) windowMemoryGB = 1.5;
+			if (minFreeMemoryGB == 1.5) minFreeMemoryGB = 1.0;
+			version = 3;
 			Migrated = true;
 		}
 		if (vipLinks == null)
