@@ -47,6 +47,7 @@ class RejoinService : Service() {
         var lastType = -1
         var pid = 0
         var place: String? = null
+        @Volatile var force: String? = null   // rejoin asked from the app (button, schedule)
     }
 
     private var worker: Thread? = null
@@ -63,6 +64,14 @@ class RejoinService : Service() {
         if (intent?.action == ACTION_STOP) {
             stopSelf()
             return START_NOT_STICKY
+        }
+        if (intent?.action == ACTION_REJOIN) {
+            // rejoin one account (pkg) or all of them, from the app's buttons
+            val pkg = intent.getStringExtra("pkg")
+            val targets = states.filter { pkg == null || it.acc.pkg == pkg }
+            targets.forEach { it.force = "rejoin button"; it.nextLaunch = 0 }
+            log(if (pkg == null) "Rejoin all (button): ${targets.size} account(s)." else "${targets.firstOrNull()?.let { name(it) } ?: pkg}: rejoin (button).")
+            if (running) return START_STICKY
         }
         startForegroundCompat("Starting…")
         if (!running) {
@@ -130,6 +139,7 @@ class RejoinService : Service() {
                 if (Store.get(this, "autoUpdate", "1") == "1") Thread { Updater.checkAndInstall(this) { log(it) } }.start()
             }
             if (now0 >= nextReport) { nextReport = now0 + reportEvery; Thread { report() }.start() }
+            checkSchedule()
             if (root && now0 >= nextExecScan && Store.get(this, "execScript", "1") == "1") {
                 // an executor installed later, or its folder appeared after the first launch
                 nextExecScan = now0 + 5 * 60_000
@@ -141,11 +151,14 @@ class RejoinService : Service() {
                 } catch (e: Exception) { log("Presence: ${e.message}"); null }
                 for (s in states) {
                     if (!running) break
-                    val reason = synchronized(s) {
+                    val auto = synchronized(s) {
                         if (root) rootReason(s, joinTimeout, grace, freeze, workspaces) else presenceReason(s, presence, joinTimeout, grace)
-                    } ?: continue
+                    }
+                    val forced = s.force
+                    val reason = forced ?: auto ?: continue
                     val now = System.currentTimeMillis()
-                    if (now < s.nextLaunch || now - lastLaunch < 4000) continue
+                    if ((forced == null && now < s.nextLaunch) || now - lastLaunch < 4000) continue
+                    s.force = null
                     launch(s, reason, root, common)
                     lastLaunch = System.currentTimeMillis()
                 }
@@ -154,6 +167,17 @@ class RejoinService : Service() {
                 total = states.size
                 rejoinsTotal = states.sumOf { it.rejoins }
                 updateNotification("$inGame of ${states.size} in game")
+                snapshot = states.map { st ->
+                    val now = System.currentTimeMillis()
+                    val status = when {
+                        st.inGame -> "In game"
+                        st.nextLaunch > now + 60_000 -> "Paused ${(st.nextLaunch - now) / 60_000 + 1} min"
+                        st.launchedAt > 0 && now - st.launchedAt < joinTimeout -> "Launching…"
+                        st.everJoined || st.launchedAt > 0 -> "Out of game"
+                        else -> "Waiting"
+                    }
+                    AccStatus(st.acc.pkg, name(st), st.acc.userId, st.inGame, status, st.rejoins, st.place)
+                }
             } catch (e: InterruptedException) {
                 break
             } catch (e: Exception) {
@@ -169,6 +193,25 @@ class RejoinService : Service() {
         val all = Store.accounts(this)
         all.firstOrNull { it.pkg == s.acc.pkg }?.let { it.userId = s.acc.userId; it.username = s.acc.username }
         Store.saveAccounts(this, all)
+    }
+
+    // ================================================================ schedule
+    private var scheduleDoneDay = -1
+
+    /** Daily rejoin of every account at the time set in the app (HH:mm, phone time). */
+    private fun checkSchedule() {
+        if (Store.get(this, "scheduleOn", "0") != "1") return
+        val parts = Store.get(this, "scheduleAt", "06:00").split(":")
+        val h = parts.getOrNull(0)?.toIntOrNull() ?: return
+        val m = parts.getOrNull(1)?.toIntOrNull() ?: 0
+        val cal = java.util.Calendar.getInstance()
+        val day = cal.get(java.util.Calendar.DAY_OF_YEAR)
+        if (day == scheduleDoneDay) return
+        if (cal.get(java.util.Calendar.HOUR_OF_DAY) == h && cal.get(java.util.Calendar.MINUTE) == m) {
+            scheduleDoneDay = day
+            states.forEach { it.force = "scheduled rejoin"; it.nextLaunch = 0 }
+            log("Scheduled rejoin ($h:${"%02d".format(m)}): all accounts.")
+        }
     }
 
     // ================================================================ no root: presence
@@ -405,6 +448,7 @@ class RejoinService : Service() {
 
     companion object {
         const val ACTION_STOP = "stop"
+        const val ACTION_REJOIN = "rejoin"
         private const val CHANNEL = "rejoin"
         private val TYPES = mapOf(0 to "offline", 1 to "online (not in a game)", 2 to "in game", 3 to "in Studio")
         private val JOIN = Regex("! Joining game '[^']+' place (\\d+)")
@@ -419,6 +463,7 @@ class RejoinService : Service() {
         @Volatile var inGame = 0
         @Volatile var total = 0
         @Volatile var rejoinsTotal = 0
+        @Volatile var snapshot: List<AccStatus> = emptyList()
         private val lines = ArrayDeque<String>()
         @Volatile var listener: ((String) -> Unit)? = null
 
@@ -431,3 +476,6 @@ class RejoinService : Service() {
         fun history(): String = synchronized(lines) { lines.joinToString("\n") }
     }
 }
+
+/** What the app shows on an account card. */
+data class AccStatus(val pkg: String, val name: String, val userId: Long, val inGame: Boolean, val status: String, val rejoins: Int, val place: String?)
