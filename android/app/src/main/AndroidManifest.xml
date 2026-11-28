@@ -12,6 +12,9 @@
     <!-- self-update from GitHub releases; restart the service after an update or a reboot -->
     <uses-permission android:name="android.permission.REQUEST_INSTALL_PACKAGES" />
     <uses-permission android:name="android.permission.RECEIVE_BOOT_COMPLETED" />
+    <!-- backup of accounts and settings in Documents/AutoRejoin (kept after a reinstall); old Android needs these -->
+    <uses-permission android:name="android.permission.WRITE_EXTERNAL_STORAGE" android:maxSdkVersion="29" />
+    <uses-permission android:name="android.permission.READ_EXTERNAL_STORAGE" android:maxSdkVersion="32" />
 
     <!-- see Roblox and its clones: every app that opens roblox:// links -->
     <queries>
@@ -26,6 +29,7 @@
         android:icon="@mipmap/ic_launcher"
         android:roundIcon="@mipmap/ic_launcher"
         android:theme="@android:style/Theme.Material.NoActionBar"
+        android:requestLegacyExternalStorage="true"
         android:usesCleartextTraffic="false">
 
         <activity

@@ -70,8 +70,17 @@ function rateLimiter(limit, windowMs) {
   };
 }
 
+// AutoRejoin Mobile: accounts and settings backup (one per account).
+const MOBILE_SCHEMA = [
+  `CREATE TABLE IF NOT EXISTS mobile_backups (
+     user_id INTEGER PRIMARY KEY REFERENCES users(id) ON DELETE CASCADE,
+     data TEXT NOT NULL,
+     updated_at TIMESTAMPTZ NOT NULL
+   )`
+];
+
 async function initDb(pool) {
-  for (const sql of SCHEMA.concat(DISCORD_SCHEMA, TELEGRAM_SCHEMA, EMAIL_SCHEMA)) await pool.query(sql);
+  for (const sql of SCHEMA.concat(DISCORD_SCHEMA, TELEGRAM_SCHEMA, EMAIL_SCHEMA, MOBILE_SCHEMA)) await pool.query(sql);
 }
 
 function createApp(pool, options = {}) {
@@ -131,7 +140,7 @@ function createApp(pool, options = {}) {
       res.set('Access-Control-Allow-Origin', origin);
       res.set('Vary', 'Origin');
       res.set('Access-Control-Allow-Headers', 'authorization, content-type');
-      res.set('Access-Control-Allow-Methods', 'GET, POST, DELETE, OPTIONS');
+      res.set('Access-Control-Allow-Methods', 'GET, POST, PUT, DELETE, OPTIONS');
       res.set('Access-Control-Max-Age', '86400');
     }
     if (req.method === 'OPTIONS') return res.status(204).end();
@@ -424,6 +433,25 @@ function createApp(pool, options = {}) {
       const report = await farm.report(req.user.id);
       const sent = await telegram.sendReport(req.user.id).catch(() => false);
       res.json({ ...report, telegram: sent });
+    } catch (e) { next(e); }
+  });
+  // AutoRejoin Mobile: accounts and settings backup, so a reinstall only needs signing in. One copy per account.
+  app.get('/api/mobile/backup', auth, async (req, res, next) => {
+    try {
+      const { rows } = await pool.query('SELECT data, updated_at FROM mobile_backups WHERE user_id = $1', [req.user.id]);
+      res.json(rows.length ? { data: rows[0].data, updatedAt: new Date(rows[0].updated_at).toISOString() } : { data: null });
+    } catch (e) { next(e); }
+  });
+  app.put('/api/mobile/backup', auth, async (req, res, next) => {
+    try {
+      const data = String((req.body && req.body.data) || '');
+      let parsed = null;
+      try { parsed = JSON.parse(data); } catch { /* checked below */ }
+      if (!parsed || typeof parsed !== 'object' || Array.isArray(parsed) || data.length > 30000) return res.status(400).json({ error: 'Bad backup.' });
+      await pool.query(
+        `INSERT INTO mobile_backups (user_id, data, updated_at) VALUES ($1, $2, $3)
+         ON CONFLICT (user_id) DO UPDATE SET data = $2, updated_at = $3`, [req.user.id, data, now()]);
+      res.json({ ok: true });
     } catch (e) { next(e); }
   });
   app.delete('/api/telegram/link', auth, async (req, res, next) => {

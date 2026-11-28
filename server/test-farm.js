@@ -44,6 +44,19 @@ const { createApp, initDb } = require('./app');
   const acc = (id, name, state, honey, main) => ({ id, name, main: !!main, enabled: true, state, text: state === 'ingame' ? 'в игре' : 'вылетел', uptime: '1 ч', honey });
   const syncPc = (pcId, pcName, accounts, running = true) => call('POST', '/api/agent/sync', { running, phase: 'running', version: '3.1', lang: 'ru', pc: { id: pcId, name: pcName }, accounts }, owner);
 
+  // ---------- AutoRejoin Mobile: accounts and settings backup ----------
+  let b = await call('GET', '/api/mobile/backup', null, owner);
+  ok(b.status === 200 && b.body.data === null, 'бэкап телефона: пока пусто');
+  const backup = JSON.stringify({ app: 'AutoRejoin Mobile', savedAt: 1, prefs: { accounts: '[{"pkg":"com.roblox.client"}]', link: '1537690962' } });
+  b = await call('PUT', '/api/mobile/backup', { data: backup }, owner);
+  ok(b.body.ok === true, 'бэкап телефона сохранён');
+  b = await call('GET', '/api/mobile/backup', null, owner);
+  ok(b.body.data === backup && b.body.updatedAt, 'бэкап телефона отдаётся после переустановки (тот же аккаунт)');
+  b = await call('PUT', '/api/mobile/backup', { data: 'not json' }, owner);
+  ok(b.status === 400, 'битый бэкап отклонён');
+  b = await call('GET', '/api/mobile/backup', null, null);
+  ok(b.status === 401, 'без входа бэкап не отдаётся');
+
   // ---------- not linked: nothing is stored ----------
   let r = await syncPc('pc1', 'MAIN-PC', [acc('a1', 'Main', 'ingame', 1000, true)]);
   ok(r.body.linked === false && r.body.commands.length === 0, 'без привязки программа не отдаёт аккаунты');

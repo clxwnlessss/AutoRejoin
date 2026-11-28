@@ -113,6 +113,7 @@ class MainActivity : Activity() {
             background = GradientDrawable(GradientDrawable.Orientation.TOP_BOTTOM, intArrayOf(Color.parseColor("#17112A"), bg, bg))
         }
         screen.addView(header())
+        val restored = Backup.restoreLocalIfFresh(this)   // fresh install: accounts and settings from the phone backup
         val content = FrameLayout(this).apply { layoutParams = LinearLayout.LayoutParams(-1, 0, 1f) }
         pages = listOf(page { accountsPage(it) }, page { settingsPage(it) }, page { logPage(it) }, page { helpPage(it) })
         pages.forEach { content.addView(it) }
@@ -121,6 +122,8 @@ class MainActivity : Activity() {
         setContentView(screen)
         showTab(0)
         if (Build.VERSION.SDK_INT >= 33) requestPermissions(arrayOf(Manifest.permission.POST_NOTIFICATIONS), 1)
+        else if (Build.VERSION.SDK_INT in 23..29) requestPermissions(arrayOf(Manifest.permission.WRITE_EXTERNAL_STORAGE, Manifest.permission.READ_EXTERNAL_STORAGE), 2)
+        if (restored) toast("Accounts and settings restored from the backup.")
     }
 
     override fun onResume() {
@@ -317,6 +320,7 @@ class MainActivity : Activity() {
                 dialog?.dismiss()
                 current.add(Account(pkg))
                 Store.saveAccounts(this, current)
+                Backup.save(this)
                 buildAccounts(current, expand = pkg)
                 toast("${appLabel(pkg)} added. Type the username if you have no root.")
                 if (RejoinService.isRunning) restartService()
@@ -337,6 +341,7 @@ class MainActivity : Activity() {
             .setPositiveButton("Remove") { _, _ ->
                 val list = currentAccounts().filter { it.pkg != pkg }
                 Store.saveAccounts(this, list)
+                Backup.save(this)
                 buildAccounts(list)
                 if (RejoinService.isRunning) restartService()
             }
@@ -578,6 +583,7 @@ class MainActivity : Activity() {
             c.addView(text("Signed in as " + Cloud.nickname(this).ifBlank { "?" }, 15f, text1, bold = true))
             val bots = hint("Checking the bots…")
             c.addView(bots)
+            c.addView(hint("☁️ Accounts and settings are saved to your account automatically — after a reinstall just sign in."))
             c.addView(hint("In the bots this phone is \"${Cloud.deviceName(this)}\" — press 📱 Phones there to see only phones. Control works while AutoRejoin is started here."))
             val row = LinearLayout(this).apply { orientation = LinearLayout.HORIZONTAL; layoutParams = LinearLayout.LayoutParams(-1, -2).apply { topMargin = dp(14) } }
             row.addView(bigButton().apply {
@@ -639,7 +645,7 @@ class MainActivity : Activity() {
         val pass = password("Password")
         formDialog("Sign in to AutoRejoin", "The same account as on PC and the site.", listOf(nick, pass), "Sign in",
             { Cloud.login(this, nick.text.toString().trim(), pass.text.toString()) },
-            { toast("Signed in as ${Cloud.nickname(this)}."); renderCloud() })
+            { toast("Signed in as ${Cloud.nickname(this)}."); renderCloud(); afterSignIn() })
     }
 
     private fun registerDialog() {
@@ -656,7 +662,27 @@ class MainActivity : Activity() {
         val code = field("", "6-digit code").apply { inputType = InputType.TYPE_CLASS_NUMBER }
         formDialog("Confirm your email", "We sent a code to $email (check spam too). It works for 15 minutes.", listOf(code), "Create account",
             { Cloud.registerConfirm(this, email, code.text.toString().trim()) },
-            { toast("Account ${Cloud.nickname(this)} created."); renderCloud(); linkBotDialog() })
+            { toast("Account ${Cloud.nickname(this)} created."); renderCloud(); Thread { Backup.uploadNow(this) }.start(); linkBotDialog() })
+    }
+
+    /** Signed in: take the backup kept in the account (fresh install) or offer it, else save this phone's setup there. */
+    private fun afterSignIn() {
+        Thread {
+            when (val r = Backup.syncAfterSignIn(this)) {
+                is Backup.AfterSignIn.Restored -> runOnUiThread { toast("Accounts and settings restored from your account."); recreate() }
+                is Backup.AfterSignIn.Ask -> runOnUiThread {
+                    val n = Backup.accountCount(r.data)
+                    val at = java.text.SimpleDateFormat("d MMM, HH:mm", java.util.Locale.US).format(java.util.Date(r.data.optLong("savedAt")))
+                    AlertDialog.Builder(this, AlertDialog.THEME_DEVICE_DEFAULT_DARK)
+                        .setTitle("Restore from your account?")
+                        .setMessage("Your account has a backup from $at with $n account(s). Restore it? It replaces the accounts and settings on this phone.")
+                        .setPositiveButton("Restore") { _, _ -> if (Backup.apply(this, r.data)) { toast("Restored."); recreate() } }
+                        .setNegativeButton("Keep this phone's") { _, _ -> Thread { Backup.uploadNow(this) }.start() }
+                        .show()
+                }
+                else -> {}
+            }
+        }.start()
     }
 
     private fun linkBotDialog() {
@@ -711,6 +737,7 @@ class MainActivity : Activity() {
         Store.put(this, "scheduleAt", at.ifEmpty { "06:00" })
         Store.put(this, "autoUpdate", if (updateSwitch.isChecked) "1" else "0")
         Store.saveAccounts(this, list)
+        Backup.save(this)   // phone file + account copy: a reinstall gets everything back
         return true
     }
 

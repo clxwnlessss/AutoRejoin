@@ -196,6 +196,7 @@ class RejoinService : Service() {
         val all = Store.accounts(this)
         all.firstOrNull { it.pkg == s.acc.pkg }?.let { it.userId = s.acc.userId; it.username = s.acc.username }
         Store.saveAccounts(this, all)
+        Backup.save(this)
     }
 
     // ================================================================ schedule
